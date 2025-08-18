@@ -1,7 +1,7 @@
 CREATE TABLE material (
     id SERIAL PRIMARY KEY,
     factory_name VARCHAR(100) NOT NULL DEFAULT '未命名工厂',
-    report_year INTEGER NOT NULL CHECK (report_year BETWEEN 1949 AND EXTRACT(YEAR FROM CURRENT_DATE)),
+    year INTEGER NOT NULL CHECK (year BETWEEN 1949 AND EXTRACT(YEAR FROM CURRENT_DATE)),
 
     -- 进料数据
     renewable_input NUMERIC(10,2) NOT NULL CHECK (renewable_input >= 0),
@@ -58,8 +58,79 @@ CREATE TABLE energy (
     energy_consumption_intensity DOUBLE PRECISION
 );
 
+CREATE TABLE water (
+    id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
+    year INTEGER NOT NULL,
 
-CREATE INDEX idx_factory_year ON material (factory_name, report_year);
+    -- 月度数据 (JSON格式)
+    industrial JSON NOT NULL,
+    domestic JSON NOT NULL,
+    reclaimed JSON NOT NULL,
+    total JSON NOT NULL,
+
+    -- 工业用水指标
+    industrial_total FLOAT NOT NULL,
+    industrial_drainage FLOAT NOT NULL,
+    industrial_consumption FLOAT NOT NULL,
+    industrial_recycled FLOAT NOT NULL,
+
+    -- 生活用水指标
+    domestic_total FLOAT NOT NULL,
+    domestic_drainage FLOAT NOT NULL,
+    domestic_consumption FLOAT NOT NULL,
+    domestic_recycled FLOAT NOT NULL,
+
+    -- 中水指标
+    reclaimed_total FLOAT NOT NULL,
+    total_revenue FLOAT NOT NULL,
+    reclaimed_intensity FLOAT NOT NULL,
+
+    -- 汇总指标
+    total_intake FLOAT NOT NULL,
+    total_drainage FLOAT NOT NULL,
+    total_consumption FLOAT NOT NULL,
+    total_recycled FLOAT NOT NULL,
+    water_intensity FLOAT NOT NULL,
+    water_recycle_rate FLOAT NOT NULL
+);
+
+CREATE TABLE emission (
+    id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
+    year INTEGER NOT NULL,
+
+    -- 温室气体排放字段
+    category_one FLOAT NOT NULL,
+    category_two FLOAT NOT NULL,
+    category_three FLOAT NOT NULL,
+    category_four FLOAT NOT NULL,
+    category_five FLOAT NOT NULL,
+    category_six FLOAT NOT NULL,
+    revenue FLOAT NOT NULL,
+
+    -- 计算指标
+    category_three_total FLOAT NOT NULL,
+    total_emission FLOAT NOT NULL,
+    emission_intensity FLOAT NOT NULL,
+
+    -- 废气排放字段
+    voc FLOAT NOT NULL,
+    nmhc FLOAT NOT NULL,
+    benzene FLOAT NOT NULL,
+    particulate FLOAT NOT NULL,
+    custom_emissions JSONB NOT NULL,
+    waste_gas_total FLOAT NOT NULL
+);
+
+-- 添加索引优化查询性能
+CREATE INDEX idx_factory_year ON material (factory_name, year);
 CREATE INDEX idx_energy_factory ON energy(factory);
 CREATE INDEX idx_energy_year ON energy(year);
 CREATE INDEX idx_energy_factory_year ON energy(factory, year);
+CREATE INDEX idx_water_data_factory ON water(factory);
+CREATE INDEX idx_water_data_year ON water(year);
+CREATE INDEX idx_water_data_factory_year ON water(factory, year);
+CREATE INDEX idx_emission_factory ON emission(factory);
+CREATE INDEX idx_emission_year ON emission(year);
+CREATE INDEX idx_emission_factory_year ON emission(factory, year);

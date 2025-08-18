@@ -103,7 +103,7 @@ def submit_emission_data(data: EmissionSubmission, db: Session = Depends(get_db)
                                category_three_total=data.categoryThreeTotal, total_emission=data.totalEmission,
                                emission_intensity=data.emissionIntensity, voc=data.voc, nmhc=data.nmhc,
                                benzene=data.benzene, particulate=data.particulate,
-                               custom_emissions=[item.dict() for item in data.customEmissions],
+                               custom_emissions=[item.model_dump() for item in data.customEmissions],
                                waste_gas_total=data.wasteGasTotal)
         db.add(db_data)
         db.commit()
