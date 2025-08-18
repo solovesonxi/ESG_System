@@ -26,5 +26,40 @@ CREATE TABLE material (
     paper_intensity NUMERIC(8,2) NOT NULL CHECK (paper_intensity >= 0)
 );
 
--- 创建索引优化查询性能
+CREATE TABLE energy (
+    id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
+    year INTEGER NOT NULL,
+
+    -- 月度数据 (JSON格式存储12个月数据)
+    purchased_power JSONB NOT NULL,
+    renewable_power JSONB NOT NULL,
+    gasoline JSONB NOT NULL,
+    diesel JSONB NOT NULL,
+    natural_gas JSONB NOT NULL,
+    other_energy JSONB NOT NULL,
+
+    -- 年度汇总
+    total_purchased_power DOUBLE PRECISION,
+    total_renewable_power DOUBLE PRECISION,
+    total_gasoline DOUBLE PRECISION,
+    total_diesel DOUBLE PRECISION,
+    total_natural_gas DOUBLE PRECISION,
+    total_other_energy DOUBLE PRECISION,
+
+    -- 能源消耗
+    water_consumption DOUBLE PRECISION,
+    power_consumption DOUBLE PRECISION,
+    gasoline_consumption DOUBLE PRECISION,
+    diesel_consumption DOUBLE PRECISION,
+    natural_gas_consumption DOUBLE PRECISION,
+    total_energy_consumption DOUBLE PRECISION,
+    turnover DOUBLE PRECISION,
+    energy_consumption_intensity DOUBLE PRECISION
+);
+
+
 CREATE INDEX idx_factory_year ON material (factory_name, report_year);
+CREATE INDEX idx_energy_factory ON energy(factory);
+CREATE INDEX idx_energy_year ON energy(year);
+CREATE INDEX idx_energy_factory_year ON energy(factory, year);

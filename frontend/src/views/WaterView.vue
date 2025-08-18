@@ -50,7 +50,7 @@
 
       <!-- 工业用水表格 -->
       <fieldset>
-        <legend>{{ year }}年用水量统计 - 工业用水</legend>
+        <legend>{{ year }}年用水量统计 - 工业用水 (T)</legend>
         <div class="monthly-grid">
           <div v-for="(_, index) in monthlyWater.industrial" :key="`title-${index}`">
             <label>{{ getMonthName(index) }}</label>
@@ -62,132 +62,54 @@
                 required
             >
           </div>
-          <div class="metric-group">
-            <label>合计 (T)</label>
-            <input type="number" v-model.number="waterData.industrialTotal" disabled>
+          <div>
+            <label>合计</label>
+            <input type="number" v-model.number="industrialTotal" disabled>
           </div>
-          <div class="metric-group">
-            <label>排水量 (T)</label>
+          <div>
+            <label>排水量</label>
             <input type="number" v-model.number="waterData.industrialDrainage" step="1" min="0">
           </div>
-          <div class="metric-group">
-            <label>耗水量 (T)</label>
+          <div>
+            <label>耗水量</label>
             <input type="number" v-model.number="waterData.industrialConsumption" step="1" min="0">
           </div>
-          <div class="metric-group">
-            <label>循环水用量 (T)</label>
+          <div>
+            <label>循环水用量</label>
             <input type="number" v-model.number="waterData.industrialRecycled" step="1" min="0">
           </div>
-
         </div>
       </fieldset>
 
       <!-- 生活用水表格 -->
       <fieldset>
-        <legend>{{ year }}年用水量统计 - 生活用水</legend>
-        <div class="water-grid">
-          <!-- 月份标题行 -->
-          <div class="month-title-row">
-            <div class="month-title" v-for="(_, index) in monthlyWater.domestic" :key="`title-${index}`">
-              {{ getMonthName(index) }}
-            </div>
-            <div class="summary-title">合计</div>
+        <legend>{{ year }}年用水量统计 - 生活用水 (T)</legend>
+        <div class="monthly-grid">
+          <div v-for="(_, index) in monthlyWater.domestic" :key="`title-${index}`">
+            <label>{{ getMonthName(index) }}</label>
+            <input
+                type="number"
+                v-model.number="monthlyWater.domestic[index]"
+                min="0"
+                step="1"
+                required
+            >
           </div>
-
-          <!-- 月度用水量 -->
-          <div class="month-input-row">
-            <div class="input-cell" v-for="(_, index) in monthlyWater.domestic" :key="`input-${index}`">
-              <input
-                  type="number"
-                  v-model.number="monthlyWater.domestic[index]"
-                  min="0"
-                  step="1"
-                  required
-              >
-            </div>
-            <div class="summary-cell">
-              <input type="number" :value="domesticTotal" disabled>
-            </div>
+          <div>
+            <label>合计</label>
+            <input type="number" v-model.number="domesticTotal" disabled>
           </div>
-
-          <!-- 指标输入区 -->
-          <div class="water-metrics">
-            <div class="metric-group">
-              <label>排水量 (T)</label>
-              <input type="number" v-model.number="waterData.domesticDrainage" step="1" min="0">
-            </div>
-            <div class="metric-group">
-              <label>耗水量 (T)</label>
-              <input type="number" v-model.number="waterData.domesticConsumption" step="1" min="0">
-            </div>
-            <div class="metric-group">
-              <label>循环水用量 (T)</label>
-              <input type="number" v-model.number="waterData.domesticRecycled" step="1" min="0">
-            </div>
+          <div>
+            <label>排水量</label>
+            <input type="number" v-model.number="waterData.domesticDrainage" step="1" min="0">
           </div>
-        </div>
-      </fieldset>
-
-      <!-- 用水量汇总表格 -->
-      <fieldset class="summary-fieldset">
-        <legend>{{ year }}年用水量统计 - 汇总</legend>
-        <div class="water-grid">
-          <!-- 月份标题行 -->
-          <div class="month-title-row">
-            <div class="month-title" v-for="(_, index) in monthlyWater.total" :key="`title-${index}`">
-              {{ getMonthName(index) }}
-            </div>
-            <div class="summary-title">合计</div>
+          <div>
+            <label>耗水量</label>
+            <input type="number" v-model.number="waterData.domesticConsumption" step="1" min="0">
           </div>
-
-          <!-- 月度用水量（自动计算） -->
-          <div class="month-input-row">
-            <div class="input-cell" v-for="(_, index) in monthlyWater.total" :key="`total-${index}`">
-              <input
-                  type="number"
-                  :value="monthlyWater.total[index]"
-                  disabled
-              >
-            </div>
-            <div class="summary-cell">
-              <input type="number" :value="totalIntake" disabled>
-            </div>
-          </div>
-
-          <!-- 汇总指标 -->
-          <div class="water-metrics">
-            <div class="metric-group">
-              <label>总排水量 (T)</label>
-              <input type="number" :value="totalDrainage" disabled>
-            </div>
-            <div class="metric-group">
-              <label>总耗水量 (T)</label>
-              <input type="number" :value="totalConsumption" disabled>
-            </div>
-            <div class="metric-group">
-              <label>总循环水用量 (T)</label>
-              <input type="number" :value="totalRecycled" disabled>
-            </div>
-          </div>
-
-          <!-- 计算结果 -->
-          <div class="water-results">
-            <div class="metric-group">
-              <label>用水强度 (T/万元)</label>
-              <input type="number" :value="waterIntensity" disabled>
-            </div>
-            <div class="metric-group">
-              <label>水资源回收率 (%)</label>
-              <input type="number" :value="waterRecycleRate" disabled>
-            </div>
-          </div>
-        </div>
-
-        <!-- 营业收入输入 -->
-        <div class="revenue-input">
-          <div class="form-group">
-            <label>营业收入 (万元)</label>
-            <input type="number" v-model.number="waterData.totalRevenue" step="1" min="0">
+          <div>
+            <label>循环水用量</label>
+            <input type="number" v-model.number="waterData.domesticRecycled" step="1" min="0">
           </div>
         </div>
       </fieldset>
@@ -195,42 +117,69 @@
       <!-- 中水总量统计表格 -->
       <fieldset>
         <legend>{{ year }}年中水总量统计</legend>
-        <div class="water-grid">
-          <!-- 月份标题行 -->
-          <div class="month-title-row">
-            <div class="month-title" v-for="(_, index) in monthlyWater.reclaimed" :key="`title-${index}`">
-              {{ getMonthName(index) }}
-            </div>
-            <div class="summary-title">合计</div>
+        <div class="monthly-grid">
+          <div class="month-title" v-for="(_, index) in monthlyWater.reclaimed" :key="`title-${index}`">
+            <label>{{ getMonthName(index) }} (T)</label>
+            <input
+                type="number"
+                v-model.number="monthlyWater.reclaimed[index]"
+                min="0"
+                step="1"
+                required
+            >
+          </div>
+          <div>
+            <label>总中水用水量 (T)</label>
+            <input type="number" v-model.number="reclaimedTotal" step="1" min="0">
+          </div>
+          <div class="form-group">
+            <label>营业收入 (万元)</label>
+            <input type="number" v-model.number="waterData.totalRevenue" step="1" min="0">
+          </div>
+          <div>
+            <label>中水用水强度 (T/万元)</label>
+            <input type="number" :value="reclaimedIntensity" disabled>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 用水量汇总表格 -->
+      <fieldset class="summary-fieldset">
+        <legend>{{ year }}年用水量统计 - 汇总</legend>
+        <div class="monthly-grid">
+          <div v-for="(_, index) in monthlyWater.total" :key="`title-${index}`">
+            <label>{{ getMonthName(index) }} (T)</label>
+            <input
+                type="number"
+                v-model.number="monthlyWater.total[index]"
+                min="0" disabled
+            >
+          </div>
+          <div>
+            <label>合计 (T)</label>
+            <input type="number" v-model.number="totalIntake" disabled>
+          </div>
+          <div>
+            <label>总排水量 (T)</label>
+            <input type="number" :value="totalDrainage" disabled>
+          </div>
+          <div>
+            <label>总耗水量 (T)</label>
+            <input type="number" :value="totalConsumption" disabled>
+          </div>
+          <div>
+            <label>总循环水用量 (T)</label>
+            <input type="number" :value="totalRecycled" disabled>
+          </div>
+          <div>
+            <label>用水强度 (T/万元)</label>
+            <input type="number" :value="waterIntensity" disabled>
+          </div>
+          <div>
+            <label>水资源回收率 (%)</label>
+            <input type="number" :value="waterRecycleRate" disabled>
           </div>
 
-          <!-- 月度中水量 -->
-          <div class="month-input-row">
-            <div class="input-cell" v-for="(_, index) in monthlyWater.reclaimed" :key="`reclaimed-${index}`">
-              <input
-                  type="number"
-                  v-model.number="monthlyWater.reclaimed[index]"
-                  min="0"
-                  step="1"
-                  required
-              >
-            </div>
-            <div class="summary-cell">
-              <input type="number" :value="reclaimedTotal" disabled>
-            </div>
-          </div>
-
-          <!-- 中水指标 -->
-          <div class="water-metrics">
-            <div class="metric-group">
-              <label>总中水用水量 (T)</label>
-              <input type="number" v-model.number="waterData.reclaimedUsage" step="1" min="0">
-            </div>
-            <div class="metric-group">
-              <label>中水用水强度 (T/万元)</label>
-              <input type="number" :value="reclaimedIntensity" disabled>
-            </div>
-          </div>
         </div>
       </fieldset>
 
@@ -265,11 +214,10 @@ const getMonthName = (index) => monthNames[index];
 const monthlyWater = reactive({
   industrial: Array(12).fill(0),    // 工业用水月度取水量
   domestic: Array(12).fill(0),      // 生活用水月度取水量
-  total: Array(12).fill(0),         // 总用水量月度值（自动计算）
-  reclaimed: Array(12).fill(0)      // 中水月度用量
+  reclaimed: Array(12).fill(0),      // 中水月度用量
+  total: Array(12).fill(0)         // 总用水量月度值（自动计算）
 });
 
-// 自动更新总用水量月度数据
 watch([() => monthlyWater.industrial, () => monthlyWater.domestic], () => {
   for (let i = 0; i < 12; i++) {
     monthlyWater.total[i] = monthlyWater.industrial[i] + monthlyWater.domestic[i];
@@ -279,22 +227,16 @@ watch([() => monthlyWater.industrial, () => monthlyWater.domestic], () => {
 // 年度指标数据
 const waterData = reactive({
   // 工业用水指标
-  industrialTotal: 0,         // 工业总量
   industrialDrainage: 0,         // 工业排水量
   industrialConsumption: 0,       // 工业耗水量
   industrialRecycled: 0,          // 工业循环水用量
 
   // 生活用水指标
-  domesticTotal: 0,            // 生活总量
   domesticDrainage: 0,            // 生活排水量
   domesticConsumption: 0,         // 生活耗水量
   domesticRecycled: 0,            // 生活循环水用量
 
-  // 经济指标
   totalRevenue: 0,                // 营业收入
-
-  // 中水指标
-  reclaimedUsage: 0               // 总中水用水量
 });
 
 // 计算工业用水合计
@@ -335,7 +277,7 @@ const totalRecycled = computed(() => {
 // 计算用水强度
 const waterIntensity = computed(() => {
   if (waterData.totalRevenue > 0 && totalIntake.value > 0) {
-    return (totalIntake.value / waterData.totalRevenue).toFixed(2);
+    return (totalIntake.value / waterData.totalRevenue);
   }
   return 0;
 });
@@ -350,14 +292,11 @@ const waterRecycleRate = computed(() => {
 
 // 计算中水用水强度
 const reclaimedIntensity = computed(() => {
-  if (waterData.totalRevenue > 0 && waterData.reclaimedUsage > 0) {
-    return (waterData.reclaimedUsage / waterData.totalRevenue).toFixed(2);
+  if (waterData.totalRevenue > 0 && reclaimedTotal.value > 0) {
+    return (reclaimedTotal.value / waterData.totalRevenue).toFixed(2);
   }
   return 0;
 });
-
-// 下拉框处理方法
-
 
 // 提交表单
 async function submitForm() {
@@ -370,30 +309,31 @@ async function submitForm() {
       industrial: [...monthlyWater.industrial],
       domestic: [...monthlyWater.domestic],
       reclaimed: [...monthlyWater.reclaimed],
+      total: [...monthlyWater.total],
       // 工业用水指标
+      industrialTotal: industrialTotal.value,
       industrialDrainage: waterData.industrialDrainage,
       industrialConsumption: waterData.industrialConsumption,
       industrialRecycled: waterData.industrialRecycled,
       // 生活用水指标
+      domesticTotal: domesticTotal.value,
       domesticDrainage: waterData.domesticDrainage,
       domesticConsumption: waterData.domesticConsumption,
       domesticRecycled: waterData.domesticRecycled,
-      // 经济指标
-      totalRevenue: waterData.totalRevenue,
+
       // 中水指标
-      reclaimedUsage: waterData.reclaimedUsage,
-      // 自动计算的指标
-      industrialTotal: industrialTotal.value,
-      domesticTotal: domesticTotal.value,
-      totalIntake: totalIntake.value,
       reclaimedTotal: reclaimedTotal.value,
+      totalRevenue: waterData.totalRevenue,
+      reclaimedIntensity: reclaimedIntensity.value,
+
+      totalIntake: totalIntake.value,
+      totalDrainage: totalDrainage.value,
+      totalConsumption: totalConsumption.value,
+      totalRecycled: totalRecycled.value,
       waterIntensity: waterIntensity.value,
-      waterRecycleRate: waterRecycleRate.value,
-      reclaimedIntensity: reclaimedIntensity.value
+      waterRecycleRate: waterRecycleRate.value
     };
-
     const response = await axios.post('http://localhost:8000/submit/water', payload);
-
     if (response.data.status === 'success') {
       alert('水资源数据提交成功!');
     }

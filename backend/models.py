@@ -1,3 +1,6 @@
+from typing import List
+
+from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, Float, JSON
 
 from database import Base
@@ -69,3 +72,68 @@ class EnergyData(Base):
     total_energy_consumption = Column(Float)  # Tce
     turnover = Column(Float)  # 万元
     energy_consumption_intensity = Column(Float)
+
+
+
+class WaterData(Base):
+    __tablename__ = 'water'
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+
+    industrial = Column(JSON, nullable=False)
+    domestic = Column(JSON, nullable=False)
+    reclaimed = Column(JSON, nullable=False)
+    total = Column(JSON, nullable=False)
+
+    industrial_total = Column(Float, nullable=False)
+    industrial_drainage = Column(Float, nullable=False)
+    industrial_consumption = Column(Float, nullable=False)
+    industrial_recycled = Column(Float, nullable=False)
+
+    domestic_total = Column(Float, nullable=False)
+    domestic_drainage = Column(Float, nullable=False)
+    domestic_consumption = Column(Float, nullable=False)
+    domestic_recycled = Column(Float, nullable=False)
+
+    reclaimed_total = Column(Float, nullable=False)
+    total_revenue = Column(Float, nullable=False)
+    reclaimed_intensity = Column(Float, nullable=False)
+
+    total_intake = Column(Float, nullable=False)
+    total_drainage = Column(Float, nullable=False)
+    total_consumption = Column(Float, nullable=False)
+    total_recycled = Column(Float, nullable=False)
+    water_intensity = Column(Float, nullable=False)
+    water_recycle_rate = Column(Float, nullable=False)
+
+
+class EmissionData(Base):
+    __tablename__ = 'emission'
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+
+    # 温室气体排放字段
+    category_one = Column(Float, nullable=False)
+    category_two = Column(Float, nullable=False)
+    category_three = Column(Float, nullable=False)
+    category_four = Column(Float, nullable=False)
+    category_five = Column(Float, nullable=False)
+    category_six = Column(Float, nullable=False)
+    revenue = Column(Float, nullable=False)
+
+    # 计算指标
+    category_three_total = Column(Float, nullable=False)
+    total_emission = Column(Float, nullable=False)
+    emission_intensity = Column(Float, nullable=False)
+
+    # 废气排放字段
+    voc = Column(Float, nullable=False)
+    nmhc = Column(Float, nullable=False)
+    benzene = Column(Float, nullable=False)
+    particulate = Column(Float, nullable=False)
+    custom_emissions = Column(JSON, nullable=False)  # 存储为JSON数组
+    waste_gas_total = Column(Float, nullable=False)

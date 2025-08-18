@@ -12,7 +12,8 @@
 const menuItems = [
   { name: 'material', path: '/material', label: '物料' },
   { name: 'energy', path: '/energy', label: '能源' },
-  { name: 'water', path: '/water', label: '水资源' }
+  { name: 'water', path: '/water', label: '水资源' },
+  { name: 'emission', path: '/emission', label: '排放' },
 ]
 </script>
 

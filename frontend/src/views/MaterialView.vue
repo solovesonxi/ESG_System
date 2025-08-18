@@ -48,7 +48,7 @@
       </fieldset>
 
       <!-- 物料统计部分 -->
-      <fieldset>
+      <fieldset class="summary-fieldset">
         <legend>物料进出统计</legend>
         <div class="form-row">
           <!-- 进料部分 -->
@@ -182,7 +182,7 @@ const packagingIntensity=computed(() => {
 
 const paperIntensity=computed(() => {
   if (formData.revenue > 0) {
-    return (formData.paper / formData.revenue).toFixed(2)
+    return (formData.paper / formData.revenue)
   }
   return 0
 })
