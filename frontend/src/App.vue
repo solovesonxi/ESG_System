@@ -1,9 +1,9 @@
 <template>
   <div id="app">
-    <header>
-      <NavBar/>
-    </header>
-    <router-view/>
+    <NavBar/>
+    <main>
+      <router-view/>
+    </main>
   </div>
 </template>
 
@@ -21,7 +21,7 @@ import NavBar from '@/components/NavBar.vue'
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  line-height: 1.6;
+  line-height: 1;
   color: #333;
   background-color: #f5f7fa;
 }

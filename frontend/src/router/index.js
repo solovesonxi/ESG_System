@@ -1,16 +1,11 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import MaterialView from '@/views/MaterialView.vue'
 import EnergyView from "@/views/EnergyView.vue";
+import WaterView from "@/views/WaterView.vue";
 
-const routes = [{
-    path: '/', redirect: '/material'
-}, {
-    path: '/material',
-    name: 'material', component: MaterialView
-}, {
-    path: '/energy',
-    name: 'energy', component: EnergyView
-}, // 其他大类路由...
+const routes = [{path: '/', redirect: '/material'},
+    {path: '/material', component: MaterialView}, {path: '/energy', component: EnergyView},
+    {path: '/water', component: WaterView},
 ]
 
 const router = createRouter({
