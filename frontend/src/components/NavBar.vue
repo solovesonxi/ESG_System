@@ -14,6 +14,16 @@ const menuItems = [
   { name: 'energy', path: '/energy', label: '能源' },
   { name: 'water', path: '/water', label: '水资源' },
   { name: 'emission', path: '/emission', label: '排放' },
+  { name: 'waste', path: '/waste', label: '废弃物' },
+  { name: 'investment', path: '/investment', label: '资金投入' },
+  { name: 'employment', path: '/employment', label: '雇佣' },
+  { name: 'training', path: '/training', label: '教育与培训' },
+  { name: 'ohs', path: '/ohs', label: '职健与安全' },
+  { name: 'satisfaction', path: '/satisfaction', label: '员工满意度' },
+  { name: 'supply', path: '/supply', label: '供应链' },
+  { name: 'ip', path: '/ip', label: '知识产权' },
+  { name: 'responsibility', path: '/responsibility', label: '产品责任' },
+  { name: 'community', path: '/community', label: '社区参与' },
 ]
 </script>
 

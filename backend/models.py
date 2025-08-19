@@ -137,3 +137,128 @@ class EmissionData(Base):
     particulate = Column(Float, nullable=False)
     custom_emissions = Column(JSON, nullable=False)  # 存储为JSON数组
     waste_gas_total = Column(Float, nullable=False)
+
+
+class WasteData(Base):
+    __tablename__ = 'waste'
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, nullable=False)
+
+    factories = Column(JSON, nullable=False)  # 工厂名称列表（行）
+
+    # 月度矩阵
+    epe = Column(JSON, nullable=False)
+    plastic_paper = Column(JSON, nullable=False)
+    domestic_industrial = Column(JSON, nullable=False)
+    hazardous = Column(JSON, nullable=False)
+    wastewater = Column(JSON, nullable=False)
+
+    # 行合计
+    epe_totals = Column(JSON, nullable=False)
+    plastic_paper_totals = Column(JSON, nullable=False)
+    domestic_industrial_totals = Column(JSON, nullable=False)
+    hazardous_totals = Column(JSON, nullable=False)
+    wastewater_totals = Column(JSON, nullable=False)
+
+    # 推导指标
+    non_hazardous_totals = Column(JSON, nullable=False)
+    recyclable_totals = Column(JSON, nullable=False)
+    total_waste = Column(JSON, nullable=False)
+    disposal_required_totals = Column(JSON, nullable=False)
+    recycle_rate = Column(JSON, nullable=False)
+
+    # 经营与合规
+    revenue = Column(JSON, nullable=False)
+    protective_reuse_rate = Column(JSON, nullable=False)
+    exceed_events = Column(JSON, nullable=False)
+
+    # 总览
+    overall = Column(JSON, nullable=False)
+
+
+class InvestmentData(Base):
+    __tablename__ = 'investment'
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, nullable=False)
+    factories = Column(JSON, nullable=False)
+
+    env_invest = Column(JSON, nullable=False)
+    clean_tech_invest = Column(JSON, nullable=False)
+    climate_invest = Column(JSON, nullable=False)
+    green_income = Column(JSON, nullable=False)
+
+    env_invest_totals = Column(JSON, nullable=False)
+    clean_tech_invest_totals = Column(JSON, nullable=False)
+    climate_invest_totals = Column(JSON, nullable=False)
+    green_income_totals = Column(JSON, nullable=False)
+
+
+class EmploymentData(Base):
+    __tablename__ = 'employment'
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, nullable=False)
+    # 明细按工厂存成数组对象
+    records = Column(JSON, nullable=False)
+    # 汇总与比例
+    summary = Column(JSON, nullable=False)
+
+
+class TrainingData(Base):
+    __tablename__ = 'training'
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, nullable=False)
+    records = Column(JSON, nullable=False)
+    summary = Column(JSON, nullable=False)
+
+
+class OHSData(Base):
+    __tablename__ = 'ohs'
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, nullable=False)
+    factories = Column(JSON, nullable=False)
+
+    training_count = Column(JSON, nullable=False)
+    training_participants = Column(JSON, nullable=False)
+    training_hours = Column(JSON, nullable=False)
+    injury_count = Column(JSON, nullable=False)
+    incident_count = Column(JSON, nullable=False)
+    fatality_count = Column(JSON, nullable=False)
+    lost_workdays = Column(JSON, nullable=False)
+    safety_investment = Column(JSON, nullable=False)
+
+    training_count_totals = Column(JSON, nullable=False)
+    training_participants_totals = Column(JSON, nullable=False)
+    training_hours_totals = Column(JSON, nullable=False)
+    injury_count_totals = Column(JSON, nullable=False)
+    incident_count_totals = Column(JSON, nullable=False)
+    fatality_count_totals = Column(JSON, nullable=False)
+    lost_workdays_totals = Column(JSON, nullable=False)
+    safety_investment_totals = Column(JSON, nullable=False)
+
+    summary = Column(JSON, nullable=False)
+
+
+class SatisfactionData(Base):
+    __tablename__ = 'satisfaction'
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, nullable=False)
+    factories = Column(JSON, nullable=False)
+    satisfaction = Column(JSON, nullable=False)
+    row_averages = Column(JSON, nullable=False)
+    monthly_averages = Column(JSON, nullable=False)
+    overall_average = Column(Float, nullable=False)
+
+
+class SupplyData(Base):
+    __tablename__ = 'supply'
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, nullable=False)
+    records = Column(JSON, nullable=False)
+    summary = Column(JSON, nullable=False)
