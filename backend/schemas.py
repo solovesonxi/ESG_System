@@ -118,3 +118,172 @@ class EmissionSubmission(BaseModel):
     particulate: float
     customEmissions: List[CustomEmission]
     wasteGasTotal: float
+
+
+class WasteSubmission(BaseModel):
+    year: int
+    factories: List[str]
+
+    # 月度矩阵 [工厂][12个月]
+    epe: List[List[float]]
+    plasticPaper: List[List[float]]
+    domesticIndustrial: List[List[float]]
+    hazardous: List[List[float]]
+    wastewater: List[List[float]]
+
+    # 各行合计
+    epeTotals: List[float]
+    plasticPaperTotals: List[float]
+    domesticIndustrialTotals: List[float]
+    hazardousTotals: List[float]
+    wastewaterTotals: List[float]
+
+    # 推导指标
+    nonHazardousTotals: List[float]
+    recyclableTotals: List[float]
+    totalWaste: List[float]
+    disposalRequiredTotals: List[float]
+    recycleRate: List[float]
+
+    # 经营与合规
+    revenue: List[float]
+    protectiveReuseRate: List[float]
+    exceedEvents: List[int]
+
+    # 总览
+    overall: dict
+
+
+class InvestmentSubmission(BaseModel):
+    year: int
+    factories: List[str]
+
+    envInvest: List[List[float]]
+    cleanTechInvest: List[List[float]]
+    climateInvest: List[List[float]]
+    greenIncome: List[List[float]]
+
+    envInvestTotals: List[float]
+    cleanTechInvestTotals: List[float]
+    climateInvestTotals: List[float]
+    greenIncomeTotals: List[float]
+
+
+class EmploymentRecord(BaseModel):
+    factory: str
+    fullTime: int
+    partTime: int
+    male: int
+    female: int
+    management: int
+    managementFemale: int
+    middle: int
+    general: int
+    mainland: int
+    overseas: int
+    eduPhd: int
+    eduMaster: int
+    eduBachelor: int
+    eduJunior: int
+    avgSocialFund: float
+    incSocialFund: float
+    age18_30: int
+    age31_45: int
+    age46_60: int
+    newHires: int
+    quitMale: int
+    quitFemale: int
+    quitMainland: int
+    quitOverseas: int
+    quit18_30: int
+    quit31_45: int
+    quit46_60: int
+    quitManagement: int
+    quitMiddle: int
+    quitGeneral: int
+    totalEmployees: int
+    quitTotal: int
+
+
+class EmploymentSubmission(BaseModel):
+    year: int
+    records: List[EmploymentRecord]
+    summary: dict
+
+
+class TrainingRecord(BaseModel):
+    factory: str
+    total: int
+    trained: int
+    male: int
+    female: int
+    mgmt: int
+    middle: int
+    general: int
+    hoursTotal: float
+    hoursMale: float
+    hoursFemale: float
+    hoursMgmt: float
+    hoursMiddle: float
+    hoursGeneral: float
+
+
+class TrainingSubmission(BaseModel):
+    year: int
+    records: List[TrainingRecord]
+    summary: dict
+
+
+class OHSSubmission(BaseModel):
+    year: int
+    factories: List[str]
+    trainingCount: List[List[float]]
+    trainingParticipants: List[List[float]]
+    trainingHours: List[List[float]]
+    injuryCount: List[List[float]]
+    incidentCount: List[List[float]]
+    fatalityCount: List[List[float]]
+    lostWorkdays: List[List[float]]
+    safetyInvestment: List[List[float]]
+    trainingCountTotals: List[float]
+    trainingParticipantsTotals: List[float]
+    trainingHoursTotals: List[float]
+    injuryCountTotals: List[float]
+    incidentCountTotals: List[float]
+    fatalityCountTotals: List[float]
+    lostWorkdaysTotals: List[float]
+    safetyInvestmentTotals: List[float]
+    summary: dict
+
+
+class SatisfactionSubmission(BaseModel):
+    year: int
+    factories: List[str]
+    satisfaction: List[List[float]]
+    rowAverages: List[float]
+    monthlyAverages: List[float]
+    overallAverage: float
+
+
+class SupplyRecord(BaseModel):
+    factory: str
+    east: int
+    south: int
+    other: int
+    envScreened: int
+    socScreened: int
+    localAmount: float
+    totalAmount: float
+    envPenaltyCount: int
+    envPenaltyAmount: float
+    cyberIncidents: int
+    totalSuppliers: int
+    envRatio: float
+    socRatio: float
+    localPurchaseRatio: float
+
+
+class SupplySubmission(BaseModel):
+    year: int
+    records: List[SupplyRecord]
+    summary: dict
