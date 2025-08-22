@@ -111,6 +111,7 @@ input {
     border: 1px solid #ddd;
     border-radius: 6px;
     background-color: white;
+    color: #333;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
@@ -150,6 +151,8 @@ input {
     padding: 10px 15px;
     cursor: pointer;
     transition: background-color 0.2s;
+    color: #333;
+    font-size: 15px;
 
     &:hover {
         background-color: #f0f8ff;
@@ -159,6 +162,7 @@ input {
 .selected-option {
     background-color: #e1f0fa;
     font-weight: bold;
+    color: #1a5276;
 }
 
 .monthly-grid {
