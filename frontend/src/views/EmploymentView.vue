@@ -1,6 +1,7 @@
 <template>
   <div class="shared-form">
     <form @submit.prevent="submitEmployment">
+      <!-- 基础信息部分保持不变 -->
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -11,11 +12,18 @@
                 {{ factory }}
                 <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
               </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown" :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div v-for="f in factories" :key="f" class="option" :class="{ 'selected-option': f === factory }" @click="selectionStore.selectFactory(f)">{{ f }}</div>
+              <div class="options" v-show="selectionStore.showFactoryDropdown"
+                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
+                <div v-for="f in factories" :key="f"
+                     class="option"
+                     :class="{ 'selected-option': f === factory }"
+                     @click="selectionStore.selectFactory(f)">
+                  {{ f }}
+                </div>
               </div>
             </div>
           </div>
+
           <div class="form-group">
             <label>统计年份</label>
             <div class="custom-select">
@@ -24,20 +32,25 @@
                 <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
               </div>
               <div class="options" v-show="selectionStore.showYearDropdown">
-                <div v-for="y in years" :key="y" class="option" :class="{ 'selected-option': y === year }" @click="selectionStore.selectYear(y)">{{ y }}年</div>
+                <div v-for="y in years" :key="y"
+                     class="option"
+                     :class="{ 'selected-option': y === year }"
+                     @click="selectionStore.selectYear(y)">
+                  {{ y }}年
+                </div>
               </div>
             </div>
           </div>
         </div>
       </fieldset>
 
+      <!-- 雇佣数据表格 - 已去除工厂列 -->
       <fieldset>
-        <legend>{{ year }}年员工雇佣统计 — 总部统计</legend>
+        <legend>{{ year }}年员工雇佣统计</legend>
         <div class="table-wrapper">
           <table class="employment-table">
             <thead>
             <tr>
-              <th>工厂</th>
               <th>员工总数</th>
               <th>全职</th>
               <th>兼职</th>
@@ -84,104 +97,68 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="(row, i) in rows" :key="`emp-${i}`">
-              <td class="factory-cell">{{ factories[i] }}</td>
-              <td class="total-cell">{{ totalEmployees(row) }}</td>
-              <td><input type="number" min="0" step="1" v-model.number="row.fullTime"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.partTime"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.male"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.female"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.management"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.managementFemale"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.middle"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.general"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.mainland"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.overseas"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.eduPhd"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.eduMaster"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.eduBachelor"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.eduJunior"></td>
-              <td><input type="number" min="0" step="0.01" v-model.number="row.avgSocialFund"></td>
-              <td><input type="number" min="0" step="0.01" v-model.number="row.incSocialFund"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.age18_30"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.age31_45"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.age46_60"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.newHires"></td>
-              <td class="total-cell">{{ quitTotal(row) }}</td>
-              <td><input type="number" min="0" step="1" v-model.number="row.quitMale"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.quitFemale"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.quitMainland"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.quitOverseas"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.quit18_30"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.quit31_45"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.quit46_60"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.quitManagement"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.quitMiddle"></td>
-              <td><input type="number" min="0" step="1" v-model.number="row.quitGeneral"></td>
-              <td class="total-cell">{{ rate(quitTotal(row), totalEmployees(row)) }}</td>
-              <td class="total-cell">{{ rate(row.quitMale, row.male) }}</td>
-              <td class="total-cell">{{ rate(row.quitFemale, row.female) }}</td>
-              <td class="total-cell">{{ rate(row.quitMainland, row.mainland) }}</td>
-              <td class="total-cell">{{ rate(row.quitOverseas, row.overseas) }}</td>
-              <td class="total-cell">{{ rate(row.quit18_30, row.age18_30) }}</td>
-              <td class="total-cell">{{ rate(row.quit31_45, row.age31_45) }}</td>
-              <td class="total-cell">{{ rate(row.quit46_60, row.age46_60) }}</td>
-              <td class="total-cell">{{ rate(row.quitManagement, row.management) }}</td>
-              <td class="total-cell">{{ rate(row.quitMiddle, row.middle) }}</td>
-              <td class="total-cell">{{ rate(row.quitGeneral, row.general) }}</td>
-            </tr>
-            <tr class="grand-total">
-              <td>合计</td>
-              <td>{{ sumRows(totalEmployees) }}</td>
-              <td>{{ sumField('fullTime') }}</td>
-              <td>{{ sumField('partTime') }}</td>
-              <td>{{ sumField('male') }}</td>
-              <td>{{ sumField('female') }}</td>
-              <td>{{ sumField('management') }}</td>
-              <td>{{ sumField('managementFemale') }}</td>
-              <td>{{ sumField('middle') }}</td>
-              <td>{{ sumField('general') }}</td>
-              <td>{{ sumField('mainland') }}</td>
-              <td>{{ sumField('overseas') }}</td>
-              <td>{{ sumField('eduPhd') }}</td>
-              <td>{{ sumField('eduMaster') }}</td>
-              <td>{{ sumField('eduBachelor') }}</td>
-              <td>{{ sumField('eduJunior') }}</td>
-              <td>-</td>
-              <td>-</td>
-              <td>{{ sumField('age18_30') }}</td>
-              <td>{{ sumField('age31_45') }}</td>
-              <td>{{ sumField('age46_60') }}</td>
-              <td>{{ sumField('newHires') }}</td>
-              <td>{{ sumRows(quitTotal) }}</td>
-              <td>{{ sumField('quitMale') }}</td>
-              <td>{{ sumField('quitFemale') }}</td>
-              <td>{{ sumField('quitMainland') }}</td>
-              <td>{{ sumField('quitOverseas') }}</td>
-              <td>{{ sumField('quit18_30') }}</td>
-              <td>{{ sumField('quit31_45') }}</td>
-              <td>{{ sumField('quit46_60') }}</td>
-              <td>{{ sumField('quitManagement') }}</td>
-              <td>{{ sumField('quitMiddle') }}</td>
-              <td>{{ sumField('quitGeneral') }}</td>
-              <td>{{ rate(sumRows(quitTotal), sumRows(totalEmployees)) }}</td>
-              <td>{{ rate(sumField('quitMale'), sumField('male')) }}</td>
-              <td>{{ rate(sumField('quitFemale'), sumField('female')) }}</td>
-              <td>{{ rate(sumField('quitMainland'), sumField('mainland')) }}</td>
-              <td>{{ rate(sumField('quitOverseas'), sumField('overseas')) }}</td>
-              <td>{{ rate(sumField('quit18_30'), sumField('age18_30')) }}</td>
-              <td>{{ rate(sumField('quit31_45'), sumField('age31_45')) }}</td>
-              <td>{{ rate(sumField('quit46_60'), sumField('age46_60')) }}</td>
-              <td>{{ rate(sumField('quitManagement'), sumField('management')) }}</td>
-              <td>{{ rate(sumField('quitMiddle'), sumField('middle')) }}</td>
-              <td>{{ rate(sumField('quitGeneral'), sumField('general')) }}</td>
+            <tr>
+              <!-- 计算字段 -->
+              <td class="total-cell">{{ totalEmployees }}</td>
+
+              <!-- 输入字段 -->
+              <td><input type="number" min="0" step="1" v-model.number="formData.fullTime"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.partTime"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.male"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.female"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.management"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.managementFemale"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.middle"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.general"></td>
+              <td><input type="number" min=" 0" step="1" v-model.number="formData.mainland"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.overseas"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.eduPhd"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.eduMaster"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.eduBachelor"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.eduJunior"></td>
+              <td><input type="number" min="0" step="0.01" v-model.number="formData.avgSocialFund"></td>
+              <td><input type="number" min="0" step="0.01" v-model.number="formData.incSocialFund"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.age18_30"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.age31_45"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.age46_60"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.newHires"></td>
+
+              <!-- 计算字段 -->
+              <td class="total-cell">{{ quitTotal }}</td>
+
+              <!-- 输入字段 -->
+              <td><input type="number" min="0" step="1" v-model.number="formData.quitMale"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.quitFemale"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.quitMainland"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.quitOverseas"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.quit18_30"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.quit31_45"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.quit46_60"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.quitManagement"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.quitMiddle"></td>
+              <td><input type="number" min="0" step="1" v-model.number="formData.quitGeneral"></td>
+
+              <!-- 流失率计算属性 -->
+              <td class="total-cell">{{ turnoverRate }}%</td>
+              <td class="total-cell">{{ maleTurnoverRate }}%</td>
+              <td class="total-cell">{{ femaleTurnoverRate }}%</td>
+              <td class="total-cell">{{ mainlandTurnoverRate }}%</td>
+              <td class="total-cell">{{ overseasTurnoverRate }}%</td>
+              <td class="total-cell">{{ age18_30TurnoverRate }}%</td>
+              <td class="total-cell">{{ age31_45TurnoverRate }}%</td>
+              <td class="total-cell">{{ age46_60TurnoverRate }}%</td>
+              <td class="total-cell">{{ managementTurnoverRate }}%</td>
+              <td class="total-cell">{{ middleTurnoverRate }}%</td>
+              <td class="total-cell">{{ generalTurnoverRate }}%</td>
             </tr>
             </tbody>
           </table>
         </div>
       </fieldset>
 
-      <button type="submit" :disabled="isSubmitting">{{ isSubmitting ? '提交中...' : '提交雇佣数据' }}</button>
+      <button type="submit" :disabled="isSubmitting">
+        {{ isSubmitting ? '提交中...' : '提交雇佣数据' }}
+      </button>
     </form>
   </div>
 </template>
@@ -192,107 +169,202 @@ import axios from 'axios'
 import {useSelectionStore} from '@/stores/selectionStore'
 
 const selectionStore = useSelectionStore()
-const factory = computed(()=> selectionStore.selectedFactory)
-const factories = computed(()=> selectionStore.factories)
-const year = computed(()=> selectionStore.selectedYear)
-const years = computed(()=> selectionStore.years)
+const factory = computed(() => selectionStore.selectedFactory)
+const factories = computed(() => selectionStore.factories)
+const year = computed(() => selectionStore.selectedYear)
+const years = computed(() => selectionStore.years)
 const isSubmitting = ref(false)
 
-onMounted(()=>{
+onMounted(() => {
   selectionStore.initYears()
   document.addEventListener('click', selectionStore.handleClickOutside)
 })
-onBeforeUnmount(()=>{
+
+onBeforeUnmount(() => {
   document.removeEventListener('click', selectionStore.handleClickOutside)
 })
 
-function makeRow(){
-  return reactive({
-    fullTime: 0, partTime: 0,
-    male: 0, female: 0,
-    management: 0, managementFemale: 0, middle: 0, general: 0,
-    mainland: 0, overseas: 0,
-    eduPhd: 0, eduMaster: 0, eduBachelor: 0, eduJunior: 0,
-    avgSocialFund: 0, incSocialFund: 0,
-    age18_30: 0, age31_45: 0, age46_60: 0,
-    newHires: 0,
-    quitMale: 0, quitFemale: 0,
-    quitMainland: 0, quitOverseas: 0,
-    quit18_30: 0, quit31_45: 0, quit46_60: 0,
-    quitManagement: 0, quitMiddle: 0, quitGeneral: 0,
-  })
+// 表单数据模型（所有字段独立定义）
+const formData = reactive({
+  // 员工构成数据
+  fullTime: 0,
+  partTime: 0,
+  male: 0,
+  female: 0,
+  management: 0,
+  managementFemale: 0,
+  middle: 0,
+  general: 0,
+  mainland: 0,
+  overseas: 0,
+  eduPhd: 0,
+  eduMaster: 0,
+  eduBachelor: 0,
+  eduJunior: 0,
+
+  // 五险一金数据
+  avgSocialFund: 0,
+  incSocialFund: 0,
+
+  // 年龄分布
+  age18_30: 0,
+  age31_45: 0,
+  age46_60: 0,
+
+  // 新员工与离职数据
+  newHires: 0,
+  quitMale: 0,
+  quitFemale: 0,
+  quitMainland: 0,
+  quitOverseas: 0,
+  quit18_30: 0,
+  quit31_45: 0,
+  quit46_60: 0,
+  quitManagement: 0,
+  quitMiddle: 0,
+  quitGeneral: 0
+})
+
+// 计算属性
+const totalEmployees = computed(() => formData.fullTime + formData.partTime)
+const quitTotal = computed(() => formData.quitMale + formData.quitFemale)
+
+// 流失率计算函数
+const calculateRate = (numerator, denominator) => {
+  if (denominator <= 0) return 0
+  return ((numerator / denominator) * 100).toFixed(2)
 }
 
-const rows = reactive(Array.from({length: factories.value.length}, ()=> makeRow()))
+// 15种流失率计算属性
+const turnoverRate = computed(() => calculateRate(quitTotal.value, totalEmployees.value))
+const maleTurnoverRate = computed(() => calculateRate(formData.quitMale, formData.male))
+const femaleTurnoverRate = computed(() => calculateRate(formData.quitFemale, formData.female))
+const mainlandTurnoverRate = computed(() => calculateRate(formData.quitMainland, formData.mainland))
+const overseasTurnoverRate = computed(() => calculateRate(formData.quitOverseas, formData.overseas))
+const age18_30TurnoverRate = computed(() => calculateRate(formData.quit18_30, formData.age18_30))
+const age31_45TurnoverRate = computed(() => calculateRate(formData.quit31_45, formData.age31_45))
+const age46_60TurnoverRate = computed(() => calculateRate(formData.quit46_60, formData.age46_60))
+const managementTurnoverRate = computed(() => calculateRate(formData.quitManagement, formData.management))
+const middleTurnoverRate = computed(() => calculateRate(formData.quitMiddle, formData.middle))
+const generalTurnoverRate = computed(() => calculateRate(formData.quitGeneral, formData.general))
 
-const totalEmployees = (row)=> Number(row.fullTime||0) + Number(row.partTime||0)
-const quitTotal = (row)=> Number(row.quitMale||0) + Number(row.quitFemale||0)
-const rate = (num, den)=> {
-  num = Number(num||0); den = Number(den||0)
-  if(den<=0||num<0) return 0
-  return ((num/den)*100).toFixed(2)
-}
+// 提交雇佣数据
+const submitEmployment = async () => {
+  if (!factory.value) {
+    alert('请选择工厂名称')
+    return
+  }
 
-const sumField = (key)=> rows.reduce((s,r)=> s + Number(r[key]||0), 0)
-const sumRows = (fn)=> rows.reduce((s,r)=> s + Number(fn(r)||0), 0)
-
-async function submitEmployment(){
   isSubmitting.value = true
-  try{
+  try {
+    // 准备提交数据 - 所有字段独立
     const payload = {
+      factory: factory.value,
       year: Number(year.value),
-      records: rows.map((r, idx)=> ({ factory: factories.value[idx], ...r, totalEmployees: totalEmployees(r), quitTotal: quitTotal(r) })),
-      summary: {
-        totals: {
-          totalEmployees: sumRows(totalEmployees),
-          fullTime: sumField('fullTime'), partTime: sumField('partTime'),
-          male: sumField('male'), female: sumField('female'),
-          management: sumField('management'), managementFemale: sumField('managementFemale'), middle: sumField('middle'), general: sumField('general'),
-          mainland: sumField('mainland'), overseas: sumField('overseas'),
-          eduPhd: sumField('eduPhd'), eduMaster: sumField('eduMaster'), eduBachelor: sumField('eduBachelor'), eduJunior: sumField('eduJunior'),
-          age18_30: sumField('age18_30'), age31_45: sumField('age31_45'), age46_60: sumField('age46_60'),
-          newHires: sumField('newHires'), quitTotal: sumRows(quitTotal),
-          quitMale: sumField('quitMale'), quitFemale: sumField('quitFemale'),
-          quitMainland: sumField('quitMainland'), quitOverseas: sumField('quitOverseas'),
-          quit18_30: sumField('quit18_30'), quit31_45: sumField('quit31_45'), quit46_60: sumField('quit46_60'),
-          quitManagement: sumField('quitManagement'), quitMiddle: sumField('quitMiddle'), quitGeneral: sumField('quitGeneral'),
-        },
-        rates: {
-          turnover: rate(sumRows(quitTotal), sumRows(totalEmployees)),
-          male: rate(sumField('quitMale'), sumField('male')),
-          female: rate(sumField('quitFemale'), sumField('female')),
-          mainland: rate(sumField('quitMainland'), sumField('mainland')),
-          overseas: rate(sumField('quitOverseas'), sumField('overseas')),
-          age18_30: rate(sumField('quit18_30'), sumField('age18_30')),
-          age31_45: rate(sumField('quit31_45'), sumField('age31_45')),
-          age46_60: rate(sumField('quit46_60'), sumField('age46_60')),
-          management: rate(sumField('quitManagement'), sumField('management')),
-          middle: rate(sumField('quitMiddle'), sumField('middle')),
-          general: rate(sumField('quitGeneral'), sumField('general')),
-        }
-      }
+
+      // 员工构成数据
+      fullTime: formData.fullTime,
+      partTime: formData.partTime,
+      male: formData.male,
+      female: formData.female,
+      management: formData.management,
+      managementFemale: formData.managementFemale,
+      middle: formData.middle,
+      general: formData.general,
+      mainland: formData.mainland,
+      overseas: formData.overseas,
+      eduPhd: formData.eduPhd,
+      eduMaster: formData.eduMaster,
+      eduBachelor: formData.eduBachelor,
+      eduJunior: formData.eduJunior,
+
+      // 五险一金数据
+      avgSocialFund: formData.avgSocialFund,
+      incSocialFund: formData.incSocialFund,
+
+      // 年龄分布
+      age18_30: formData.age18_30,
+      age31_45: formData.age31_45,
+      age46_60: formData.age46_60,
+
+      // 新员工与离职数据
+      newHires: formData.newHires,
+      quitMale: formData.quitMale,
+      quitFemale: formData.quitFemale,
+      quitMainland: formData.quitMainland,
+      quitOverseas: formData.quitOverseas,
+      quit18_30: formData.quit18_30,
+      quit31_45: formData.quit31_45,
+      quit46_60: formData.quit46_60,
+      quitManagement: formData.quitManagement,
+      quitMiddle: formData.quitMiddle,
+      quitGeneral: formData.quitGeneral,
+
+      // 计算指标
+      totalEmployees: totalEmployees.value,
+      quitTotal: quitTotal.value,
+      turnoverRate: turnoverRate.value,
+      maleTurnoverRate: maleTurnoverRate.value,
+      femaleTurnoverRate: femaleTurnoverRate.value,
+      mainlandTurnoverRate: mainlandTurnoverRate.value,
+      overseasTurnoverRate: overseasTurnoverRate.value,
+      age18_30TurnoverRate: age18_30TurnoverRate.value,
+      age31_45TurnoverRate: age31_45TurnoverRate.value,
+      age46_60TurnoverRate: age46_60TurnoverRate.value,
+      managementTurnoverRate: managementTurnoverRate.value,
+      middleTurnoverRate: middleTurnoverRate.value,
+      generalTurnoverRate: generalTurnoverRate.value
     }
-    const resp = await axios.post('http://localhost:8000/submit/employment', payload)
-    if(resp.data.status==='success') alert('雇佣数据提交成功!')
-  }catch(e){
-    console.error(e)
-    alert(`提交失败: ${e.response?.data?.detail || e.message}`)
-  }finally{
+
+    const response = await axios.post('http://localhost:8000/submit/employment', payload)
+
+    if (response.data.status === 'success') {
+      alert('雇佣数据提交成功!')
+    }
+  } catch (error) {
+    console.error('提交失败:', error)
+    alert(`提交失败: ${error.response?.data?.detail || error.message}`)
+  } finally {
     isSubmitting.value = false
   }
 }
 </script>
 
 <style scoped>
-.table-wrapper{overflow:auto}
-.employment-table{width:100%; border-collapse:collapse}
-.employment-table th,.employment-table td{border:1px solid #ddd; padding:6px; text-align:center}
-.employment-table thead th{position:sticky; top:0; background:#f7f7f7; z-index:1}
-.factory-cell{white-space:nowrap; text-align:left}
-.total-cell{font-weight:600}
-.grand-total td{font-weight:700; background:#fafafa}
-.employment-table input{width:90px}
-@media (max-width: 768px){.employment-table input{width:70px}}
+/* 样式保持不变 */
+.table-wrapper {
+  overflow: auto
+}
+
+.employment-table {
+  width: 100%;
+  border-collapse: collapse
+}
+
+.employment-table th, .employment-table td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  text-align: center
+}
+
+.employment-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f7f7f7;
+  z-index: 1
+}
+
+.total-cell {
+  font-weight: 600
+}
+
+.employment-table input {
+  width: 90px
+}
+
+@media (max-width: 768px) {
+  .employment-table input {
+    width: 70px
+  }
+}
 </style>
-
-

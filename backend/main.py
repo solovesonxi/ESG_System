@@ -4,9 +4,11 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
 
-from schemas import MaterialSubmission, EnergySubmission, WaterSubmission, EmissionSubmission, WasteSubmission, InvestmentSubmission, EmploymentSubmission, TrainingSubmission, OHSSubmission, SatisfactionSubmission, SupplySubmission
 from database import get_db, engine
-from models import EnergyData, Base, MaterialData, WaterData, EmissionData, WasteData, InvestmentData, EmploymentData, TrainingData, OHSData, SatisfactionData, SupplyData
+from models import EnergyData, Base, MaterialData, WaterData, EmissionData, EmploymentData, TrainingData, \
+    SatisfactionData, SupplyData, WasteData, InvestmentData, OHSData
+from schemas import MaterialSubmission, EnergySubmission, WaterSubmission, EmissionSubmission, EmploymentSubmission, \
+    TrainingSubmission, SatisfactionSubmission, SupplySubmission, WasteSubmission, InvestmentSubmission, OHSSubmission
 
 # 创建数据库表
 Base.metadata.create_all(bind=engine)
@@ -119,7 +121,7 @@ async def submit_supply(data: SupplySubmission, db: Session = Depends(get_db)):
         rec = SupplyData(year=data.year, records=[r.model_dump() for r in data.records], summary=data.summary)
         db.add(rec)
         db.commit()
-        return {"status":"success","id": rec.id}
+        return {"status": "success", "id": rec.id}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
@@ -128,135 +130,132 @@ async def submit_supply(data: SupplySubmission, db: Session = Depends(get_db)):
 @app.post("/submit/satisfaction")
 async def submit_satisfaction(data: SatisfactionSubmission, db: Session = Depends(get_db)):
     try:
-        rec = SatisfactionData(
-            year=data.year,
-            factories=data.factories,
-            satisfaction=data.satisfaction,
-            row_averages=data.rowAverages,
-            monthly_averages=data.monthlyAverages,
-            overall_average=data.overallAverage
-        )
+        rec = SatisfactionData(year=data.year, factories=data.factories, satisfaction=data.satisfaction,
+                               row_averages=data.rowAverages, monthly_averages=data.monthlyAverages,
+                               overall_average=data.overallAverage)
         db.add(rec)
         db.commit()
-        return {"status":"success","id": rec.id}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
-
-
-@app.post("/submit/ohs")
-async def submit_ohs(data: OHSSubmission, db: Session = Depends(get_db)):
-    try:
-        rec = OHSData(
-            year=data.year,
-            factories=data.factories,
-            training_count=data.trainingCount,
-            training_participants=data.trainingParticipants,
-            training_hours=data.trainingHours,
-            injury_count=data.injuryCount,
-            incident_count=data.incidentCount,
-            fatality_count=data.fatalityCount,
-            lost_workdays=data.lostWorkdays,
-            safety_investment=data.safetyInvestment,
-            training_count_totals=data.trainingCountTotals,
-            training_participants_totals=data.trainingParticipantsTotals,
-            training_hours_totals=data.trainingHoursTotals,
-            injury_count_totals=data.injuryCountTotals,
-            incident_count_totals=data.incidentCountTotals,
-            fatality_count_totals=data.fatalityCountTotals,
-            lost_workdays_totals=data.lostWorkdaysTotals,
-            safety_investment_totals=data.safetyInvestmentTotals,
-            summary=data.summary
-        )
-        db.add(rec)
-        db.commit()
-        return {"status":"success","id": rec.id}
+        return {"status": "success", "id": rec.id}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
 
 
 @app.post("/submit/training")
-async def submit_training(data: TrainingSubmission, db: Session = Depends(get_db)):
+async def submit_training_data(data: TrainingSubmission, db: Session = Depends(get_db)):
     try:
-        rec = TrainingData(year=data.year, records=[r.model_dump() for r in data.records], summary=data.summary)
-        db.add(rec)
+        record = TrainingData(factory=data.factory, year=data.year, total=data.total, trained=data.trained,
+                              male=data.male, female=data.female, mgmt=data.mgmt, middle=data.middle,
+                              general=data.general, hours_total=data.hoursTotal, hours_male=data.hoursMale,
+                              hours_female=data.hoursFemale, hours_mgmt=data.hoursMgmt, hours_middle=data.hoursMiddle,
+                              hours_general=data.hoursGeneral, coverage_rate=data.coverageRate, male_rate=data.maleRate,
+                              female_rate=data.femaleRate, mgmt_rate=data.mgmtRate, middle_rate=data.middleRate,
+                              general_rate=data.generalRate)
+        db.add(record)
         db.commit()
-        return {"status": "success", "id": rec.id}
+        return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"教育与培训数据提交失败: {str(e)}")
+
+
+@app.post("/submit/ohs")
+async def submit_ohs_data(data: OHSSubmission, db: Session = Depends(get_db)):
+    try:
+        # 创建记录（前端camelCase→后端snake_case）
+        record = OHSData(factory=data.factory, year=data.year, training_count=data.trainingCount,
+            training_participants=data.trainingParticipants, training_hours=data.trainingHours,
+            injury_count=data.injuryCount, incident_count=data.incidentCount, fatality_count=data.fatalityCount,
+            lost_workdays=data.lostWorkdays, safety_investment=data.safetyInvestment,
+            training_count_total=data.trainingCountTotal, training_participants_total=data.trainingParticipantsTotal,
+            training_hours_total=data.trainingHoursTotal, injury_count_total=data.injuryCountTotal,
+            incident_count_total=data.incidentCountTotal, fatality_count_total=data.fatalityCountTotal,
+            lost_workdays_total=data.lostWorkdaysTotal, safety_investment_total=data.safetyInvestmentTotal,
+            safety_managers=data.safetyManagers, medical_checks=data.medicalChecks, coverage_rate=data.coverageRate,
+            emergency_drills=data.emergencyDrills, hazards_found=data.hazardsFound,
+            occupational_checks=data.occupationalChecks)
+        db.add(record)
+        db.commit()
+        return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
-
-
-@app.get("/")
-async def health_check():
-    return {"status": "running", "timestamp": datetime.now(), "service": "ESG Energy API"}
 
 
 @app.post("/submit/waste")
 async def submit_waste_data(data: WasteSubmission, db: Session = Depends(get_db)):
     try:
-        record = WasteData(
-            year=data.year,
-            factories=data.factories,
-            epe=data.epe,
-            plastic_paper=data.plasticPaper,
-            domestic_industrial=data.domesticIndustrial,
-            hazardous=data.hazardous,
-            wastewater=data.wastewater,
-            epe_totals=data.epeTotals,
-            plastic_paper_totals=data.plasticPaperTotals,
-            domestic_industrial_totals=data.domesticIndustrialTotals,
-            hazardous_totals=data.hazardousTotals,
-            wastewater_totals=data.wastewaterTotals,
-            non_hazardous_totals=data.nonHazardousTotals,
-            recyclable_totals=data.recyclableTotals,
-            total_waste=data.totalWaste,
-            disposal_required_totals=data.disposalRequiredTotals,
-            recycle_rate=data.recycleRate,
-            revenue=data.revenue,
-            protective_reuse_rate=data.protectiveReuseRate,
-            exceed_events=data.exceedEvents,
-            overall=data.overall
-        )
+        # 创建数据库记录（字段名映射）
+        record = WasteData(factory=data.factory, year=data.year, epe=data.epe, plastic_paper=data.plasticPaper,
+                           domestic_industrial=data.domesticIndustrial, hazardous=data.hazardous,
+                           wastewater=data.wastewater, epe_total=data.epeTotal,
+                           plastic_paper_total=data.plasticPaperTotal,
+                           domestic_industrial_total=data.domesticIndustrialTotal, hazardous_total=data.hazardousTotal,
+                           wastewater_total=data.wastewaterTotal, non_hazardous_total=data.nonHazardousTotal,
+                           recyclable_total=data.recyclableTotal, total_waste=data.totalWaste,
+                           disposal_required_total=data.disposalRequiredTotal, recycle_rate=data.recycleRate,
+                           revenue=data.revenue, protective_reuse_rate=data.protectiveReuseRate,
+                           exceed_events=data.exceedEvents, hazardous_intensity=data.hazardousIntensity,
+                           wastewater_intensity=data.wastewaterIntensity)
         db.add(record)
         db.commit()
-        return {"status": "success", "id": record.id}
+        return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"废弃物数据提交失败: {str(e)}")
 
 
 @app.post("/submit/investment")
 async def submit_investment_data(data: InvestmentSubmission, db: Session = Depends(get_db)):
     try:
-        rec = InvestmentData(
-            year=data.year,
-            factories=data.factories,
-            env_invest=data.envInvest,
-            clean_tech_invest=data.cleanTechInvest,
-            climate_invest=data.climateInvest,
-            green_income=data.greenIncome,
-            env_invest_totals=data.envInvestTotals,
-            clean_tech_invest_totals=data.cleanTechInvestTotals,
-            climate_invest_totals=data.climateInvestTotals,
-            green_income_totals=data.greenIncomeTotals
-        )
-        db.add(rec)
+        # 创建数据库记录（字段名映射）
+        record = InvestmentData(factory=data.factory, year=data.year, env_invest=data.envInvest,
+                                clean_tech_invest=data.cleanTechInvest, climate_invest=data.climateInvest,
+                                green_income=data.greenIncome, env_invest_total=data.envInvestTotal,
+                                clean_tech_invest_total=data.cleanTechInvestTotal,
+                                climate_invest_total=data.climateInvestTotal, green_income_total=data.greenIncomeTotal,
+                                total_investment=data.totalInvestment, green_income_ratio=data.greenIncomeRatio)
+        db.add(record)
         db.commit()
-        return {"status":"success","id": rec.id}
+        return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"资金投入数据提交失败: {str(e)}")
 
 
 @app.post("/submit/employment")
-async def submit_employment(data: EmploymentSubmission, db: Session = Depends(get_db)):
+async def submit_employment_data(data: EmploymentSubmission, db: Session = Depends(get_db)):
     try:
-        rec = EmploymentData(year=data.year, records=[r.model_dump() for r in data.records], summary=data.summary)
-        db.add(rec)
+        record = EmploymentData(factory=data.factory, year=data.year, full_time=data.fullTime, part_time=data.partTime,
+                                male=data.male, female=data.female, management=data.management,
+                                management_female=data.managementFemale, middle=data.middle, general=data.general,
+                                mainland=data.mainland, overseas=data.overseas, edu_phd=data.eduPhd,
+                                edu_master=data.eduMaster, edu_bachelor=data.eduBachelor, edu_junior=data.eduJunior,
+                                avg_social_fund=data.avgSocialFund, inc_social_fund=data.incSocialFund,
+                                age18_30=data.age18_30, age31_45=data.age31_45, age46_60=data.age46_60,
+                                new_hires=data.newHires, quit_male=data.quitMale, quit_female=data.quitFemale,
+                                quit_mainland=data.quitMainland, quit_overseas=data.quitOverseas,
+                                quit18_30=data.quit18_30, quit31_45=data.quit31_45, quit46_60=data.quit46_60,
+                                quit_management=data.quitManagement, quit_middle=data.quitMiddle,
+                                quit_general=data.quitGeneral, total_employees=data.totalEmployees,
+                                quit_total=data.quitTotal, turnover_rate=data.turnoverRate,
+                                male_turnover_rate=data.maleTurnoverRate, female_turnover_rate=data.femaleTurnoverRate,
+                                mainland_turnover_rate=data.mainlandTurnoverRate,
+                                overseas_turnover_rate=data.overseasTurnoverRate,
+                                age18_30_turnover_rate=data.age18_30TurnoverRate,
+                                age31_45_turnover_rate=data.age31_45TurnoverRate,
+                                age46_60_turnover_rate=data.age46_60TurnoverRate,
+                                management_turnover_rate=data.managementTurnoverRate,
+                                middle_turnover_rate=data.middleTurnoverRate,
+                                general_turnover_rate=data.generalTurnoverRate)
+        db.add(record)
         db.commit()
-        return {"status": "success", "id": rec.id}
+        return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"雇佣数据提交失败: {str(e)}")
+
+
+@app.get("/")
+async def health_check():
+    return {"status": "running", "timestamp": datetime.now(), "service": "ESG Energy API"}

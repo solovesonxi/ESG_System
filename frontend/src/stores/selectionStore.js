@@ -15,7 +15,7 @@ export const useSelectionStore = defineStore('selection', () => {
     const initYears = () => {
         const currentYear = new Date().getFullYear()
         years.value = []
-        for (let y = 2000; y <= currentYear; y++) {
+        for (let y = 2020; y <= currentYear; y++) {
             years.value.push(y.toString())
         }
     }

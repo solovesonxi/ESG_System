@@ -121,56 +121,62 @@ class EmissionSubmission(BaseModel):
 
 
 class WasteSubmission(BaseModel):
+    factory: str  # 当前选中的工厂名称
     year: int
-    factories: List[str]
 
-    # 月度矩阵 [工厂][12个月]
-    epe: List[List[float]]
-    plasticPaper: List[List[float]]
-    domesticIndustrial: List[List[float]]
-    hazardous: List[List[float]]
-    wastewater: List[List[float]]
+    # 月度数据（12个月）
+    epe: List[float]
+    plasticPaper: List[float]
+    domesticIndustrial: List[float]
+    hazardous: List[float]
+    wastewater: List[float]
 
-    # 各行合计
-    epeTotals: List[float]
-    plasticPaperTotals: List[float]
-    domesticIndustrialTotals: List[float]
-    hazardousTotals: List[float]
-    wastewaterTotals: List[float]
-
-    # 推导指标
-    nonHazardousTotals: List[float]
-    recyclableTotals: List[float]
-    totalWaste: List[float]
-    disposalRequiredTotals: List[float]
-    recycleRate: List[float]
+    # 计算指标
+    epeTotal: float
+    plasticPaperTotal: float
+    domesticIndustrialTotal: float
+    hazardousTotal: float
+    wastewaterTotal: float
+    nonHazardousTotal: float
+    recyclableTotal: float
+    totalWaste: float
+    disposalRequiredTotal: float
+    recycleRate: float
 
     # 经营与合规
-    revenue: List[float]
-    protectiveReuseRate: List[float]
-    exceedEvents: List[int]
+    revenue: float
+    protectiveReuseRate: float
+    exceedEvents: int
 
-    # 总览
-    overall: dict
+    # 强度指标
+    hazardousIntensity: float
+    wastewaterIntensity: float
 
 
 class InvestmentSubmission(BaseModel):
-    year: int
-    factories: List[str]
-
-    envInvest: List[List[float]]
-    cleanTechInvest: List[List[float]]
-    climateInvest: List[List[float]]
-    greenIncome: List[List[float]]
-
-    envInvestTotals: List[float]
-    cleanTechInvestTotals: List[float]
-    climateInvestTotals: List[float]
-    greenIncomeTotals: List[float]
-
-
-class EmploymentRecord(BaseModel):
     factory: str
+    year: int
+
+    # 月度数据
+    envInvest: List[float]
+    cleanTechInvest: List[float]
+    climateInvest: List[float]
+    greenIncome: List[float]
+
+    # 计算指标
+    envInvestTotal: float
+    cleanTechInvestTotal: float
+    climateInvestTotal: float
+    greenIncomeTotal: float
+    totalInvestment: float
+    greenIncomeRatio: float
+
+
+class EmploymentSubmission(BaseModel):
+    factory: str
+    year: int
+
+    # 员工构成数据
     fullTime: int
     partTime: int
     male: int
@@ -185,11 +191,17 @@ class EmploymentRecord(BaseModel):
     eduMaster: int
     eduBachelor: int
     eduJunior: int
+
+    # 五险一金数据
     avgSocialFund: float
     incSocialFund: float
+
+    # 年龄分布
     age18_30: int
     age31_45: int
     age46_60: int
+
+    # 新员工与离职数据
     newHires: int
     quitMale: int
     quitFemale: int
@@ -201,18 +213,28 @@ class EmploymentRecord(BaseModel):
     quitManagement: int
     quitMiddle: int
     quitGeneral: int
+
+    # 计算指标
     totalEmployees: int
     quitTotal: int
+    turnoverRate: float
+    maleTurnoverRate: float
+    femaleTurnoverRate: float
+    mainlandTurnoverRate: float
+    overseasTurnoverRate: float
+    age18_30TurnoverRate: float
+    age31_45TurnoverRate: float
+    age46_60TurnoverRate: float
+    managementTurnoverRate: float
+    middleTurnoverRate: float
+    generalTurnoverRate: float
 
 
-class EmploymentSubmission(BaseModel):
-    year: int
-    records: List[EmploymentRecord]
-    summary: dict
-
-
-class TrainingRecord(BaseModel):
+class TrainingSubmission(BaseModel):
     factory: str
+    year: int
+
+    # 基础数据
     total: int
     trained: int
     male: int
@@ -227,33 +249,46 @@ class TrainingRecord(BaseModel):
     hoursMiddle: float
     hoursGeneral: float
 
-
-class TrainingSubmission(BaseModel):
-    year: int
-    records: List[TrainingRecord]
-    summary: dict
+    # 计算指标
+    coverageRate: float
+    maleRate: float
+    femaleRate: float
+    mgmtRate: float
+    middleRate: float
+    generalRate: float
 
 
 class OHSSubmission(BaseModel):
+    factory: str
     year: int
-    factories: List[str]
-    trainingCount: List[List[float]]
-    trainingParticipants: List[List[float]]
-    trainingHours: List[List[float]]
-    injuryCount: List[List[float]]
-    incidentCount: List[List[float]]
-    fatalityCount: List[List[float]]
-    lostWorkdays: List[List[float]]
-    safetyInvestment: List[List[float]]
-    trainingCountTotals: List[float]
-    trainingParticipantsTotals: List[float]
-    trainingHoursTotals: List[float]
-    injuryCountTotals: List[float]
-    incidentCountTotals: List[float]
-    fatalityCountTotals: List[float]
-    lostWorkdaysTotals: List[float]
-    safetyInvestmentTotals: List[float]
-    summary: dict
+
+    # 月度数据
+    trainingCount: List[float]
+    trainingParticipants: List[float]
+    trainingHours: List[float]
+    injuryCount: List[float]
+    incidentCount: List[float]
+    fatalityCount: List[float]
+    lostWorkdays: List[float]
+    safetyInvestment: List[float]
+
+    # 汇总数据
+    safetyManagers: int
+    medicalChecks: int
+    coverageRate: float
+    emergencyDrills: int
+    hazardsFound: int
+    occupationalChecks: int
+
+    # 计算字段（添加类型转换器）
+    trainingCountTotal: int
+    trainingParticipantsTotal: int
+    trainingHoursTotal: float
+    injuryCountTotal: int
+    incidentCountTotal: int
+    fatalityCountTotal: int
+    lostWorkdaysTotal: int
+    safetyInvestmentTotal: float
 
 
 class SatisfactionSubmission(BaseModel):
