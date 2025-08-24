@@ -1,10 +1,10 @@
 <template>
   <div id="app">
-    <NavBar/>
+    <NavBar ref="navBar"/>
     <main>
       <router-view/>
-
     </main>
+    <FloatingBall @toggleMode="toggleMode" />
     <canvas id="starry-bg"></canvas>
   </div>
 </template>
@@ -12,7 +12,16 @@
 <script setup>
 import {RouterView} from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
-import {onMounted} from 'vue'
+import FloatingBall from '@/components/FloatingBall.vue'
+import {onMounted, ref} from 'vue'
+
+const navBar = ref(null)
+
+const toggleMode = () => {
+  if (navBar.value) {
+    navBar.value.toggleMode()
+  }
+}
 
 // 动态星空背景（保持不变）
 onMounted(() => {

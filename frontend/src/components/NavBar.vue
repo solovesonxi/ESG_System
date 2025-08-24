@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar">
+  <nav class="navbar" :style="navbarStyle">
     <ul class="nav-list">
       <li v-for="route in menuItems" :key="route.name">
         <router-link
@@ -15,10 +15,16 @@
 
 <script setup>
 import {useRoute} from 'vue-router'
+import { ref, computed } from 'vue';
 
 const route = useRoute()
+const isDataMode = ref(false)
 
-const menuItems = [
+const menuItems = computed(() => {
+  return isDataMode.value ? dataModeItems : defaultModeItems
+})
+
+const defaultModeItems = [
   {name: 'material', path: '/material', label: '物料'},
   {name: 'energy', path: '/energy', label: '能源'},
   {name: 'water', path: '/water', label: '水资源'},
@@ -35,10 +41,35 @@ const menuItems = [
   {name: 'community', path: '/community', label: '社区参与'},
 ]
 
+const dataModeItems = [
+  {name: 'env-quantitative', path: '/env-quantitative', label: '环境定量'},
+  {name: 'env-qualitative', path: '/env-qualitative', label: '环境定性'},
+  {name: 'social-quantitative-labor', path: '/social-quantitative-labor', label: '社会定量-劳工'},
+  {name: 'social-qualitative-labor', path: '/social-qualitative-labor', label: '社会定性-劳工'},
+  {name: 'social-quantitative-other', path: '/social-quantitative-other', label: '社会定量-其他'},
+  {name: 'social-qualitative-other', path: '/social-qualitative-other', label: '社会定性-其他'},
+  {name: 'governance', path: '/governance', label: '管治'},
+]
+
+const navbarStyle = computed(() => {
+  return {
+    background: isDataMode.value ? 'linear-gradient(to right, #90ee90, #2c3e50)' : 'linear-gradient(to right, #2c3e50, #3498db)'
+  }
+})
+
 // 检查当前路由是否匹配
 const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/')
 }
+
+// 切换模式
+const toggleMode = () => {
+  isDataMode.value = !isDataMode.value
+}
+
+defineExpose({
+  toggleMode
+})
 </script>
 
 <style scoped>
@@ -69,11 +100,15 @@ const isActive = (path) => {
 }
 
 .nav-list a {
-  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   color: white;
   text-decoration: none;
   font-weight: 500;
-  padding: 15px 20px;
+  padding: 0 20px;
+  height: 100%;
+  min-height: 60px;
   transition: all 0.3s;
   font-size: 1.1rem;
   position: relative;
@@ -81,23 +116,6 @@ const isActive = (path) => {
 
 .nav-list a:hover {
   background: rgba(255, 255, 255, 0.15);
-}
-
-/* 当前选中项样式 */
-.nav-list a.router-link-active {
-  background: rgba(255, 255, 255, 0.25);
-  font-weight: 600;
-}
-
-.nav-list a.router-link-active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 10%;
-  width: 80%;
-  height: 4px;
-  background: #fff;
-  border-radius: 4px 4px 0 0;
 }
 
 @media (max-width: 768px) {
@@ -110,10 +128,5 @@ const isActive = (path) => {
     width: 100%;
   }
 
-  .nav-list a.router-link-active::after {
-    left: 0;
-    width: 100%;
-    border-radius: 0;
-  }
 }
 </style>

@@ -13,6 +13,13 @@ import SupplyView from "@/views/SupplyView.vue";
 import IPView from "@/views/IPView.vue";
 import ResponsibilityView from "@/views/ResponsibilityView.vue";
 import CommunityView from "@/views/CommunityView.vue";
+import EnvQuantitativeView from "@/views/EnvQuantitativeView.vue";
+import EnvQualitativeView from "@/views/EnvQualitativeView.vue";
+import SocialQuantitativeLaborView from "@/views/SocialQuantitativeLaborView.vue";
+import SocialQualitativeLaborView from "@/views/SocialQualitativeLaborView.vue";
+import SocialQuantitativeOtherView from "@/views/SocialQuantitativeOtherView.vue";
+import SocialQualitativeOtherView from "@/views/SocialQualitativeOtherView.vue";
+import GovernanceView from "@/views/GovernanceView.vue";
 
 const routes = [
     {path: '/', redirect: '/material'},
@@ -30,6 +37,13 @@ const routes = [
     {path: '/ip', component: IPView},
     {path: '/responsibility', component: ResponsibilityView},
     {path: '/community', component: CommunityView},
+    {path: '/env-quantitative', component: EnvQuantitativeView},
+    {path: '/env-qualitative', component: EnvQualitativeView},
+    {path: '/social-quantitative-labor', component: SocialQuantitativeLaborView},
+    {path: '/social-qualitative-labor', component: SocialQualitativeLaborView},
+    {path: '/social-quantitative-other', component: SocialQuantitativeOtherView},
+    {path: '/social-qualitative-other', component: SocialQualitativeOtherView},
+    {path: '/governance', component: GovernanceView},
 ]
 
 const router = createRouter({
