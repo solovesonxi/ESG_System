@@ -3,7 +3,7 @@
     <NavBar />
     <main>
       <router-view />
-      <div class="sprite" id="sprite"></div> <!-- 小精灵元素 -->
+      
     </main>
     <canvas id="starry-bg"></canvas>
   </div>
@@ -56,80 +56,10 @@ onMounted(() => {
 
   animateStars()
 
-  // 小精灵动画逻辑
-  const sprite = document.getElementById('sprite')
-  let spriteX = 0
-  let spriteY = 0
-  let speedX = 2
-  let speedY = 1.5
-
-  function animateSprite() {
-    // 获取表格位置（假设页面只有一个表格）
-    const table = document.querySelector('table')
-    if (table) {
-      const rect = table.getBoundingClientRect()
-      const tableLeft = rect.left
-      const tableTop = rect.top
-      const tableRight = rect.right
-      const tableBottom = rect.bottom
-
-      // 小精灵围绕表格边界移动
-      spriteX += speedX
-      spriteY += speedY
-
-      // 边界检查（沿表格外框移动）
-      if (spriteX <= tableLeft || spriteX >= tableRight - 30) {
-        speedX = -speedX
-      }
-      if (spriteY <= tableTop || spriteY >= tableBottom - 30) {
-        speedY = -speedY
-      }
-
-      sprite.style.left = `${spriteX}px`
-      sprite.style.top = `${spriteY}px`
-    }
-
-    requestAnimationFrame(animateSprite)
-  }
-
-  // 初始化小精灵位置
-  const table = document.querySelector('table')
-  if (table) {
-    const rect = table.getBoundingClientRect()
-    spriteX = rect.left
-    spriteY = rect.top
-    sprite.style.left = `${spriteX}px`
-    sprite.style.top = `${spriteY}px`
-  }
-
-  animateSprite()
-
-  // 小精灵交互：悬浮放大，点击触发闪光
-  sprite.addEventListener('mouseenter', () => {
-    sprite.style.transform = 'scale(1.5) rotate(10deg)'
-    sprite.style.background = 'radial-gradient(circle, #ffeb3b, #f06292)'
-  })
-
-  sprite.addEventListener('mouseleave', () => {
-    sprite.style.transform = 'scale(1) rotate(0deg)'
-    sprite.style.background = 'radial-gradient(circle, #4fc3f7, #0288d1)'
-  })
-
-  sprite.addEventListener('click', () => {
-    sprite.style.animation = 'flash 0.5s'
-    setTimeout(() => {
-      sprite.style.animation = ''
-    }, 500)
-  })
+  
 })
 
-// 清理事件监听器
-onUnmounted(() => {
-  const sprite = document.getElementById('sprite')
-  sprite.removeEventListener('mouseenter', () => {})
-  sprite.removeEventListener('mouseleave', () => {})
-  sprite.removeEventListener('click', () => {})
-})
+
 </script>
 
 <style>
@@ -232,25 +162,7 @@ td {
   border-bottom: 1px solid #ddd;
 }
 
-/* 小精灵样式 */
-.sprite {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  background: radial-gradient(circle, #4fc3f7, #0288d1);
-  border-radius: 50%;
-  box-shadow: 0 0 10px rgba(79, 195, 247, 0.8);
-  transition: transform 0.3s ease, background 0.3s ease;
-  cursor: pointer;
-  z-index: 10;
-}
 
-/* 闪光动画 */
-@keyframes flash {
-  0% { box-shadow: 0 0 10px rgba(79, 195, 247, 0.8); }
-  50% { box-shadow: 0 0 20px 10px rgba(255, 235, 59, 0.9); }
-  100% { box-shadow: 0 0 10px rgba(79, 195, 247, 0.8); }
-}
 
 /* 按钮样式（保持不变） */
 .nav-button {

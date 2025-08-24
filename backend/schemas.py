@@ -292,33 +292,36 @@ class OHSSubmission(BaseModel):
 
 
 class SatisfactionSubmission(BaseModel):
-    year: int
-    factories: List[str]
-    satisfaction: List[List[float]]
-    rowAverages: List[float]
-    monthlyAverages: List[float]
-    overallAverage: float
-
-
-class SupplyRecord(BaseModel):
     factory: str
+    year: int
+    satisfaction: List[float]  # 12个月份的满意度百分比
+    annualAverage: float       # 年度平均满意度
+
+
+class SupplySubmission(BaseModel):
+    factory: str
+    year: int
+
+    # 供应商分布
     east: int
     south: int
     other: int
+
+    # 供应商筛选
     envScreened: int
     socScreened: int
+
+    # 采购金额
     localAmount: float
     totalAmount: float
+
+    # 供应商问题
     envPenaltyCount: int
     envPenaltyAmount: float
     cyberIncidents: int
+
+    # 计算指标
     totalSuppliers: int
     envRatio: float
     socRatio: float
     localPurchaseRatio: float
-
-
-class SupplySubmission(BaseModel):
-    year: int
-    records: List[SupplyRecord]
-    summary: dict

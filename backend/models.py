@@ -326,21 +326,42 @@ class OHSData(Base):
 
 
 class SatisfactionData(Base):
-    __tablename__ = 'satisfaction'
+    __tablename__ = "satisfaction"
 
     id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
-    factories = Column(JSON, nullable=False)
-    satisfaction = Column(JSON, nullable=False)
-    row_averages = Column(JSON, nullable=False)
-    monthly_averages = Column(JSON, nullable=False)
-    overall_average = Column(Float, nullable=False)
+    satisfaction = Column(JSON, nullable=False)  # 存储12个月份的满意度数据
+    annual_average = Column(Float, default=0.0)  # 年度平均值
 
 
 class SupplyData(Base):
-    __tablename__ = 'supply'
+    __tablename__ = "supply"
 
     id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
-    records = Column(JSON, nullable=False)
-    summary = Column(JSON, nullable=False)
+
+    # 供应商分布数据
+    east = Column(Integer, default=0)  # 华东地区供应商
+    south = Column(Integer, default=0)  # 华南地区供应商
+    other = Column(Integer, default=0)  # 其他地区供应商
+    total_suppliers = Column(Integer, default=0)  # 供应商总数
+
+    # 供应商筛选数据
+    env_screened = Column(Integer, default=0)  # 环境筛选供应商
+    soc_screened = Column(Integer, default=0)  # 社会标准供应商
+
+    # 采购金额数据
+    local_amount = Column(Float, default=0.0)  # 当地采购金额
+    total_amount = Column(Float, default=0.0)  # 采购总金额
+
+    # 供应商问题数据
+    env_penalty_count = Column(Integer, default=0)  # 环境处罚次数
+    env_penalty_amount = Column(Float, default=0.0)  # 环境处罚金额
+    cyber_incidents = Column(Integer, default=0)  # 数据安全事件
+
+    # 计算指标
+    env_ratio = Column(Float, default=0.0)  # 环境维度占比
+    soc_ratio = Column(Float, default=0.0)  # 社会标准占比
+    local_purchase_ratio = Column(Float, default=0.0)  # 当地采购比例

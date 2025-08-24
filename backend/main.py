@@ -116,29 +116,38 @@ def submit_emission_data(data: EmissionSubmission, db: Session = Depends(get_db)
 
 
 @app.post("/submit/supply")
-async def submit_supply(data: SupplySubmission, db: Session = Depends(get_db)):
+async def submit_supply_data(data: SupplySubmission, db: Session = Depends(get_db)):
     try:
-        rec = SupplyData(year=data.year, records=[r.model_dump() for r in data.records], summary=data.summary)
-        db.add(rec)
+        # 创建数据库记录
+        record = SupplyData(factory=data.factory, year=data.year, east=data.east, south=data.south, other=data.other,
+            total_suppliers=data.totalSuppliers, env_screened=data.envScreened, soc_screened=data.socScreened,
+            local_amount=data.localAmount, total_amount=data.totalAmount, env_penalty_count=data.envPenaltyCount,
+            env_penalty_amount=data.envPenaltyAmount, cyber_incidents=data.cyberIncidents, env_ratio=data.envRatio,
+            soc_ratio=data.socRatio, local_purchase_ratio=data.localPurchaseRatio)
+
+        db.add(record)
         db.commit()
-        return {"status": "success", "id": rec.id}
+
+        return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"供应链数据提交失败: {str(e)}")
 
 
 @app.post("/submit/satisfaction")
-async def submit_satisfaction(data: SatisfactionSubmission, db: Session = Depends(get_db)):
+async def submit_satisfaction_data(data: SatisfactionSubmission, db: Session = Depends(get_db)):
     try:
-        rec = SatisfactionData(year=data.year, factories=data.factories, satisfaction=data.satisfaction,
-                               row_averages=data.rowAverages, monthly_averages=data.monthlyAverages,
-                               overall_average=data.overallAverage)
-        db.add(rec)
+        # 创建数据库记录
+        record = SatisfactionData(factory=data.factory, year=data.year, satisfaction=data.satisfaction,
+            annual_average=data.annualAverage)
+
+        db.add(record)
         db.commit()
-        return {"status": "success", "id": rec.id}
+
+        return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"满意度数据提交失败: {str(e)}")
 
 
 @app.post("/submit/training")
@@ -164,16 +173,17 @@ async def submit_ohs_data(data: OHSSubmission, db: Session = Depends(get_db)):
     try:
         # 创建记录（前端camelCase→后端snake_case）
         record = OHSData(factory=data.factory, year=data.year, training_count=data.trainingCount,
-            training_participants=data.trainingParticipants, training_hours=data.trainingHours,
-            injury_count=data.injuryCount, incident_count=data.incidentCount, fatality_count=data.fatalityCount,
-            lost_workdays=data.lostWorkdays, safety_investment=data.safetyInvestment,
-            training_count_total=data.trainingCountTotal, training_participants_total=data.trainingParticipantsTotal,
-            training_hours_total=data.trainingHoursTotal, injury_count_total=data.injuryCountTotal,
-            incident_count_total=data.incidentCountTotal, fatality_count_total=data.fatalityCountTotal,
-            lost_workdays_total=data.lostWorkdaysTotal, safety_investment_total=data.safetyInvestmentTotal,
-            safety_managers=data.safetyManagers, medical_checks=data.medicalChecks, coverage_rate=data.coverageRate,
-            emergency_drills=data.emergencyDrills, hazards_found=data.hazardsFound,
-            occupational_checks=data.occupationalChecks)
+                         training_participants=data.trainingParticipants, training_hours=data.trainingHours,
+                         injury_count=data.injuryCount, incident_count=data.incidentCount,
+                         fatality_count=data.fatalityCount, lost_workdays=data.lostWorkdays,
+                         safety_investment=data.safetyInvestment, training_count_total=data.trainingCountTotal,
+                         training_participants_total=data.trainingParticipantsTotal,
+                         training_hours_total=data.trainingHoursTotal, injury_count_total=data.injuryCountTotal,
+                         incident_count_total=data.incidentCountTotal, fatality_count_total=data.fatalityCountTotal,
+                         lost_workdays_total=data.lostWorkdaysTotal, safety_investment_total=data.safetyInvestmentTotal,
+                         safety_managers=data.safetyManagers, medical_checks=data.medicalChecks,
+                         coverage_rate=data.coverageRate, emergency_drills=data.emergencyDrills,
+                         hazards_found=data.hazardsFound, occupational_checks=data.occupationalChecks)
         db.add(record)
         db.commit()
         return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}

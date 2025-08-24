@@ -298,15 +298,6 @@ CREATE INDEX idx_employment_year ON employment(year);
 CREATE INDEX idx_training_factory_year ON training(factory, year);
 CREATE INDEX idx_training_year ON training(year);
 
--- 新增：教育与培训（总部统计）
-CREATE TABLE IF NOT EXISTS training (
-    id SERIAL PRIMARY KEY,
-    year INTEGER NOT NULL,
-    records JSONB NOT NULL,
-    summary JSONB NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_training_year ON training(year);
 
 -- 新增：职业健康与安全（OHS）
 CREATE TABLE IF NOT EXISTS ohs (
@@ -336,26 +327,49 @@ CREATE TABLE IF NOT EXISTS ohs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_ohs_year ON ohs(year);
-
--- 新增：员工满意度
-CREATE TABLE IF NOT EXISTS satisfaction (
-    id SERIAL PRIMARY KEY,
-    year INTEGER NOT NULL,
-    factories JSONB NOT NULL,
-    satisfaction JSONB NOT NULL,
-    row_averages JSONB NOT NULL,
-    monthly_averages JSONB NOT NULL,
-    overall_average DOUBLE PRECISION NOT NULL
-);
-
 CREATE INDEX IF NOT EXISTS idx_satisfaction_year ON satisfaction(year);
 
--- 新增：供应链管理（供应商统计）
-CREATE TABLE IF NOT EXISTS supply (
+CREATE TABLE satisfaction (
     id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
     year INTEGER NOT NULL,
-    records JSONB NOT NULL,
-    summary JSONB NOT NULL
+    satisfaction JSONB NOT NULL,  -- 存储12个月份的满意度数据
+    annual_average NUMERIC(5,2) DEFAULT 0.00 NOT NULL, -- 年度平均值
+    CONSTRAINT uq_satisfaction_factory_year UNIQUE (factory, year)
+);
+
+
+CREATE TABLE supply (
+    id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
+    year INTEGER NOT NULL,
+
+    -- 供应商分布
+    east INTEGER DEFAULT 0,
+    south INTEGER DEFAULT 0,
+    other INTEGER DEFAULT 0,
+    total_suppliers INTEGER DEFAULT 0,
+
+    -- 供应商筛选
+    env_screened INTEGER DEFAULT 0,
+    soc_screened INTEGER DEFAULT 0,
+
+    -- 采购金额
+    local_amount NUMERIC(12, 2) DEFAULT 0.00,
+    total_amount NUMERIC(12, 2) DEFAULT 0.00,
+
+    -- 供应商问题
+    env_penalty_count INTEGER DEFAULT 0,
+    env_penalty_amount NUMERIC(12, 2) DEFAULT 0.00,
+    cyber_incidents INTEGER DEFAULT 0,
+
+    -- 计算指标
+    env_ratio NUMERIC(5, 2) DEFAULT 0.00,
+    soc_ratio NUMERIC(5, 2) DEFAULT 0.00,
+    local_purchase_ratio NUMERIC(5, 2) DEFAULT 0.00,
+
+    -- 唯一约束
+    CONSTRAINT uq_supply_factory_year UNIQUE (factory, year)
 );
 
 CREATE INDEX IF NOT EXISTS idx_supply_year ON supply(year);
