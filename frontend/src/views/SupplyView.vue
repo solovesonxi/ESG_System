@@ -192,7 +192,7 @@ const submitSupply = async () => {
 .supply-table{width:100%; border-collapse:collapse}
 .supply-table th,.supply-table td{border:1px solid #ddd; padding:6px; text-align:center}
 .supply-table thead th{position:sticky; top:0; background:#f7f7f7; z-index:1}
-.factory-cell{white-space:nowrap; text-align:left}
+
 .total-cell{font-weight:600}
 .grand-total td{font-weight:700; background:#fafafa}
 .supply-table input{width:110px}

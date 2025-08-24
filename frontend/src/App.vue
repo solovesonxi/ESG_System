@@ -1,27 +1,27 @@
 <template>
   <div id="app">
-    <NavBar />
+    <NavBar/>
     <main>
-      <router-view />
-      
+      <router-view/>
+
     </main>
     <canvas id="starry-bg"></canvas>
   </div>
 </template>
 
 <script setup>
-import { RouterView } from 'vue-router'
+import {RouterView} from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
-import { onMounted, onUnmounted } from 'vue'
+import {onMounted} from 'vue'
 
 // 动态星空背景（保持不变）
 onMounted(() => {
   const canvas = document.getElementById('starry-bg')
   const ctx = canvas.getContext('2d')
-  
+
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
-  
+
   const stars = []
   const numStars = 100
 
@@ -37,7 +37,7 @@ onMounted(() => {
   function animateStars() {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'
-    
+
     stars.forEach(star => {
       ctx.beginPath()
       ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2)
@@ -45,7 +45,7 @@ onMounted(() => {
       star.y += star.speed
       if (star.y > canvas.height) star.y = 0
     })
-    
+
     requestAnimationFrame(animateStars)
   }
 
@@ -56,7 +56,7 @@ onMounted(() => {
 
   animateStars()
 
-  
+
 })
 
 
@@ -111,7 +111,7 @@ h1 {
   font-family: 'Playfair Display', serif;
   font-weight: 800;
   font-size: 3rem;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
@@ -122,7 +122,7 @@ main {
   border-radius: 10px;
   margin: 1rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  position: relative; /* 为小精灵定位提供上下文 */
+  position: relative;
 }
 
 /* 表格样式（保持不变） */
@@ -162,71 +162,14 @@ td {
   border-bottom: 1px solid #ddd;
 }
 
-
-
-/* 按钮样式（保持不变） */
-.nav-button {
-  display: inline-block;
-  padding: 0.8rem 1.5rem;
-  margin: 0.5rem;
-  font-family: 'Lora', serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #ffffff;
-  background: linear-gradient(45deg, #3498db, #8e44ad);
-  border: none;
-  border-radius: 25px;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.nav-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(45deg, #8e44ad, #3498db);
-}
-
-.nav-button::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.6s ease, height 0.6s ease;
-}
-
-.nav-button:hover::before {
-  width: 200px;
-  height: 200px;
-}
-
 /* 响应式调整 */
 @media (max-width: 768px) {
   body {
     font-size: 1rem;
   }
+
   h1 {
     font-size: 2rem;
-  }
-  .nav-button {
-    font-size: 1rem;
-    padding: 0.6rem 1.2rem;
-  }
-  th, td {
-    font-size: 1rem;
-    padding: 0.6rem;
-  }
-  .sprite {
-    width: 20px;
-    height: 20px;
   }
 }
 </style>

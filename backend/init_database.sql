@@ -160,7 +160,6 @@ CREATE TABLE waste (
 );
 
 
-
 CREATE TABLE investment (
     id SERIAL PRIMARY KEY,
     year INTEGER NOT NULL,
@@ -180,6 +179,7 @@ CREATE TABLE investment (
     total_investment FLOAT NOT NULL,
     green_income_ratio FLOAT NOT NULL
 );
+
 
 CREATE TABLE employment (
     id SERIAL PRIMARY KEY,
@@ -277,34 +277,10 @@ CREATE TABLE training (
 );
 
 
--- 添加索引
-CREATE INDEX IF NOT EXISTS idx_factory_year ON material (factory, year);
-CREATE INDEX IF NOT EXISTS idx_factory ON material(factory);
-CREATE INDEX IF NOT EXISTS idx_energy_factory ON energy(factory);
-CREATE INDEX IF NOT EXISTS idx_energy_year ON energy(year);
-CREATE INDEX IF NOT EXISTS idx_energy_factory_year ON energy(factory, year);
-CREATE INDEX IF NOT EXISTS idx_water_data_factory ON water(factory);
-CREATE INDEX IF NOT EXISTS idx_water_data_year ON water(year);
-CREATE INDEX IF NOT EXISTS idx_water_data_factory_year ON water(factory, year);
-CREATE INDEX IF NOT EXISTS idx_emission_factory ON emission(factory);
-CREATE INDEX IF NOT EXISTS idx_emission_year ON emission(year);
-CREATE INDEX IF NOT EXISTS idx_emission_factory_year ON emission(factory, year);
-CREATE INDEX idx_waste_factory_year ON waste(factory, year);
-CREATE INDEX idx_waste_year ON waste(year);
-CREATE INDEX idx_investment_factory_year ON investment(factory, year);
-CREATE INDEX idx_investment_year ON investment(year);
-CREATE INDEX idx_employment_factory_year ON employment(factory, year);
-CREATE INDEX idx_employment_year ON employment(year);
-CREATE INDEX idx_training_factory_year ON training(factory, year);
-CREATE INDEX idx_training_year ON training(year);
-
-
--- 新增：职业健康与安全（OHS）
-CREATE TABLE IF NOT EXISTS ohs (
+CREATE TABLE ohs (
     id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
     year INTEGER NOT NULL,
-    factories JSONB NOT NULL,
-
     training_count JSONB NOT NULL,
     training_participants JSONB NOT NULL,
     training_hours JSONB NOT NULL,
@@ -313,21 +289,23 @@ CREATE TABLE IF NOT EXISTS ohs (
     fatality_count JSONB NOT NULL,
     lost_workdays JSONB NOT NULL,
     safety_investment JSONB NOT NULL,
-
-    training_count_totals JSONB NOT NULL,
-    training_participants_totals JSONB NOT NULL,
-    training_hours_totals JSONB NOT NULL,
-    injury_count_totals JSONB NOT NULL,
-    incident_count_totals JSONB NOT NULL,
-    fatality_count_totals JSONB NOT NULL,
-    lost_workdays_totals JSONB NOT NULL,
-    safety_investment_totals JSONB NOT NULL,
-
-    summary JSONB NOT NULL
+    training_count_total INTEGER DEFAULT 0,
+    training_participants_total INTEGER DEFAULT 0,
+    training_hours_total NUMERIC(10,1) DEFAULT 0.0,
+    injury_count_total INTEGER DEFAULT 0,
+    incident_count_total INTEGER DEFAULT 0,
+    fatality_count_total INTEGER DEFAULT 0,
+    lost_workdays_total INTEGER DEFAULT 0,
+    safety_investment_total NUMERIC(10,2) DEFAULT 0.0,
+    safety_managers INTEGER DEFAULT 0,
+    medical_checks INTEGER DEFAULT 0,
+    coverage_rate NUMERIC(5,2) DEFAULT 0.00,
+    emergency_drills INTEGER DEFAULT 0,
+    hazards_found INTEGER DEFAULT 0,
+    occupational_checks INTEGER DEFAULT 0,
+    CONSTRAINT uq_factory_year UNIQUE (factory, year)
 );
 
-CREATE INDEX IF NOT EXISTS idx_ohs_year ON ohs(year);
-CREATE INDEX IF NOT EXISTS idx_satisfaction_year ON satisfaction(year);
 
 CREATE TABLE satisfaction (
     id SERIAL PRIMARY KEY,
@@ -372,4 +350,38 @@ CREATE TABLE supply (
     CONSTRAINT uq_supply_factory_year UNIQUE (factory, year)
 );
 
+
+-- 添加索引
+CREATE INDEX IF NOT EXISTS idx_factory_year ON material (factory, year);
+CREATE INDEX IF NOT EXISTS idx_factory ON material(factory);
+CREATE INDEX IF NOT EXISTS idx_year ON material(year);
+CREATE INDEX IF NOT EXISTS idx_energy_factory_year ON energy(factory, year);
+CREATE INDEX IF NOT EXISTS idx_energy_factory ON energy(factory);
+CREATE INDEX IF NOT EXISTS idx_energy_year ON energy(year);
+CREATE INDEX IF NOT EXISTS idx_water_data_factory_year ON water(factory, year);
+CREATE INDEX IF NOT EXISTS idx_water_data_factory ON water(factory);
+CREATE INDEX IF NOT EXISTS idx_water_data_year ON water(year);
+CREATE INDEX IF NOT EXISTS idx_emission_factory_year ON emission(factory, year);
+CREATE INDEX IF NOT EXISTS idx_emission_factory ON emission(factory);
+CREATE INDEX IF NOT EXISTS idx_emission_year ON emission(year);
+CREATE INDEX IF NOT EXISTS idx_waste_factory_year ON waste(factory, year);
+CREATE INDEX IF NOT EXISTS idx_waste_factory ON waste(factory);
+CREATE INDEX IF NOT EXISTS idx_waste_year ON waste(year);
+CREATE INDEX IF NOT EXISTS idx_investment_factory_year ON investment(factory, year);
+CREATE INDEX IF NOT EXISTS idx_investment_factory ON investment(factory);
+CREATE INDEX IF NOT EXISTS idx_investment_year ON investment(year);
+CREATE INDEX IF NOT EXISTS idx_employment_factory_year ON employment(factory, year);
+CREATE INDEX IF NOT EXISTS idx_employment_factory ON employment(factory);
+CREATE INDEX IF NOT EXISTS idx_employment_year ON employment(year);
+CREATE INDEX IF NOT EXISTS idx_training_factory_year ON training(factory, year);
+CREATE INDEX IF NOT EXISTS idx_training_factory ON training(factory);
+CREATE INDEX IF NOT EXISTS idx_training_year ON training(year);
+CREATE INDEX IF NOT EXISTS idx_ohs_factory_year ON ohs(factory, year);
+CREATE INDEX IF NOT EXISTS idx_ohs_factory ON ohs(factory);
+CREATE INDEX IF NOT EXISTS idx_ohs_year ON ohs(year);
+CREATE INDEX IF NOT EXISTS idx_satisfaction_factory_year ON satisfaction(factory, year);
+CREATE INDEX IF NOT EXISTS idx_satisfaction_factory ON satisfaction(factory);
+CREATE INDEX IF NOT EXISTS idx_satisfaction_year ON satisfaction(year);
+CREATE INDEX IF NOT EXISTS idx_supply_factory_year ON supply(factory, year);
+CREATE INDEX IF NOT EXISTS idx_supply_factory ON supply(factory);
 CREATE INDEX IF NOT EXISTS idx_supply_year ON supply(year);
