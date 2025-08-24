@@ -8,7 +8,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from database import get_db, engine
 from models import EnergyData, Base, MaterialData, WaterData, EmissionData, EmploymentData, TrainingData, \
-    SatisfactionData, SupplyData, WasteData, InvestmentData, OHSData, MaterialAnalyze
+    SatisfactionData, SupplyData, WasteData, InvestmentData, OHSData
 from schemas import MaterialSubmission, EnergySubmission, WaterSubmission, EmissionSubmission, EmploymentSubmission, \
     TrainingSubmission, SatisfactionSubmission, SupplySubmission, WasteSubmission, InvestmentSubmission, OHSSubmission
 
@@ -47,7 +47,7 @@ async def submit_material_data(data: MaterialSubmission, db: Session = Depends(g
                                paper_consumption=data.paper, packaging_intensity=data.packagingIntensity,
                                paper_intensity=data.paperIntensity, total_input=data.totalInput,
                                total_output=data.totalOutput, renewable_input_ratio=data.renewableInputRatio,
-                               renewable_output_ratio=data.renewableOutputRatio)
+                               renewable_output_ratio=data.renewableOutputRatio, reasons=[""] * 15)
         db.add(db_item)
         db.commit()
         return {"status": "success", "id": db_item.id}
@@ -289,13 +289,11 @@ async def get_material_data(factory: str = Query(..., description="工厂名称"
                       "material_consumption", "wood_fiber", "aluminum", "packaging_material", "paper_consumption",
                       "packaging_intensity", "paper_intensity", "total_input", "total_output", "renewable_input_ratio",
                       "renewable_output_ratio"]
-        reason_record = db.query(MaterialAnalyze).filter(MaterialAnalyze.factory == factory,
-                                                         MaterialAnalyze.year == year).first()
-        reasons = reason_record.reasons if reason_record else [""] * len(indicators)
+        reasons = current_year_data.reasons if current_year_data.reasons else [""] * len(indicators)
         result = {}
         for idx, indicator in enumerate(indicators):
-            current_value = getattr(current_year_data, indicator.lower(), None)
-            last_value = getattr(last_year_data, indicator.lower(), None) if last_year_data else None
+            current_value = getattr(current_year_data, indicator, None)
+            last_value = getattr(last_year_data, indicator, None) if last_year_data else None
             comparison = None
             if last_value is not None and last_value != 0:
                 try:
@@ -305,7 +303,7 @@ async def get_material_data(factory: str = Query(..., description="工厂名称"
                     comparison = None
             reason = reasons[idx] if idx < len(reasons) else ""
             result[indicator] = {"currentYear": current_value, "lastYear": last_value, "comparison": comparison,
-                                 "reason": reason}
+                "reason": reason}
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取物料数据失败: {str(e)}")
@@ -313,7 +311,7 @@ async def get_material_data(factory: str = Query(..., description="工厂名称"
 
 @app.post("/api/material/reasons")
 async def save_material_reasons(factory: str = Body(...), year: int = Body(...), reasons: Dict[str, str] = Body(...),
-                                db: Session = Depends(get_db)):
+        db: Session = Depends(get_db)):
     try:
         indicators = ["renewable_input", "non_renewable_input", "renewable_output", "non_renewable_output",
                       "material_consumption", "wood_fiber", "aluminum", "packaging_material", "paper_consumption",
@@ -322,15 +320,15 @@ async def save_material_reasons(factory: str = Body(...), year: int = Body(...),
         reasons_list = []
         for indicator in indicators:
             reasons_list.append(reasons.get(indicator, ""))
-        existing_record = db.query(MaterialAnalyze).filter(MaterialAnalyze.factory == factory,
-                                                           MaterialAnalyze.year == year).first()
-        if existing_record:
-            existing_record.reasons = reasons_list
+        material_data = db.query(MaterialData).filter(MaterialData.factory == factory,
+                                                      MaterialData.year == year).first()
+        if material_data:
+            material_data.reasons = reasons_list
+            db.commit()
+            return {"status": "success", "message": "原因说明已保存"}
         else:
-            new_record = MaterialAnalyze(factory=factory, year=year, reasons=reasons_list)
-            db.add(new_record)
-        db.commit()
-        return {"status": "success", "message": "原因说明已保存"}
+            raise HTTPException(status_code=404, detail="未找到对应的物料数据")
+
     except Exception as e:
         db.rollback()
         logger.error(f"保存原因说明失败: {str(e)}")

@@ -14,8 +14,6 @@ class MaterialData(Base):
     non_renewable_input = Column(Float, nullable=False)
     renewable_output = Column(Float, nullable=False)
     non_renewable_output = Column(Float, nullable=False)
-
-    # 消耗数据
     material_consumption = Column(Float, nullable=False)
     wood_fiber = Column(Float, nullable=False)
     aluminum = Column(Float, nullable=False)
@@ -24,20 +22,13 @@ class MaterialData(Base):
     paper_consumption = Column(Float, nullable=False)
     packaging_intensity = Column(Float, nullable=False)
     paper_intensity = Column(Float, nullable=False)
-    # 计算得出的占比
     total_input = Column(Float, nullable=False)
     total_output = Column(Float, nullable=False)
     renewable_input_ratio = Column(Float, nullable=False)
     renewable_output_ratio = Column(Float, nullable=False)
 
+    reasons = Column(JSON, nullable=True)
 
-class MaterialAnalyze(Base):
-    __tablename__ = 'material_analyze'
-
-    id = Column(Integer, primary_key=True, index=True)
-    factory = Column(String(100), nullable=False)
-    year = Column(Integer, nullable=False)
-    reasons = Column(JSON, nullable=True)  # 存储字符串数组
 
 class EnergyData(Base):
     __tablename__ = 'energy'
