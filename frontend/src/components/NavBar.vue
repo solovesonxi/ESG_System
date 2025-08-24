@@ -53,7 +53,7 @@ const dataModeItems = [
 
 const navbarStyle = computed(() => {
   return {
-    background: isDataMode.value ? 'linear-gradient(to right, #90ee90, #2c3e50)' : 'linear-gradient(to right, #2c3e50, #3498db)'
+    background: isDataMode.value ? 'linear-gradient(to right, #2c3e50, #90ee90)' : 'linear-gradient(to right, #3498db, #2c3e50)'
   }
 })
 
@@ -78,7 +78,7 @@ defineExpose({
   top: 0;
   left: 0;
   width: 100%;
-  background: linear-gradient(to right, #2c3e50, #3498db);
+  background: linear-gradient(to right, #3498db, #2c3e50);
   z-index: 1000;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
@@ -116,6 +116,10 @@ defineExpose({
 
 .nav-list a:hover {
   background: rgba(255, 255, 255, 0.15);
+}
+
+.nav-list a.router-link-active {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 @media (max-width: 768px) {

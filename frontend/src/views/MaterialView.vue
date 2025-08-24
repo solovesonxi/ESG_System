@@ -11,7 +11,8 @@
                 {{ factory }}
                 <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
               </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown" :style="{ maxHeight: '200px', overflowY: 'auto' }">
+              <div class="options" v-show="selectionStore.showFactoryDropdown"
+                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
                 <div
                     v-for="f in factories"
                     :key="f"
@@ -92,6 +93,21 @@
             <label>物料消耗总量 (T)</label>
             <input type="number" v-model.number="formData.materialConsumption" step="0.1" required>
           </div>
+
+          <div class="form-group">
+            <label>木纤维 (T)</label>
+            <input type="number" v-model.number="formData.woodFiber" step="0.1" required>
+          </div>
+          <div class="form-group">
+            <label>铝 (T)</label>
+            <input type="number" v-model.number="formData.aluminum" step="0.1" required>
+          </div>
+
+          <div class="form-group">
+            <label>总营收 (万元)</label>
+            <input type="number" v-model.number="formData.revenue" step="0.1" required>
+          </div>
+
           <div class="form-group">
             <label>包装材料总量 (T)</label>
             <input type="number" v-model.number="formData.packagingMaterial" step="0.1" required>
@@ -100,12 +116,6 @@
             <label>纸张总量 (T)</label>
             <input type="number" v-model.number="formData.paper" step="0.1" required>
           </div>
-          <div class="form-group">
-            <label>总营收 (万元)</label>
-            <input type="number" v-model.number="formData.revenue" step="0.1" required>
-          </div>
-
-          <!-- 消耗强度部分 -->
           <div class="form-group">
             <label>包装材料消耗强度 (T/万元)</label>
             <input type="number" v-model.number="packagingIntensity" disabled>
@@ -125,7 +135,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, onMounted, onBeforeUnmount } from 'vue'
+import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import axios from 'axios'
 import {useSelectionStore} from "@/stores/selectionStore.js";
 
@@ -138,7 +148,6 @@ const years = computed(() => selectionStore.years)
 const isSubmitting = ref(false)
 
 
-
 // 表单数据结构
 const formData = reactive({
   renewableInput: 0,
@@ -146,11 +155,13 @@ const formData = reactive({
   renewableOutput: 0,
   nonRenewableOutput: 0,
   materialConsumption: 0,
+  woodFiber: 0,
+  aluminum: 0,
+  revenue: 0,
   packagingMaterial: 0,
   paper: 0,
   packagingIntensity: 0,
   paperIntensity: 0,
-  revenue: 0
 })
 
 // 计算进料总量
@@ -173,14 +184,14 @@ const renewableOutputRatio = computed(() => {
   return 0
 })
 
-const packagingIntensity=computed(() => {
+const packagingIntensity = computed(() => {
   if (formData.revenue > 0) {
     return (formData.packagingMaterial / formData.revenue).toFixed(2)
   }
   return 0
 })
 
-const paperIntensity=computed(() => {
+const paperIntensity = computed(() => {
   if (formData.revenue > 0) {
     return (formData.paper / formData.revenue)
   }

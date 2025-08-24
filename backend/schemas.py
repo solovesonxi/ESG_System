@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from pydantic import BaseModel
 
@@ -12,9 +12,11 @@ class MaterialSubmission(BaseModel):
     renewableOutput: float
     nonRenewableOutput: float
     materialConsumption: float
+    woodFiber: float
+    aluminum: float
+    revenue: float
     packagingMaterial: float
     paper: float
-    revenue: float
     packagingIntensity: float
     paperIntensity: float
     totalInput: float

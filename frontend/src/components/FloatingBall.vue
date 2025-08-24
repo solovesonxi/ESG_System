@@ -6,16 +6,18 @@
     @mousedown="startDrag"
     @mouseup="stopDrag"
   >
-    <div class="ball-text">{{ isActive ? '分析' : '填报' }}</div>
+    <div class="ball-text">{{ isActive ? '填报': '分析'  }}</div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { defineEmits } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 const emit = defineEmits(['toggleMode']);
 const floatingBall = ref(null);
+const route = useRoute();
+const router = useRouter();
 const isActive = ref(false);
 const isDragging = ref(false);
 const posX = ref(0);
@@ -59,6 +61,8 @@ const stopDrag = (e) => {
 
 
 const updatePosition = () => {
+  if (!floatingBall.value) return;
+  
   const ball = floatingBall.value;
   const ballRect = ball.getBoundingClientRect();
   const windowWidth = window.innerWidth;
@@ -79,8 +83,24 @@ const updatePosition = () => {
 };
 
 const toggleMode = () => {
+  // 记录当前模式的最后浏览页面
+  const currentMode = isActive.value ? 'data' : 'default';
+  localStorage.setItem(`lastPath_${currentMode}`, route.path);
+  
   isActive.value = !isActive.value;
   emit('toggleMode');
+  
+  if (isActive.value) {
+    // 切换到分析模式
+    const lastPath = localStorage.getItem('lastPath_data');
+    const path = lastPath || '/env-quantitative';
+    router.push(path);
+  } else {
+    // 切换到填报模式
+    const lastPath = localStorage.getItem('lastPath_default');
+    const path = lastPath || '/material';
+    router.push(path);
+  }
 };
 
 onMounted(() => {
@@ -99,8 +119,8 @@ onUnmounted(() => {
 <style scoped>
 .floating-ball {
   position: fixed;
-  width: 50px;
-  height: 50px;
+  width: 75px;
+  height: 75px;
   border-radius: 50%;
   background-color: rgba(144, 238, 144, 0.7);
   cursor: pointer;
@@ -125,7 +145,7 @@ onUnmounted(() => {
 .ball-text {
   color: white;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 20px;
   user-select: none;
 }
 </style>

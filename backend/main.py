@@ -1,14 +1,31 @@
+import logging
 from datetime import datetime
+from typing import Dict, Any
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
 
 from database import get_db, engine
 from models import EnergyData, Base, MaterialData, WaterData, EmissionData, EmploymentData, TrainingData, \
-    SatisfactionData, SupplyData, WasteData, InvestmentData, OHSData
+    SatisfactionData, SupplyData, WasteData, InvestmentData, OHSData, MaterialAnalyze
 from schemas import MaterialSubmission, EnergySubmission, WaterSubmission, EmissionSubmission, EmploymentSubmission, \
     TrainingSubmission, SatisfactionSubmission, SupplySubmission, WasteSubmission, InvestmentSubmission, OHSSubmission
+
+# 配置日志
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)  # 设置日志级别为DEBUG
+
+# 创建一个控制台处理器
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+
+# 定义日志格式
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+
+# 添加处理器到logger
+logger.addHandler(console_handler)
 
 # 创建数据库表
 Base.metadata.create_all(bind=engine)
@@ -22,14 +39,15 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 @app.post("/submit/material")
 async def submit_material_data(data: MaterialSubmission, db: Session = Depends(get_db)):
     try:
-        db_item = MaterialData(factory_name=data.factory, report_year=data.year, renewable_input=data.renewableInput,
-                               non_renewable_input=data.nonRenewableInput, total_input=data.totalInput,
-                               renewable_output=data.renewableOutput, non_renewable_output=data.nonRenewableOutput,
-                               total_output=data.totalOutput, material_consumption=data.materialConsumption,
-                               packaging_material=data.packagingMaterial, paper_consumption=data.paper,
-                               total_revenue=data.revenue, renewable_input_ratio=data.renewableInputRatio,
-                               renewable_output_ratio=data.renewableOutputRatio,
-                               packaging_intensity=data.packagingIntensity, paper_intensity=data.paperIntensity)
+        db_item = MaterialData(factory=data.factory, year=data.year, renewable_input=data.renewableInput,
+                               non_renewable_input=data.nonRenewableInput, renewable_output=data.renewableOutput,
+                               non_renewable_output=data.nonRenewableOutput,
+                               material_consumption=data.materialConsumption, wood_fiber=data.woodFiber,
+                               aluminum=data.aluminum, revenue=data.revenue, packaging_material=data.packagingMaterial,
+                               paper_consumption=data.paper, packaging_intensity=data.packagingIntensity,
+                               paper_intensity=data.paperIntensity, total_input=data.totalInput,
+                               total_output=data.totalOutput, renewable_input_ratio=data.renewableInputRatio,
+                               renewable_output_ratio=data.renewableOutputRatio)
         db.add(db_item)
         db.commit()
         return {"status": "success", "id": db_item.id}
@@ -61,9 +79,6 @@ async def submit_energy_data(data: EnergySubmission, db: Session = Depends(get_d
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
-
-
-
 
 
 @app.post("/submit/water")
@@ -257,6 +272,70 @@ async def submit_supply_data(data: SupplySubmission, db: Session = Depends(get_d
 @app.get("/")
 async def health_check():
     return {"status": "running", "timestamp": datetime.now(), "service": "ESG Energy API"}
+
+
+@app.get("/api/material")
+async def get_material_data(factory: str = Query(..., description="工厂名称"),
+                            year: int = Query(..., description="统计年份"), db: Session = Depends(get_db)) -> Dict[
+    str, Any]:
+    try:
+        current_year_data = db.query(MaterialData).filter(MaterialData.factory == factory,
+                                                          MaterialData.year == year).first()
+        if not current_year_data:
+            raise HTTPException(status_code=404, detail="未找到当前年物料数据")
+        last_year_data = db.query(MaterialData).filter(MaterialData.factory == factory,
+                                                       MaterialData.year == year - 1).first()
+        indicators = ["renewable_input", "non_renewable_input", "renewable_output", "non_renewable_output",
+                      "material_consumption", "wood_fiber", "aluminum", "packaging_material", "paper_consumption",
+                      "packaging_intensity", "paper_intensity", "total_input", "total_output", "renewable_input_ratio",
+                      "renewable_output_ratio"]
+        reason_record = db.query(MaterialAnalyze).filter(MaterialAnalyze.factory == factory,
+                                                         MaterialAnalyze.year == year).first()
+        reasons = reason_record.reasons if reason_record else [""] * len(indicators)
+        result = {}
+        for idx, indicator in enumerate(indicators):
+            current_value = getattr(current_year_data, indicator.lower(), None)
+            last_value = getattr(last_year_data, indicator.lower(), None) if last_year_data else None
+            comparison = None
+            if last_value is not None and last_value != 0:
+                try:
+                    comparison = ((current_value - last_value) / last_value) * 100
+                    comparison = round(comparison, 2)
+                except (TypeError, ZeroDivisionError):
+                    comparison = None
+            reason = reasons[idx] if idx < len(reasons) else ""
+            result[indicator] = {"currentYear": current_value, "lastYear": last_value, "comparison": comparison,
+                                 "reason": reason}
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取物料数据失败: {str(e)}")
+
+
+@app.post("/api/material/reasons")
+async def save_material_reasons(factory: str = Body(...), year: int = Body(...), reasons: Dict[str, str] = Body(...),
+                                db: Session = Depends(get_db)):
+    try:
+        indicators = ["renewable_input", "non_renewable_input", "renewable_output", "non_renewable_output",
+                      "material_consumption", "wood_fiber", "aluminum", "packaging_material", "paper_consumption",
+                      "packaging_intensity", "paper_intensity", "total_input", "total_output", "renewable_input_ratio",
+                      "renewable_output_ratio"]
+        reasons_list = []
+        for indicator in indicators:
+            reasons_list.append(reasons.get(indicator, ""))
+        existing_record = db.query(MaterialAnalyze).filter(MaterialAnalyze.factory == factory,
+                                                           MaterialAnalyze.year == year).first()
+        if existing_record:
+            existing_record.reasons = reasons_list
+        else:
+            new_record = MaterialAnalyze(factory=factory, year=year, reasons=reasons_list)
+            db.add(new_record)
+        db.commit()
+        return {"status": "success", "message": "原因说明已保存"}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"保存原因说明失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"保存原因说明失败: {str(e)}")
+
 
 @app.get("/energy/{factory}/{year}")
 async def get_energy_data(factory: str, year: int, db: Session = Depends(get_db)):
