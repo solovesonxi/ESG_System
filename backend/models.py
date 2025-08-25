@@ -63,6 +63,7 @@ class EnergyData(Base):
     total_energy_consumption = Column(Float)  # Tce
     turnover = Column(Float)  # 万元
     energy_consumption_intensity = Column(Float)
+    reasons = Column(JSON, nullable=True)
 
 
 class WaterData(Base):

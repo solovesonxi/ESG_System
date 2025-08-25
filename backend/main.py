@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from fastapi import FastAPI, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
@@ -57,65 +57,61 @@ async def submit_material_data(data: MaterialSubmission, db: Session = Depends(g
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/material")
-async def get_material_data(factory: str = Query(..., description="工厂名称"),
-                            year: int = Query(..., description="统计年份"), db: Session = Depends(get_db)) -> Dict[
-    str, Any]:
+
+def fetch_and_process_data(db, model, factory, year, fields):
+    current_data = db.query(model).filter(model.factory == factory, model.year == year).first()
+    last_year_data = db.query(model).filter(model.factory == factory, model.year == year - 1).first() if year > 1 else None
+    result = {}
+    if current_data:
+        data_reasons = current_data.reasons or []
+        for i, field in enumerate(fields):
+            current_value = getattr(current_data, field)
+            last_value = getattr(last_year_data, field) if last_year_data else None
+            comparison= None if (last_value is None or last_value == 0) else round(((current_value - last_value) / last_value) * 100, 2)
+            reason = data_reasons[i] if i < len(data_reasons) else ""
+            result[field] = {"currentYear": current_value, "lastYear": last_value,
+                "comparison": comparison, "reason": reason}
+    return result
+
+@app.get("/api/envquant")
+async def get_envquant_data(factory: str = Query(..., description="工厂名称"),
+        year: int = Query(..., description="统计年份"), db: Session = Depends(get_db)) -> Dict[str, Any]:
     try:
-        current_year_data = db.query(MaterialData).filter(MaterialData.factory == factory,
-                                                          MaterialData.year == year).first()
-        if not current_year_data:
-            raise HTTPException(status_code=404, detail="未找到当前年物料数据")
-        last_year_data = db.query(MaterialData).filter(MaterialData.factory == factory,
-                                                       MaterialData.year == year - 1).first()
-        indicators = ["renewable_input", "non_renewable_input", "renewable_output", "non_renewable_output",
-                      "material_consumption", "wood_fiber", "aluminum", "packaging_material", "paper_consumption",
-                      "packaging_intensity", "paper_intensity", "total_input", "total_output", "renewable_input_ratio",
-                      "renewable_output_ratio"]
-        reasons = current_year_data.reasons if current_year_data.reasons else [""] * len(indicators)
-        result = {}
-        for idx, indicator in enumerate(indicators):
-            current_value = getattr(current_year_data, indicator, None)
-            last_value = getattr(last_year_data, indicator, None) if last_year_data else None
-            comparison = None
-            if last_value is not None and last_value != 0:
-                try:
-                    comparison = ((current_value - last_value) / last_value) * 100
-                    comparison = round(comparison, 2)
-                except (TypeError, ZeroDivisionError):
-                    comparison = None
-            reason = reasons[idx] if idx < len(reasons) else ""
-            result[indicator] = {"currentYear": current_value, "lastYear": last_value, "comparison": comparison,
-                                 "reason": reason}
+        result = {"material": {}, "energy": {}}
+        material_fields = ["renewable_input", "non_renewable_input", "renewable_output", "non_renewable_output",
+            "material_consumption", "wood_fiber", "aluminum", "packaging_material", "paper_consumption",
+            "packaging_intensity", "paper_intensity", "total_input", "total_output", "renewable_input_ratio",
+            "renewable_output_ratio"]
+        energy_fields = ["total_purchased_power", "total_renewable_power", "coal_consumption", "total_gasoline",
+            "total_diesel", "total_natural_gas", "total_other_energy", "total_energy_consumption",
+            "energy_consumption_intensity"]
+        result["material"] = fetch_and_process_data(db, MaterialData, factory, year, material_fields)
+        result["energy"] = fetch_and_process_data(db, EnergyData, factory, year, energy_fields)
+        # 检查是否有数据
+        if not result["material"] and not result["energy"]:
+            raise HTTPException(status_code=404, detail="未找到环境定量数据")
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"获取物料数据失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"获取数据失败: {str(e)}")
 
 
-@app.post("/api/material/reasons")
-async def save_material_reasons(factory: str = Body(...), year: int = Body(...), reasons: Dict[str, str] = Body(...),
-                                db: Session = Depends(get_db)):
+@app.post("/api/envquant/reasons")
+async def save_reasons(factory: str = Body(..., description="工厂名称"), year: int = Body(..., description="统计年份"),
+        materialReasons: List[str] = Body(..., description="物料原因分析列表"),
+        energyReasons: List[str] = Body(..., description="能源原因分析列表"), db: Session = Depends(get_db)):
     try:
-        indicators = ["renewable_input", "non_renewable_input", "renewable_output", "non_renewable_output",
-                      "material_consumption", "wood_fiber", "aluminum", "packaging_material", "paper_consumption",
-                      "packaging_intensity", "paper_intensity", "total_input", "total_output", "renewable_input_ratio",
-                      "renewable_output_ratio"]
-        reasons_list = []
-        for indicator in indicators:
-            reasons_list.append(reasons.get(indicator, ""))
         material_data = db.query(MaterialData).filter(MaterialData.factory == factory,
                                                       MaterialData.year == year).first()
         if material_data:
-            material_data.reasons = reasons_list
-            db.commit()
-            return {"status": "success", "message": "原因说明已保存"}
-        else:
-            raise HTTPException(status_code=404, detail="未找到对应的物料数据")
-
+            material_data.reasons = materialReasons
+        energy_data = db.query(EnergyData).filter(EnergyData.factory == factory, EnergyData.year == year).first()
+        if energy_data:
+            energy_data.reasons = energyReasons
+        db.commit()
+        return {"status": "success", "message": "原因分析提交成功"}
     except Exception as e:
         db.rollback()
-        logger.error(f"保存原因说明失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"保存原因说明失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"提交原因分析失败: {str(e)}")
 
 
 @app.post("/submit/energy")
@@ -127,12 +123,12 @@ async def submit_energy_data(data: EnergySubmission, db: Session = Depends(get_d
                                total_purchased_power=data.totalPurchasedPower,
                                total_renewable_power=data.totalRenewablePower, total_gasoline=data.totalGasoline,
                                total_diesel=data.totalDiesel, total_natural_gas=data.totalNaturalGas,
-                               total_other_energy=data.totalOtherEnergy, water_consumption=data.waterConsumption, coal_consumption=data.coalConsumption,
-                               power_consumption=data.powerConsumption, gasoline_consumption=data.gasolineConsumption,
-                               diesel_consumption=data.dieselConsumption,
+                               total_other_energy=data.totalOtherEnergy, water_consumption=data.waterConsumption,
+                               coal_consumption=data.coalConsumption, power_consumption=data.powerConsumption,
+                               gasoline_consumption=data.gasolineConsumption, diesel_consumption=data.dieselConsumption,
                                natural_gas_consumption=data.naturalGasConsumption,
                                total_energy_consumption=data.totalEnergyConsumption, turnover=data.turnover,
-                               energy_consumption_intensity=data.energyConsumptionIntensity)
+                               energy_consumption_intensity=data.energyConsumptionIntensity, reasons=[""] * 9)
         db.add(db_record)
         db.commit()
         return {"status": "success", "id": db_record.id, "factory": db_record.factory, "year": db_record.year}
