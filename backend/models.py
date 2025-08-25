@@ -55,6 +55,7 @@ class EnergyData(Base):
 
     # 能源消耗计算结果
     water_consumption = Column(Float)  # Tce
+    coal_consumption = Column(Float)  # Tce
     power_consumption = Column(Float)  # Tce
     gasoline_consumption = Column(Float)  # Tce
     diesel_consumption = Column(Float)  # Tce

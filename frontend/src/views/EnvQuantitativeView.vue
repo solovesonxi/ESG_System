@@ -56,8 +56,8 @@
             <thead>
             <tr>
               <th>指标</th>
-              <th>当前年 ({{ year }})</th>
-              <th>上一年 ({{ year - 1 }})</th>
+              <th>当期 ({{ year }})</th>
+              <th>上期 ({{ year - 1 }})</th>
               <th>对比上期 (%)</th>
               <th>原因分析</th>
             </tr>
@@ -76,16 +76,15 @@
             </tr>
             </tbody>
           </table>
-          <div class="edit-controls">
-            <button v-if="!isEditing" @click="startEditing" class="edit-button">✏️</button>
-            <div v-else class="edit-actions">
-              <button @click="cancelEditing" class="cancel-button">取消</button>
-              <button @click="submitReasons" class="submit-button">提交</button>
-            </div>
-          </div>
         </div>
       </fieldset>
-
+      <div class="edit-controls" @click="!isEditing && startEditing()">
+        <button v-if="!isEditing" class="edit-button">✏️</button>
+        <div v-else class="edit-actions">
+          <button @click.stop="cancelEditing" class="cancel-button">取消</button>
+          <button @click.stop="submitReasons" class="submit-button">提交</button>
+        </div>
+      </div>
     </form>
   </div>
 </template>
@@ -189,10 +188,10 @@ const submitReasons = async () => {
       }
     });
     isEditing.value = false;
-    alert('原因提交成功！');
+    alert('原因分析提交成功！');
   } catch (error) {
-    console.error('提交原因失败:', error);
-    alert(`提交原因失败: ${error.response?.data?.detail || error.message}`);
+    console.error('提交原因分析失败:', error);
+    alert(`提交原因分析失败: ${error.response?.data?.detail || error.message}`);
   }
 }
 </script>
@@ -220,34 +219,66 @@ const submitReasons = async () => {
 }
 
 .edit-controls {
-  position: absolute;
-  top: 10px;
-  right: 10px;
+  position: fixed;
+  right: 20px;
+  top: 200px;
   z-index: 1000;
+  background: rgba(44, 62, 80, 0.6);
+  padding: 8px 8px;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+.edit-controls:not(.is-editing)::before {
+  content: '编辑';
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s;
+  order: -1;
+  font-size: 18px;
+}
+.edit-controls:hover:not(.is-editing)::before {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .edit-button, .cancel-button, .submit-button {
-  padding: 4px 8px;
-  margin-left: 10px;
+  padding: 8px 12px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
+  transition: all 0.2s;
 }
 
 .edit-button {
-  background-color: #4CAF50;
-  color: white;
+  background-color: transparent;
+  font-size: 25px;
+}
+.edit-button:hover {
+  background-color: transparent;
 }
 
 .cancel-button {
   background-color: #f44336;
   color: white;
 }
+.cancel-button:hover {
+  background-color: #d32f2f;
+}
 
 .submit-button {
   background-color: #2196F3;
   color: white;
+}
+.submit-button:hover {
+  background-color: #1976d2;
 }
 
 

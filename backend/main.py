@@ -57,6 +57,67 @@ async def submit_material_data(data: MaterialSubmission, db: Session = Depends(g
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/material")
+async def get_material_data(factory: str = Query(..., description="工厂名称"),
+                            year: int = Query(..., description="统计年份"), db: Session = Depends(get_db)) -> Dict[
+    str, Any]:
+    try:
+        current_year_data = db.query(MaterialData).filter(MaterialData.factory == factory,
+                                                          MaterialData.year == year).first()
+        if not current_year_data:
+            raise HTTPException(status_code=404, detail="未找到当前年物料数据")
+        last_year_data = db.query(MaterialData).filter(MaterialData.factory == factory,
+                                                       MaterialData.year == year - 1).first()
+        indicators = ["renewable_input", "non_renewable_input", "renewable_output", "non_renewable_output",
+                      "material_consumption", "wood_fiber", "aluminum", "packaging_material", "paper_consumption",
+                      "packaging_intensity", "paper_intensity", "total_input", "total_output", "renewable_input_ratio",
+                      "renewable_output_ratio"]
+        reasons = current_year_data.reasons if current_year_data.reasons else [""] * len(indicators)
+        result = {}
+        for idx, indicator in enumerate(indicators):
+            current_value = getattr(current_year_data, indicator, None)
+            last_value = getattr(last_year_data, indicator, None) if last_year_data else None
+            comparison = None
+            if last_value is not None and last_value != 0:
+                try:
+                    comparison = ((current_value - last_value) / last_value) * 100
+                    comparison = round(comparison, 2)
+                except (TypeError, ZeroDivisionError):
+                    comparison = None
+            reason = reasons[idx] if idx < len(reasons) else ""
+            result[indicator] = {"currentYear": current_value, "lastYear": last_value, "comparison": comparison,
+                                 "reason": reason}
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取物料数据失败: {str(e)}")
+
+
+@app.post("/api/material/reasons")
+async def save_material_reasons(factory: str = Body(...), year: int = Body(...), reasons: Dict[str, str] = Body(...),
+                                db: Session = Depends(get_db)):
+    try:
+        indicators = ["renewable_input", "non_renewable_input", "renewable_output", "non_renewable_output",
+                      "material_consumption", "wood_fiber", "aluminum", "packaging_material", "paper_consumption",
+                      "packaging_intensity", "paper_intensity", "total_input", "total_output", "renewable_input_ratio",
+                      "renewable_output_ratio"]
+        reasons_list = []
+        for indicator in indicators:
+            reasons_list.append(reasons.get(indicator, ""))
+        material_data = db.query(MaterialData).filter(MaterialData.factory == factory,
+                                                      MaterialData.year == year).first()
+        if material_data:
+            material_data.reasons = reasons_list
+            db.commit()
+            return {"status": "success", "message": "原因说明已保存"}
+        else:
+            raise HTTPException(status_code=404, detail="未找到对应的物料数据")
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"保存原因说明失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"保存原因说明失败: {str(e)}")
+
+
 @app.post("/submit/energy")
 async def submit_energy_data(data: EnergySubmission, db: Session = Depends(get_db)):
     try:
@@ -66,7 +127,7 @@ async def submit_energy_data(data: EnergySubmission, db: Session = Depends(get_d
                                total_purchased_power=data.totalPurchasedPower,
                                total_renewable_power=data.totalRenewablePower, total_gasoline=data.totalGasoline,
                                total_diesel=data.totalDiesel, total_natural_gas=data.totalNaturalGas,
-                               total_other_energy=data.totalOtherEnergy, water_consumption=data.waterConsumption,
+                               total_other_energy=data.totalOtherEnergy, water_consumption=data.waterConsumption, coal_consumption=data.coalConsumption,
                                power_consumption=data.powerConsumption, gasoline_consumption=data.gasolineConsumption,
                                diesel_consumption=data.dieselConsumption,
                                natural_gas_consumption=data.naturalGasConsumption,
@@ -272,71 +333,3 @@ async def submit_supply_data(data: SupplySubmission, db: Session = Depends(get_d
 @app.get("/")
 async def health_check():
     return {"status": "running", "timestamp": datetime.now(), "service": "ESG Energy API"}
-
-
-@app.get("/api/material")
-async def get_material_data(factory: str = Query(..., description="工厂名称"),
-                            year: int = Query(..., description="统计年份"), db: Session = Depends(get_db)) -> Dict[
-    str, Any]:
-    try:
-        current_year_data = db.query(MaterialData).filter(MaterialData.factory == factory,
-                                                          MaterialData.year == year).first()
-        if not current_year_data:
-            raise HTTPException(status_code=404, detail="未找到当前年物料数据")
-        last_year_data = db.query(MaterialData).filter(MaterialData.factory == factory,
-                                                       MaterialData.year == year - 1).first()
-        indicators = ["renewable_input", "non_renewable_input", "renewable_output", "non_renewable_output",
-                      "material_consumption", "wood_fiber", "aluminum", "packaging_material", "paper_consumption",
-                      "packaging_intensity", "paper_intensity", "total_input", "total_output", "renewable_input_ratio",
-                      "renewable_output_ratio"]
-        reasons = current_year_data.reasons if current_year_data.reasons else [""] * len(indicators)
-        result = {}
-        for idx, indicator in enumerate(indicators):
-            current_value = getattr(current_year_data, indicator, None)
-            last_value = getattr(last_year_data, indicator, None) if last_year_data else None
-            comparison = None
-            if last_value is not None and last_value != 0:
-                try:
-                    comparison = ((current_value - last_value) / last_value) * 100
-                    comparison = round(comparison, 2)
-                except (TypeError, ZeroDivisionError):
-                    comparison = None
-            reason = reasons[idx] if idx < len(reasons) else ""
-            result[indicator] = {"currentYear": current_value, "lastYear": last_value, "comparison": comparison,
-                "reason": reason}
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"获取物料数据失败: {str(e)}")
-
-
-@app.post("/api/material/reasons")
-async def save_material_reasons(factory: str = Body(...), year: int = Body(...), reasons: Dict[str, str] = Body(...),
-        db: Session = Depends(get_db)):
-    try:
-        indicators = ["renewable_input", "non_renewable_input", "renewable_output", "non_renewable_output",
-                      "material_consumption", "wood_fiber", "aluminum", "packaging_material", "paper_consumption",
-                      "packaging_intensity", "paper_intensity", "total_input", "total_output", "renewable_input_ratio",
-                      "renewable_output_ratio"]
-        reasons_list = []
-        for indicator in indicators:
-            reasons_list.append(reasons.get(indicator, ""))
-        material_data = db.query(MaterialData).filter(MaterialData.factory == factory,
-                                                      MaterialData.year == year).first()
-        if material_data:
-            material_data.reasons = reasons_list
-            db.commit()
-            return {"status": "success", "message": "原因说明已保存"}
-        else:
-            raise HTTPException(status_code=404, detail="未找到对应的物料数据")
-
-    except Exception as e:
-        db.rollback()
-        logger.error(f"保存原因说明失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"保存原因说明失败: {str(e)}")
-
-
-@app.get("/energy/{factory}/{year}")
-async def get_energy_data(factory: str, year: int, db: Session = Depends(get_db)):
-    record = db.query(EnergyData).filter(EnergyData.factory == factory, EnergyData.year == year).first()
-    if not record: raise HTTPException(status_code=404, detail=f"找不到 {factory} {year} 年的能源数据")
-    return record
