@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, JSON
+from sqlalchemy import Column, Integer, String, Float, JSON, UniqueConstraint
 
 from database import Base
 
@@ -376,3 +376,32 @@ class EnvQuantData(Base):
     env_penalty_amount = Column(Float, default=0.0)  # 环境处罚金额
     env_violations = Column(Integer, default=0) # 环境违规
     reasons = Column(JSON, nullable=True)
+
+
+class EnvQualData(Base):
+    __tablename__ = "env_qual"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+    board_supervision = Column(String(500), nullable=True)  # 董事会监管
+    management_responsibility = Column(String(500), nullable=True)  # 管理层职责
+    environment_strategy = Column(String(500), nullable=True)  # 环境战略
+    risk_opportunity_identification = Column(String(500), nullable=True)  # 风险与机遇识别以及应对措施
+    climate_risk_disclosure = Column(String(500), nullable=True)  # 气候风险应对披露
+    risk_matrix = Column(String(500), nullable=True)  # （物理风险、转型风险、短期风险、长期风险）
+    risk_impact = Column(String(500), nullable=True)  # 风险影响
+    resilience = Column(String(500), nullable=True)  # 能力韧性
+    risk_process = Column(String(500), nullable=True)  # （识别、评估风险流程）
+    risk_management_process = Column(String(500), nullable=True)  # 管理风险流程
+    business_strategy = Column(String(500), nullable=True)  # 纳入业务策略
+    ghg_reduction_target = Column(String(500), nullable=True)  # 温室气体排放物减排目标
+    ghg_reduction_rate = Column(Float, nullable=True)  # 温室气体减排目标达成率（%）
+    ghg_reduction_action = Column(String(500), nullable=True)  # 温室气体排放物减排行动
+    carbon_capture_target = Column(String(500), nullable=True)  # 碳捕捉计划目标
+    carbon_capture_rate = Column(Float, nullable=True)  # 碳捕捉计划目标达成率（%）
+    comparison = Column(JSON, nullable=True)
+    reasons = Column(JSON, nullable=True)
+    __table_args__ = (
+        UniqueConstraint('factory', 'year', name='uq_factory_year'),
+    )

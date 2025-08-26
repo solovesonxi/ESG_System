@@ -91,7 +91,6 @@ class WaterSubmission(BaseModel):
     waterRecycleRate: float
 
 
-
 class EmissionSubmission(BaseModel):
     factory: str
     year: int
@@ -296,7 +295,7 @@ class SatisfactionSubmission(BaseModel):
     factory: str
     year: int
     satisfaction: List[float]  # 12个月份的满意度百分比
-    annualAverage: float       # 年度平均满意度
+    annualAverage: float  # 年度平均满意度
 
 
 class SupplySubmission(BaseModel):
@@ -327,6 +326,7 @@ class SupplySubmission(BaseModel):
     socRatio: float
     localPurchaseRatio: float
 
+
 class EnvManagementSubmission(BaseModel):
     national_green_factory: int
     provincial_green_factory: int
@@ -334,3 +334,15 @@ class EnvManagementSubmission(BaseModel):
     env_penalty_amount: float
     env_violations: int
     reason: str
+
+
+class IndicatorData(BaseModel):
+    currentYear: str
+    comparison: str
+    reason: str
+
+
+class EnvQualDataRequest(BaseModel):
+    factory: str
+    year: int
+    envQualData: Dict[str, IndicatorData]

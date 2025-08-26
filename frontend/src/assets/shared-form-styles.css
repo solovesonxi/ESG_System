@@ -231,3 +231,93 @@ button {
         gap: 15px;
     }
 }
+
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.data-table th, .data-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.data-table th {
+    background-color: #f2f2f2;
+}
+
+.reason-input {
+    width: 100%;
+    min-height: 60px;
+}
+
+.edit-controls {
+    position: fixed;
+    right: 20px;
+    top: 200px;
+    z-index: 1000;
+    background: rgba(44, 62, 80, 0.6);
+    padding: 8px 8px;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.edit-controls::before {
+    content: '编辑';
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s;
+    order: -1;
+    font-size: 18px;
+}
+
+.edit-controls:hover::before {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.edit-button, .cancel-button, .submit-button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.edit-button {
+    background-color: transparent;
+    font-size: 25px;
+}
+
+.edit-button:hover {
+    background-color: transparent;
+}
+
+.cancel-button {
+    background-color: #f44336;
+    color: white;
+}
+
+.cancel-button:hover {
+    background-color: #d32f2f;
+}
+
+.submit-button {
+    background-color: #2196F3;
+    color: white;
+}
+
+.submit-button:hover {
+    background-color: #1976d2;
+}

@@ -10,9 +10,10 @@ from starlette.middleware.cors import CORSMiddleware
 
 from database import get_db, engine
 from models import EnergyData, Base, MaterialData, WaterData, EmissionData, EmploymentData, TrainingData, \
-    SatisfactionData, SupplyData, WasteData, InvestmentData, OHSData, EnvQuantData
+    SatisfactionData, SupplyData, WasteData, InvestmentData, OHSData, EnvQuantData, EnvQualData
 from schemas import MaterialSubmission, EnergySubmission, WaterSubmission, EmissionSubmission, EmploymentSubmission, \
-    TrainingSubmission, SatisfactionSubmission, SupplySubmission, WasteSubmission, InvestmentSubmission, OHSSubmission
+    TrainingSubmission, SatisfactionSubmission, SupplySubmission, WasteSubmission, InvestmentSubmission, OHSSubmission, \
+    EnvQualDataRequest
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -36,6 +37,9 @@ app = FastAPI()
 # 添加CORS中间件
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"],
                    allow_headers=["*"], )
+config_path = Path(__file__).parent / "config" / "indicators.json"
+with open(config_path, "r", encoding="utf-8") as f:
+    indicators = json.load(f)
 
 
 @app.get("/")
@@ -282,14 +286,14 @@ def fetch_and_process_quant_data(db, model, factory, year, fields):
     last_year_data = db.query(model).filter(model.factory == factory,
                                             model.year == year - 1).first() if year > 1 else None
     result = {}
-    data_reasons = current_data.reasons if current_data else []
+    reasons = current_data.reasons if current_data else []
     for i, field in enumerate(fields):
         current_value = getattr(current_data, field) if current_data else None
         last_value = getattr(last_year_data, field) if last_year_data else None
         comparison = None if (last_value is None or last_value == 0) else round(
             ((current_value - last_value) / last_value) * 100,
             2) if current_value is not None and last_value is not None else None
-        reason = data_reasons[i] if i < len(data_reasons) else ""
+        reason = reasons[i] if i < len(reasons) else ""
         result[field] = {"currentYear": current_value, "lastYear": last_value, "comparison": comparison,
                          "reason": reason}
     return result
@@ -301,16 +305,18 @@ async def get_envquant_data(factory: str = Query(..., description="工厂名称"
     str, Any]:
     try:
         result = {}
-        config_path = Path(__file__).parent / "config" / "indicators.json"
-        with open(config_path, "r", encoding="utf-8") as f:
-            indicators = json.load(f)
-        result["material"] = fetch_and_process_quant_data(db, MaterialData, factory, year, indicators["material"])
-        result["energy"] = fetch_and_process_quant_data(db, EnergyData, factory, year, indicators["energy"])
-        result["water"] = fetch_and_process_quant_data(db, WaterData, factory, year, indicators["water"])
-        result["emission"] = fetch_and_process_quant_data(db, EmissionData, factory, year, indicators["emission"])
-        result["waste"] = fetch_and_process_quant_data(db, WasteData, factory, year, indicators["waste"])
-        result["investment"] = fetch_and_process_quant_data(db, InvestmentData, factory, year, indicators["investment"])
-        result["envQuant"] = fetch_and_process_quant_data(db, EnvQuantData, factory, year, indicators["envQuant"])
+        envquant_indicators = indicators["env_quant"]
+        result["material"] = fetch_and_process_quant_data(db, MaterialData, factory, year,
+                                                          envquant_indicators["material"])
+        result["energy"] = fetch_and_process_quant_data(db, EnergyData, factory, year, envquant_indicators["energy"])
+        result["water"] = fetch_and_process_quant_data(db, WaterData, factory, year, envquant_indicators["water"])
+        result["emission"] = fetch_and_process_quant_data(db, EmissionData, factory, year,
+                                                          envquant_indicators["emission"])
+        result["waste"] = fetch_and_process_quant_data(db, WasteData, factory, year, envquant_indicators["waste"])
+        result["investment"] = fetch_and_process_quant_data(db, InvestmentData, factory, year,
+                                                            envquant_indicators["investment"])
+        result["envQuant"] = fetch_and_process_quant_data(db, EnvQuantData, factory, year,
+                                                          envquant_indicators["envQuant"])
         if not any(result.values()):
             raise HTTPException(status_code=404, detail="未找到环境定量数据")
         return result
@@ -319,11 +325,12 @@ async def get_envquant_data(factory: str = Query(..., description="工厂名称"
 
 
 @app.post("/api/envquant/reasons")
-async def save_reasons(factory: str = Body(..., description="工厂名称"), year: int = Body(..., description="统计年份"),
-                       materialReasons: List[str] = Body(...), energyReasons: List[str] = Body(...),
-                       waterReasons: List[str] = Body(...), emissionReasons: List[str] = Body(...),
-                       wasteReasons: List[str] = Body(...), investmentReasons: List[str] = Body(...),
-                       envQuantReasons: List[str] = Body(...), db: Session = Depends(get_db)):
+async def save_envquant_reasons(factory: str = Body(..., description="工厂名称"),
+                                year: int = Body(..., description="统计年份"), materialReasons: List[str] = Body(...),
+                                energyReasons: List[str] = Body(...), waterReasons: List[str] = Body(...),
+                                emissionReasons: List[str] = Body(...), wasteReasons: List[str] = Body(...),
+                                investmentReasons: List[str] = Body(...), envQuantReasons: List[str] = Body(...),
+                                db: Session = Depends(get_db)):
     try:
         reason_mapping = {"materialReasons": (MaterialData, materialReasons),
                           "energyReasons": (EnergyData, energyReasons), "waterReasons": (WaterData, waterReasons),
@@ -340,3 +347,72 @@ async def save_reasons(factory: str = Body(..., description="工厂名称"), yea
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"提交原因分析失败: {str(e)}")
+
+
+def fetch_and_process_qual_data(db, model, factory, year, fields):
+    current_data = db.query(model).filter(model.factory == factory, model.year == year).first()
+    last_year_data = db.query(model).filter(model.factory == factory,
+                                            model.year == year - 1).first() if year > 1 else None
+    result = {}
+    comparisons = current_data.comparison if current_data else []
+    reasons = current_data.reasons if current_data else []
+    for i, field in enumerate(fields):
+        current_value = getattr(current_data, field) if current_data else None
+        last_value = getattr(last_year_data, field) if last_year_data else None
+        comparison = comparisons[i] if i < len(reasons) else ""
+        reason = reasons[i] if i < len(reasons) else ""
+        result[field] = {"currentYear": current_value, "lastYear": last_value, "comparison": comparison,
+                         "reason": reason}
+    return result
+
+
+@app.get("/api/envqual")
+async def get_envqual_data(factory: str, year: int, db: Session = Depends(get_db)):
+    current_data = db.query(EnvQualData).filter_by(factory=factory, year=year).first()
+    last_year_data = db.query(EnvQualData).filter_by(factory=factory, year=year - 1).first()
+    response_data = {}
+    for key in indicators["env_qual"]["total"]:
+        current_value = getattr(current_data, key, "") if current_data else ""
+        last_year_value = getattr(last_year_data, key, "") if last_year_data else ""
+        comparison = current_data.comparison.get(key, "") if current_data and current_data.comparison else ""
+        reason = current_data.reasons.get(key, "") if current_data and current_data.reasons else ""
+        response_data[key] = {"lastYear": last_year_value, "currentYear": current_value, "comparison": comparison,
+                              "reason": reason}
+    return response_data
+
+
+@app.post("/api/envqual/data")
+async def save_envqual_data(request: EnvQualDataRequest = Body(...), db: Session = Depends(get_db)):
+    try:
+        existing_data = db.query(EnvQualData).filter_by(factory=request.factory, year=request.year).first()
+        comparisons = {}
+        reasons = {}
+        indicator_data = {}
+        for indicator_key, data in request.envQualData.items():
+            value = data.currentYear
+            if indicator_key in indicators["env_qual"]["percentage"]:
+                if value == '':
+                    value = None
+                else:
+                    try:
+                        value = float(value)
+                    except (ValueError, TypeError):
+                        value = None
+            indicator_data[indicator_key] = value
+            comparisons[indicator_key] = data.comparison
+            reasons[indicator_key] = data.reason
+        if existing_data:
+            for key, value in indicator_data.items():
+                setattr(existing_data, key, value)
+            existing_data.comparison = comparisons
+            existing_data.reasons = reasons
+        else:
+            new_data = EnvQualData(factory=request.factory, year=request.year, **indicator_data, comparison=comparisons,
+                reasons=reasons)
+            db.add(new_data)
+
+        db.commit()
+        return {"status": "success", "message": "数据提交成功"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"提交数据失败: {str(e)}")
