@@ -385,3 +385,116 @@ CREATE INDEX IF NOT EXISTS idx_satisfaction_year ON satisfaction(year);
 CREATE INDEX IF NOT EXISTS idx_supply_factory_year ON supply(factory, year);
 CREATE INDEX IF NOT EXISTS idx_supply_factory ON supply(factory);
 CREATE INDEX IF NOT EXISTS idx_supply_year ON supply(year);
+
+
+-- 劳动定量原因说明表
+CREATE TABLE IF NOT EXISTS labor_reasons (
+    id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
+    year INTEGER NOT NULL,
+    indicator VARCHAR(200) NOT NULL,
+    reason TEXT,
+    CONSTRAINT uq_labor_reason_factory_year_indicator UNIQUE (factory, year, indicator)
+);
+
+CREATE INDEX IF NOT EXISTS idx_labor_reasons_factory_year ON labor_reasons(factory, year);
+
+-- 供应链：新增影响评估字段（若不存在则增加）
+ALTER TABLE supply ADD COLUMN IF NOT EXISTS env_assessment_count INTEGER DEFAULT 0;
+ALTER TABLE supply ADD COLUMN IF NOT EXISTS soc_assessment_count INTEGER DEFAULT 0;
+
+-- 产品责任
+CREATE TABLE IF NOT EXISTS product_responsibility (
+    id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
+    year INTEGER NOT NULL,
+    complaints_total INTEGER DEFAULT 0,
+    complaints_handled INTEGER DEFAULT 0,
+    complaints_handle_rate NUMERIC(5,2) DEFAULT 0.00,
+    customer_satisfaction NUMERIC(5,2) DEFAULT 0.00,
+    recall_count INTEGER DEFAULT 0,
+    recall_percent NUMERIC(6,2) DEFAULT 0.00,
+    product_quality_issues INTEGER DEFAULT 0,
+    cyber_incidents INTEGER DEFAULT 0,
+    CONSTRAINT uq_product_factory_year UNIQUE (factory, year)
+);
+CREATE INDEX IF NOT EXISTS idx_product_factory_year ON product_responsibility(factory, year);
+
+-- 知识产权保护
+CREATE TABLE IF NOT EXISTS ipr (
+    id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
+    year INTEGER NOT NULL,
+    patents_total INTEGER DEFAULT 0,
+    invention_total INTEGER DEFAULT 0,
+    invention_applications INTEGER DEFAULT 0,
+    utility_model_total INTEGER DEFAULT 0,
+    design_total INTEGER DEFAULT 0,
+    authorized_total INTEGER DEFAULT 0,
+    new_patents_year INTEGER DEFAULT 0,
+    software_copyright_total INTEGER DEFAULT 0,
+    trademarks_total INTEGER DEFAULT 0,
+    CONSTRAINT uq_ipr_factory_year UNIQUE (factory, year)
+);
+CREATE INDEX IF NOT EXISTS idx_ipr_factory_year ON ipr(factory, year);
+
+-- 社区参与
+CREATE TABLE IF NOT EXISTS community (
+    id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
+    year INTEGER NOT NULL,
+    donation_total NUMERIC(12,2) DEFAULT 0.00,
+    community_investment NUMERIC(12,2) DEFAULT 0.00,
+    CONSTRAINT uq_community_factory_year UNIQUE (factory, year)
+);
+CREATE INDEX IF NOT EXISTS idx_community_factory_year ON community(factory, year);
+
+-- 志愿活动
+CREATE TABLE IF NOT EXISTS volunteer (
+    id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
+    year INTEGER NOT NULL,
+    participants INTEGER DEFAULT 0,
+    hours_total NUMERIC(12,2) DEFAULT 0.00,
+    CONSTRAINT uq_volunteer_factory_year UNIQUE (factory, year)
+);
+CREATE INDEX IF NOT EXISTS idx_volunteer_factory_year ON volunteer(factory, year);
+
+-- 其他定量原因说明表
+CREATE TABLE IF NOT EXISTS other_reasons (
+    id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
+    year INTEGER NOT NULL,
+    indicator VARCHAR(200) NOT NULL,
+    reason TEXT,
+    CONSTRAINT uq_other_reason_factory_year_indicator UNIQUE (factory, year, indicator)
+);
+CREATE INDEX IF NOT EXISTS idx_other_reasons_factory_year ON other_reasons(factory, year);
+
+-- 劳动定性数据表
+CREATE TABLE IF NOT EXISTS labor_qualitative (
+    id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
+    year INTEGER NOT NULL,
+    indicator VARCHAR(200) NOT NULL,
+    current_text TEXT,
+    last_text TEXT,
+    comparison_text TEXT,
+    reason TEXT,
+    CONSTRAINT uq_labor_qual_factory_year_indicator UNIQUE (factory, year, indicator)
+);
+CREATE INDEX IF NOT EXISTS idx_labor_qual_factory_year ON labor_qualitative(factory, year);
+
+-- 其他定性数据表
+CREATE TABLE IF NOT EXISTS other_qualitative (
+    id SERIAL PRIMARY KEY,
+    factory VARCHAR(100) NOT NULL,
+    year INTEGER NOT NULL,
+    indicator VARCHAR(200) NOT NULL,
+    current_text TEXT,
+    last_text TEXT,
+    comparison_text TEXT,
+    reason TEXT,
+    CONSTRAINT uq_other_qual_factory_year_indicator UNIQUE (factory, year, indicator)
+);
+CREATE INDEX IF NOT EXISTS idx_other_qual_factory_year ON other_qualitative(factory, year);
