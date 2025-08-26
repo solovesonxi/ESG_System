@@ -1,5 +1,7 @@
+import json
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, Any, List
 
 from fastapi import FastAPI, Depends, HTTPException, Query, Body
@@ -8,7 +10,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from database import get_db, engine
 from models import EnergyData, Base, MaterialData, WaterData, EmissionData, EmploymentData, TrainingData, \
-    SatisfactionData, SupplyData, WasteData, InvestmentData, OHSData
+    SatisfactionData, SupplyData, WasteData, InvestmentData, OHSData, EnvQuantData
 from schemas import MaterialSubmission, EnergySubmission, WaterSubmission, EmissionSubmission, EmploymentSubmission, \
     TrainingSubmission, SatisfactionSubmission, SupplySubmission, WasteSubmission, InvestmentSubmission, OHSSubmission
 
@@ -36,6 +38,11 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
                    allow_headers=["*"], )
 
 
+@app.get("/")
+async def health_check():
+    return {"status": "running", "timestamp": datetime.now(), "service": "ESG Energy API"}
+
+
 @app.post("/submit/material")
 async def submit_material_data(data: MaterialSubmission, db: Session = Depends(get_db)):
     try:
@@ -43,11 +50,12 @@ async def submit_material_data(data: MaterialSubmission, db: Session = Depends(g
                                non_renewable_input=data.nonRenewableInput, renewable_output=data.renewableOutput,
                                non_renewable_output=data.nonRenewableOutput,
                                material_consumption=data.materialConsumption, wood_fiber=data.woodFiber,
-                               aluminum=data.aluminum, revenue=data.revenue, packaging_material=data.packagingMaterial,
-                               paper_consumption=data.paper, packaging_intensity=data.packagingIntensity,
-                               paper_intensity=data.paperIntensity, total_input=data.totalInput,
-                               total_output=data.totalOutput, renewable_input_ratio=data.renewableInputRatio,
-                               renewable_output_ratio=data.renewableOutputRatio, reasons=[""] * 15)
+                               aluminum=data.aluminum, total_revenue=data.total_revenue,
+                               packaging_material=data.packagingMaterial, paper_consumption=data.paper,
+                               packaging_intensity=data.packagingIntensity, paper_intensity=data.paperIntensity,
+                               total_input=data.totalInput, total_output=data.totalOutput,
+                               renewable_input_ratio=data.renewableInputRatio,
+                               renewable_output_ratio=data.renewableOutputRatio)
         db.add(db_item)
         db.commit()
         return {"status": "success", "id": db_item.id}
@@ -55,63 +63,6 @@ async def submit_material_data(data: MaterialSubmission, db: Session = Depends(g
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-
-
-
-def fetch_and_process_data(db, model, factory, year, fields):
-    current_data = db.query(model).filter(model.factory == factory, model.year == year).first()
-    last_year_data = db.query(model).filter(model.factory == factory, model.year == year - 1).first() if year > 1 else None
-    result = {}
-    if current_data:
-        data_reasons = current_data.reasons or []
-        for i, field in enumerate(fields):
-            current_value = getattr(current_data, field)
-            last_value = getattr(last_year_data, field) if last_year_data else None
-            comparison= None if (last_value is None or last_value == 0) else round(((current_value - last_value) / last_value) * 100, 2)
-            reason = data_reasons[i] if i < len(data_reasons) else ""
-            result[field] = {"currentYear": current_value, "lastYear": last_value,
-                "comparison": comparison, "reason": reason}
-    return result
-
-@app.get("/api/envquant")
-async def get_envquant_data(factory: str = Query(..., description="工厂名称"),
-        year: int = Query(..., description="统计年份"), db: Session = Depends(get_db)) -> Dict[str, Any]:
-    try:
-        result = {"material": {}, "energy": {}}
-        material_fields = ["renewable_input", "non_renewable_input", "renewable_output", "non_renewable_output",
-            "material_consumption", "wood_fiber", "aluminum", "packaging_material", "paper_consumption",
-            "packaging_intensity", "paper_intensity", "total_input", "total_output", "renewable_input_ratio",
-            "renewable_output_ratio"]
-        energy_fields = ["total_purchased_power", "total_renewable_power", "coal_consumption", "total_gasoline",
-            "total_diesel", "total_natural_gas", "total_other_energy", "total_energy_consumption",
-            "energy_consumption_intensity"]
-        result["material"] = fetch_and_process_data(db, MaterialData, factory, year, material_fields)
-        result["energy"] = fetch_and_process_data(db, EnergyData, factory, year, energy_fields)
-        # 检查是否有数据
-        if not result["material"] and not result["energy"]:
-            raise HTTPException(status_code=404, detail="未找到环境定量数据")
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"获取数据失败: {str(e)}")
-
-
-@app.post("/api/envquant/reasons")
-async def save_reasons(factory: str = Body(..., description="工厂名称"), year: int = Body(..., description="统计年份"),
-        materialReasons: List[str] = Body(..., description="物料原因分析列表"),
-        energyReasons: List[str] = Body(..., description="能源原因分析列表"), db: Session = Depends(get_db)):
-    try:
-        material_data = db.query(MaterialData).filter(MaterialData.factory == factory,
-                                                      MaterialData.year == year).first()
-        if material_data:
-            material_data.reasons = materialReasons
-        energy_data = db.query(EnergyData).filter(EnergyData.factory == factory, EnergyData.year == year).first()
-        if energy_data:
-            energy_data.reasons = energyReasons
-        db.commit()
-        return {"status": "success", "message": "原因分析提交成功"}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"提交原因分析失败: {str(e)}")
 
 
 @app.post("/submit/energy")
@@ -128,7 +79,7 @@ async def submit_energy_data(data: EnergySubmission, db: Session = Depends(get_d
                                gasoline_consumption=data.gasolineConsumption, diesel_consumption=data.dieselConsumption,
                                natural_gas_consumption=data.naturalGasConsumption,
                                total_energy_consumption=data.totalEnergyConsumption, turnover=data.turnover,
-                               energy_consumption_intensity=data.energyConsumptionIntensity, reasons=[""] * 9)
+                               energy_consumption_intensity=data.energyConsumptionIntensity)
         db.add(db_record)
         db.commit()
         return {"status": "success", "id": db_record.id, "factory": db_record.factory, "year": db_record.year}
@@ -169,11 +120,10 @@ def submit_emission_data(data: EmissionSubmission, db: Session = Depends(get_db)
         db_data = EmissionData(factory=data.factory, year=data.year, category_one=data.categoryOne,
                                category_two=data.categoryTwo, category_three=data.categoryThree,
                                category_four=data.categoryFour, category_five=data.categoryFive,
-                               category_six=data.categorySix, revenue=data.revenue,
+                               category_six=data.categorySix, total_revenue=data.total_revenue,
                                category_three_total=data.categoryThreeTotal, total_emission=data.totalEmission,
                                emission_intensity=data.emissionIntensity, voc=data.voc, nmhc=data.nmhc,
-                               benzene=data.benzene, particulate=data.particulate,
-                               custom_emissions=[item.model_dump() for item in data.customEmissions],
+                               benzene=data.benzene, particulate=data.particulate, nox_sox_other=data.nox_sox_other,
                                waste_gas_total=data.wasteGasTotal)
         db.add(db_data)
         db.commit()
@@ -194,7 +144,7 @@ async def submit_waste_data(data: WasteSubmission, db: Session = Depends(get_db)
                            wastewater_total=data.wastewaterTotal, non_hazardous_total=data.nonHazardousTotal,
                            recyclable_total=data.recyclableTotal, total_waste=data.totalWaste,
                            disposal_required_total=data.disposalRequiredTotal, recycle_rate=data.recycleRate,
-                           revenue=data.revenue, protective_reuse_rate=data.protectiveReuseRate,
+                           total_revenue=data.total_revenue, protective_reuse_rate=data.protectiveReuseRate,
                            exceed_events=data.exceedEvents, hazardous_intensity=data.hazardousIntensity,
                            wastewater_intensity=data.wastewaterIntensity)
         db.add(record)
@@ -213,7 +163,8 @@ async def submit_investment_data(data: InvestmentSubmission, db: Session = Depen
                                 green_income=data.greenIncome, env_invest_total=data.envInvestTotal,
                                 clean_tech_invest_total=data.cleanTechInvestTotal,
                                 climate_invest_total=data.climateInvestTotal, green_income_total=data.greenIncomeTotal,
-                                total_investment=data.totalInvestment, green_income_ratio=data.greenIncomeRatio)
+                                total_investment=data.totalInvestment, green_income_ratio=data.greenIncomeRatio,
+                                total_revenue=data.totalRevenue, env_invest_intensity=data.envInvestIntensity)
         db.add(record)
         db.commit()
         return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
@@ -326,6 +277,66 @@ async def submit_supply_data(data: SupplySubmission, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=f"供应链数据提交失败: {str(e)}")
 
 
-@app.get("/")
-async def health_check():
-    return {"status": "running", "timestamp": datetime.now(), "service": "ESG Energy API"}
+def fetch_and_process_quant_data(db, model, factory, year, fields):
+    current_data = db.query(model).filter(model.factory == factory, model.year == year).first()
+    last_year_data = db.query(model).filter(model.factory == factory,
+                                            model.year == year - 1).first() if year > 1 else None
+    result = {}
+    data_reasons = current_data.reasons if current_data else []
+    for i, field in enumerate(fields):
+        current_value = getattr(current_data, field) if current_data else None
+        last_value = getattr(last_year_data, field) if last_year_data else None
+        comparison = None if (last_value is None or last_value == 0) else round(
+            ((current_value - last_value) / last_value) * 100,
+            2) if current_value is not None and last_value is not None else None
+        reason = data_reasons[i] if i < len(data_reasons) else ""
+        result[field] = {"currentYear": current_value, "lastYear": last_value, "comparison": comparison,
+                         "reason": reason}
+    return result
+
+
+@app.get("/api/envquant")
+async def get_envquant_data(factory: str = Query(..., description="工厂名称"),
+                            year: int = Query(..., description="统计年份"), db: Session = Depends(get_db)) -> Dict[
+    str, Any]:
+    try:
+        result = {}
+        config_path = Path(__file__).parent / "config" / "indicators.json"
+        with open(config_path, "r", encoding="utf-8") as f:
+            indicators = json.load(f)
+        result["material"] = fetch_and_process_quant_data(db, MaterialData, factory, year, indicators["material"])
+        result["energy"] = fetch_and_process_quant_data(db, EnergyData, factory, year, indicators["energy"])
+        result["water"] = fetch_and_process_quant_data(db, WaterData, factory, year, indicators["water"])
+        result["emission"] = fetch_and_process_quant_data(db, EmissionData, factory, year, indicators["emission"])
+        result["waste"] = fetch_and_process_quant_data(db, WasteData, factory, year, indicators["waste"])
+        result["investment"] = fetch_and_process_quant_data(db, InvestmentData, factory, year, indicators["investment"])
+        result["envQuant"] = fetch_and_process_quant_data(db, EnvQuantData, factory, year, indicators["envQuant"])
+        if not any(result.values()):
+            raise HTTPException(status_code=404, detail="未找到环境定量数据")
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取数据失败: {str(e)}")
+
+
+@app.post("/api/envquant/reasons")
+async def save_reasons(factory: str = Body(..., description="工厂名称"), year: int = Body(..., description="统计年份"),
+                       materialReasons: List[str] = Body(...), energyReasons: List[str] = Body(...),
+                       waterReasons: List[str] = Body(...), emissionReasons: List[str] = Body(...),
+                       wasteReasons: List[str] = Body(...), investmentReasons: List[str] = Body(...),
+                       envQuantReasons: List[str] = Body(...), db: Session = Depends(get_db)):
+    try:
+        reason_mapping = {"materialReasons": (MaterialData, materialReasons),
+                          "energyReasons": (EnergyData, energyReasons), "waterReasons": (WaterData, waterReasons),
+                          "emissionReasons": (EmissionData, emissionReasons), "wasteReasons": (WasteData, wasteReasons),
+                          "investmentReasons": (InvestmentData, investmentReasons),
+                          "envQuantReasons": (EnvQuantData, envQuantReasons)}
+        for model_class, reasons in reason_mapping.values():
+            if data := db.query(model_class).filter_by(factory=factory, year=year).first():
+                data.reasons = reasons
+        logger.info(
+            f"materialReasons: {materialReasons}, energyReasons: {energyReasons}, waterReasons: {waterReasons}, emissionReasons: {emissionReasons}, wasteReasons: {wasteReasons}, investmentReasons: {investmentReasons}, envQuantReasons: {envQuantReasons}")
+        db.commit()
+        return {"status": "success", "message": "原因分析提交成功"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"提交原因分析失败: {str(e)}")

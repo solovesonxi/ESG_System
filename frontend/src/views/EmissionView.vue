@@ -86,7 +86,7 @@
           </div>
           <div class="form-group">
             <label>营业收入 (万元)</label>
-            <input type="number" v-model.number="emissionData.revenue" step="1" min="0" required>
+            <input type="number" v-model.number="emissionData.total_revenue" step="1" min="0" required>
           </div>
           <div class="form-group">
             <label>排放强度</label>
@@ -115,19 +115,9 @@
             <label>颗粒物</label>
             <input type="number" v-model.number="wasteGasData.particulate" step="1" min="0">
           </div>
-
-          <!-- 自定义排放列 -->
-          <div v-for="(custom, index) in wasteGasData.customEmissions" :key="`custom-${index}`" class="form-group">
-            <input type="text" v-model="custom.name" placeholder="自定义名称" class="custom-name-input">
-            <input type="number" v-model.number="custom.value" step="1" min="0" placeholder="数值">
-            <button type="button" @click="removeCustomEmission(index)" class="remove-btn">×</button>
-          </div>
-
           <div class="form-group">
-            <button type="button" @click="addCustomEmission" :disabled="wasteGasData.customEmissions.length >= 3"
-                    class="add-btn">
-              添加自定义排放
-            </button>
+            <label>氮氧化物 (NOx)、硫氧化物 (SOx)和其他重大气体排放</label>
+            <input type="number" v-model.number="wasteGasData.nox_sox_other" step="1" min="0">
           </div>
 
           <div class="form-group">
@@ -165,7 +155,7 @@ const emissionData = reactive({
   categoryFour: 0,    // 范畴三（类别四）
   categoryFive: 0,    // 范畴三（类别五）
   categorySix: 0,     // 范畴三（类别六）
-  revenue: 0          // 营业收入（用于计算排放强度）
+  total_revenue: 0          // 营业收入（用于计算排放强度）
 })
 
 // 废气排放数据结构
@@ -174,20 +164,8 @@ const wasteGasData = reactive({
   nmhc: 0,            // 碳氢化合物（非甲烷总烃）
   benzene: 0,         // 苯类
   particulate: 0,     // 颗粒物
-  customEmissions: []  // 自定义排放列
+  nox_sox_other: 0        // 其他气体
 })
-
-// 添加自定义排放列
-function addCustomEmission() {
-  if (wasteGasData.customEmissions.length < 3) {
-    wasteGasData.customEmissions.push({name: '', value: 0})
-  }
-}
-
-// 移除自定义排放列
-function removeCustomEmission(index) {
-  wasteGasData.customEmissions.splice(index, 1)
-}
 
 // 计算范畴三合计
 const categoryThreeTotal = computed(() => {
@@ -206,22 +184,19 @@ const totalEmission = computed(() => {
 
 // 计算排放强度
 const emissionIntensity = computed(() => {
-  if (emissionData.revenue > 0 && totalEmission.value > 0) {
-    return (totalEmission.value / emissionData.revenue).toFixed(2)
+  if (emissionData.total_revenue > 0 && totalEmission.value > 0) {
+    return (totalEmission.value / emissionData.total_revenue).toFixed(2)
   }
   return 0
 })
 
 // 计算废气排放总量
 const wasteGasTotal = computed(() => {
-  let total = parseFloat(wasteGasData.voc) +
+  return (parseFloat(wasteGasData.voc) +
       parseFloat(wasteGasData.nmhc) +
       parseFloat(wasteGasData.benzene) +
-      parseFloat(wasteGasData.particulate)
-  wasteGasData.customEmissions.forEach(item => {
-    total += parseFloat(item.value || 0)
-  })
-  return total.toFixed(2)
+      parseFloat(wasteGasData.particulate) +
+      parseFloat(wasteGasData.nox_sox_other)).toFixed(2)
 })
 
 // 初始化年份列表

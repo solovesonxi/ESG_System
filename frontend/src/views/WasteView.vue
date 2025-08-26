@@ -203,7 +203,7 @@
                 <input type="number" min="0" step="0.01" v-model.number="protectiveReuseRate">
               </td>
               <td>
-                <input type="number" min="0" step="0.01" v-model.number="revenue">
+                <input type="number" min="0" step="0.01" v-model.number="total_revenue">
               </td>
               <td>{{ hazardousIntensity }}</td>
               <td>{{ wastewaterTotal }}</td>
@@ -257,7 +257,7 @@ const hazardous = reactive(Array(12).fill(0))
 const wastewater = reactive(Array(12).fill(0))
 
 // 汇总输入项
-const revenue = ref(0)
+const total_revenue = ref(0)
 const exceedEvents = ref(0)
 const protectiveReuseRate = ref(0)
 
@@ -301,15 +301,15 @@ const recycleRate = computed(() => {
 })
 
 const hazardousIntensity = computed(() => {
-  if (revenue.value > 0 && parseFloat(hazardousTotal.value) > 0) {
-    return (parseFloat(hazardousTotal.value) / revenue.value).toFixed(4)
+  if (total_revenue.value > 0 && parseFloat(hazardousTotal.value) > 0) {
+    return (parseFloat(hazardousTotal.value) / total_revenue.value).toFixed(4)
   }
   return 0
 })
 
 const wastewaterIntensity = computed(() => {
-  if (revenue.value > 0 && parseFloat(wastewaterTotal.value) > 0) {
-    return (parseFloat(wastewaterTotal.value) / revenue.value).toFixed(4)
+  if (total_revenue.value > 0 && parseFloat(wastewaterTotal.value) > 0) {
+    return (parseFloat(wastewaterTotal.value) / total_revenue.value).toFixed(4)
   }
   return 0
 })
@@ -335,7 +335,7 @@ async function submitForm(){
       totalWaste: totalWaste.value,
       disposalRequiredTotal: disposalRequiredTotal.value,
       recycleRate: recycleRate.value,
-      revenue: revenue.value,
+      total_revenue: total_revenue.value,
       protectiveReuseRate: protectiveReuseRate.value,
       exceedEvents: exceedEvents.value,
       hazardousIntensity: hazardousIntensity.value,

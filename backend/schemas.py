@@ -14,7 +14,7 @@ class MaterialSubmission(BaseModel):
     materialConsumption: float
     woodFiber: float
     aluminum: float
-    revenue: float
+    total_revenue: float
     packagingMaterial: float
     paper: float
     packagingIntensity: float
@@ -91,10 +91,6 @@ class WaterSubmission(BaseModel):
     waterRecycleRate: float
 
 
-class CustomEmission(BaseModel):
-    name: str
-    value: float
-
 
 class EmissionSubmission(BaseModel):
     factory: str
@@ -107,7 +103,7 @@ class EmissionSubmission(BaseModel):
     categoryFour: float
     categoryFive: float
     categorySix: float
-    revenue: float
+    total_revenue: float
 
     # 计算指标
     categoryThreeTotal: float
@@ -119,7 +115,7 @@ class EmissionSubmission(BaseModel):
     nmhc: float
     benzene: float
     particulate: float
-    customEmissions: List[CustomEmission]
+    nox_sox_other: float
     wasteGasTotal: float
 
 
@@ -147,7 +143,7 @@ class WasteSubmission(BaseModel):
     recycleRate: float
 
     # 经营与合规
-    revenue: float
+    total_revenue: float
     protectiveReuseRate: float
     exceedEvents: int
 
@@ -173,6 +169,8 @@ class InvestmentSubmission(BaseModel):
     greenIncomeTotal: float
     totalInvestment: float
     greenIncomeRatio: float
+    totalRevenue: float
+    envInvestIntensity: float
 
 
 class EmploymentSubmission(BaseModel):
@@ -328,3 +326,11 @@ class SupplySubmission(BaseModel):
     envRatio: float
     socRatio: float
     localPurchaseRatio: float
+
+class EnvManagementSubmission(BaseModel):
+    national_green_factory: int
+    provincial_green_factory: int
+    env_penalty_intensity: float
+    env_penalty_amount: float
+    env_violations: int
+    reason: str

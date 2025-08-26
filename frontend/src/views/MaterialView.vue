@@ -105,7 +105,7 @@
 
           <div class="form-group">
             <label>总营收 (万元)</label>
-            <input type="number" v-model.number="formData.revenue" step="0.1" required>
+            <input type="number" v-model.number="formData.total_revenue" step="0.1" required>
           </div>
 
           <div class="form-group">
@@ -157,7 +157,7 @@ const formData = reactive({
   materialConsumption: 0,
   woodFiber: 0,
   aluminum: 0,
-  revenue: 0,
+  total_revenue: 0,
   packagingMaterial: 0,
   paper: 0,
   packagingIntensity: 0,
@@ -185,15 +185,15 @@ const renewableOutputRatio = computed(() => {
 })
 
 const packagingIntensity = computed(() => {
-  if (formData.revenue > 0) {
-    return (formData.packagingMaterial / formData.revenue).toFixed(2)
+  if (formData.total_revenue > 0) {
+    return (formData.packagingMaterial / formData.total_revenue).toFixed(2)
   }
   return 0
 })
 
 const paperIntensity = computed(() => {
-  if (formData.revenue > 0) {
-    return (formData.paper / formData.revenue)
+  if (formData.total_revenue > 0) {
+    return (formData.paper / formData.total_revenue)
   }
   return 0
 })

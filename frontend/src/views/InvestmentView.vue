@@ -51,7 +51,7 @@
 
       <!-- 环保投入表格 -->
       <fieldset>
-        <legend>{{ year }}年环保投入 (万元)</legend>
+        <legend>{{ year }}年环保投入 （万元）</legend>
         <div class="table-wrapper">
           <table class="waste-table">
             <thead>
@@ -74,7 +74,7 @@
 
       <!-- 清洁技术投入表格 -->
       <fieldset>
-        <legend>{{ year }}年清洁技术投入 (万元)</legend>
+        <legend>{{ year }}年清洁技术投入 （万元）</legend>
         <div class="table-wrapper">
           <table class="waste-table">
             <thead>
@@ -97,7 +97,7 @@
 
       <!-- 气候投入表格 -->
       <fieldset>
-        <legend>{{ year }}年气候投入 (万元)</legend>
+        <legend>{{ year }}年气候投入 （万元）</legend>
         <div class="table-wrapper">
           <table class="waste-table">
             <thead>
@@ -120,7 +120,7 @@
 
       <!-- 绿色收入表格 -->
       <fieldset>
-        <legend>{{ year }}年绿色收入 (万元)</legend>
+        <legend>{{ year }}年绿色收入 （万元）</legend>
         <div class="table-wrapper">
           <table class="waste-table">
             <thead>
@@ -143,7 +143,7 @@
 
       <!-- 汇总 -->
       <fieldset class="summary-fieldset">
-        <legend>{{ year }}年资金投入统计 - 汇总</legend>
+        <legend>{{ year }}年资金投入统计 - 汇总 （万元）</legend>
         <div class="table-wrapper">
           <table class="waste-table">
             <thead>
@@ -153,7 +153,9 @@
               <th>气候投入</th>
               <th>绿色收入</th>
               <th>总投入</th>
-              <th>绿色收入占比(%)</th>
+              <th>总营收</th>
+              <th>环保投入强度 （%）</th>
+              <th>绿色收入占比 （%）</th>
             </tr>
             </thead>
             <tbody>
@@ -163,6 +165,10 @@
               <td>{{ climateInvestTotal }}</td>
               <td>{{ greenIncomeTotal }}</td>
               <td>{{ totalInvestment }}</td>
+              <td>
+                <input type="number" min="0" step="0.01" v-model.number="totalRevenue">
+              </td>
+              <td>{{ envInvestIntensity}}</td>
               <td>{{ greenIncomeRatio }}</td>
             </tr>
             </tbody>
@@ -224,6 +230,12 @@ const totalInvestment = computed(() => {
       parseFloat(climateInvestTotal.value)).toFixed(2)
 })
 
+const totalRevenue = ref(0);
+const envInvestIntensity = computed(() => {
+  if (totalRevenue.value === 0) return 0;
+  return ((parseFloat(envInvestTotal.value) / parseFloat(totalRevenue.value)) * 100).toFixed(2);
+});
+
 const greenIncomeRatio = computed(() => {
   if (parseFloat(totalInvestment.value) > 0) {
     return ((parseFloat(greenIncomeTotal.value) / parseFloat(totalInvestment.value)) * 100).toFixed(2)
@@ -246,7 +258,9 @@ async function submitForm(){
       climateInvestTotal: climateInvestTotal.value,
       greenIncomeTotal: greenIncomeTotal.value,
       totalInvestment: totalInvestment.value,
-      greenIncomeRatio: greenIncomeRatio.value
+      greenIncomeRatio: greenIncomeRatio.value,
+      totalRevenue: totalRevenue.value,
+      envInvestIntensity: envInvestIntensity.value
     }
 
     const resp = await axios.post('http://localhost:8000/submit/investment', payload)

@@ -17,7 +17,7 @@ class MaterialData(Base):
     material_consumption = Column(Float, nullable=False)
     wood_fiber = Column(Float, nullable=False)
     aluminum = Column(Float, nullable=False)
-    revenue = Column(Float, nullable=False)
+    total_revenue = Column(Float, nullable=False)
     packaging_material = Column(Float, nullable=False)
     paper_consumption = Column(Float, nullable=False)
     packaging_intensity = Column(Float, nullable=False)
@@ -98,6 +98,7 @@ class WaterData(Base):
     total_recycled = Column(Float, nullable=False)
     water_intensity = Column(Float, nullable=False)
     water_recycle_rate = Column(Float, nullable=False)
+    reasons = Column(JSON, nullable=True)
 
 
 class EmissionData(Base):
@@ -114,7 +115,7 @@ class EmissionData(Base):
     category_four = Column(Float, nullable=False)
     category_five = Column(Float, nullable=False)
     category_six = Column(Float, nullable=False)
-    revenue = Column(Float, nullable=False)
+    total_revenue = Column(Float, nullable=False)
 
     # 计算指标
     category_three_total = Column(Float, nullable=False)
@@ -126,8 +127,10 @@ class EmissionData(Base):
     nmhc = Column(Float, nullable=False)
     benzene = Column(Float, nullable=False)
     particulate = Column(Float, nullable=False)
-    custom_emissions = Column(JSON, nullable=False)  # 存储为JSON数组
+    nox_sox_other = Column(Float, nullable=False)
     waste_gas_total = Column(Float, nullable=False)
+    reasons = Column(JSON, nullable=True)
+
 
 
 class WasteData(Base):
@@ -157,13 +160,14 @@ class WasteData(Base):
     recycle_rate = Column(Float, nullable=False)
 
     # 经营与合规
-    revenue = Column(Float, nullable=False)
+    total_revenue = Column(Float, nullable=False)
     protective_reuse_rate = Column(Float, nullable=False)
     exceed_events = Column(Integer, nullable=False)
 
     # 强度指标
     hazardous_intensity = Column(Float, nullable=False)
     wastewater_intensity = Column(Float, nullable=False)
+    reasons = Column(JSON, nullable=True)
 
 
 class InvestmentData(Base):
@@ -186,6 +190,9 @@ class InvestmentData(Base):
     green_income_total = Column(Float, nullable=False)
     total_investment = Column(Float, nullable=False)
     green_income_ratio = Column(Float, nullable=False)
+    total_revenue= Column(Float, nullable=False)
+    env_invest_intensity= Column(Float, nullable=False)
+    reasons = Column(JSON, nullable=True)
 
 
 class EmploymentData(Base):
@@ -356,3 +363,16 @@ class SupplyData(Base):
     env_ratio = Column(Float, default=0.0)  # 环境维度占比
     soc_ratio = Column(Float, default=0.0)  # 社会标准占比
     local_purchase_ratio = Column(Float, default=0.0)  # 当地采购比例
+
+class EnvQuantData(Base):
+    __tablename__ = "env_quant"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+    national_green_factory = Column(Integer, default=0)  # 国家级绿色工厂
+    provincial_green_factory = Column(Integer, default=0)  # 省级绿色工厂
+    env_penalty_intensity = Column(Float, default=0.0)  # 环境处罚强度
+    env_penalty_amount = Column(Float, default=0.0)  # 环境处罚金额
+    env_violations = Column(Integer, default=0) # 环境违规
+    reasons = Column(JSON, nullable=True)

@@ -1,0 +1,84 @@
+{
+  "material": [
+    "renewable_input",
+    "non_renewable_input",
+    "renewable_output",
+    "non_renewable_output",
+    "material_consumption",
+    "wood_fiber",
+    "aluminum",
+    "packaging_material",
+    "paper_consumption",
+    "packaging_intensity",
+    "paper_intensity",
+    "total_input",
+    "total_output",
+    "renewable_input_ratio",
+    "renewable_output_ratio"
+  ],
+  "energy": [
+    "total_purchased_power",
+    "total_renewable_power",
+    "coal_consumption",
+    "total_gasoline",
+    "total_diesel",
+    "total_natural_gas",
+    "total_other_energy",
+    "total_energy_consumption",
+    "energy_consumption_intensity"
+  ],
+  "water": [
+    "industrial_total",
+    "domestic_total",
+    "total_intake",
+    "water_intensity",
+    "total_drainage",
+    "total_consumption",
+    "total_recycled",
+    "water_recycle_rate",
+    "reclaimed_intensity",
+    "reclaimed_total"
+  ],
+  "emission": [
+    "category_one",
+    "category_two",
+    "category_three_total",
+    "total_emission",
+    "emission_intensity",
+    "voc",
+    "nmhc",
+    "benzene",
+    "particulate",
+    "nox_sox_other"
+  ],
+  "waste": [
+    "hazardous_total",
+    "hazardous_intensity",
+    "epe_total",
+    "plastic_paper_total",
+    "domestic_industrial_total",
+    "recyclable_total",
+    "non_hazardous_total",
+    "total_waste",
+    "recycle_rate",
+    "protective_reuse_rate",
+    "disposal_required_total",
+    "wastewater_total",
+    "wastewater_intensity",
+    "exceed_events"
+  ],
+  "investment": [
+    "env_invest_total",
+    "env_invest_intensity",
+    "green_income_ratio",
+    "climate_invest_total",
+    "clean_tech_invest_total"
+  ],
+  "envQuant": [
+    "national_green_factory",
+    "provincial_green_factory",
+    "env_penalty_intensity",
+    "env_penalty_amount",
+    "env_violations"
+  ]
+}
