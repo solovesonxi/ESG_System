@@ -4,7 +4,8 @@
       <li v-for="route in menuItems" :key="route.name">
         <router-link
             :to="route.path"
-            :class="{ 'router-link-active': isActive(route.path) }"
+            :class="{ 'router-link-active': $route.path === route.path || $route.path.startsWith(route.path + '/') }"
+            
         >
           {{ route.label }}
         </router-link>
@@ -15,7 +16,10 @@
 
 <script setup>
 import {useRoute} from 'vue-router'
-import { ref, computed } from 'vue';
+import {ref, computed, watch} from 'vue';
+import router from "@/router/index.js";
+
+const emit = defineEmits(['toggleMode']);
 
 const route = useRoute()
 const isDataMode = ref(false)
@@ -58,13 +62,38 @@ const navbarStyle = computed(() => {
 })
 
 // 检查当前路由是否匹配
-const isActive = (path) => {
-  return route.path === path || route.path.startsWith(path + '/')
-}
+// 监听路由变化并更新 localStorage
+watch(() => route.path, (newPath) => {
+  const currentMode = isDataMode.value ? 'data' : 'default';
+  localStorage.setItem(`lastPath_${currentMode}`, newPath);
+});
 
 // 切换模式
 const toggleMode = () => {
-  isDataMode.value = !isDataMode.value
+  const currentMode = isDataMode.value ? 'data' : 'default';
+  localStorage.setItem(`lastPath_${currentMode}`, route.path);
+
+  isDataMode.value = !isDataMode.value;
+  emit('toggleMode');
+
+  console.log('切换模式:', {
+    isActive: isDataMode.value,
+    lastPath_data: localStorage.getItem('lastPath_data'),
+    lastPath_default: localStorage.getItem('lastPath_default'),
+    targetPath: isDataMode.value ? '/env-quantitative' : '/material'
+  });
+
+  if (isDataMode.value) {
+    // 切换到分析模式
+    const lastPath = localStorage.getItem('lastPath_data');
+    const path = lastPath || '/env-quantitative'; // 确保默认是环境定量
+    router.push(path);
+  } else {
+    // 切换到填报模式
+    const lastPath = localStorage.getItem('lastPath_default');
+    const path = lastPath || '/material'; // 默认是材料页面
+    router.push(path);
+  }
 }
 
 defineExpose({
@@ -119,7 +148,8 @@ defineExpose({
 }
 
 .nav-list a.router-link-active {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  font-weight: bold;
 }
 
 @media (max-width: 768px) {

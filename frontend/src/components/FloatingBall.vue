@@ -104,8 +104,8 @@ const toggleMode = () => {
 };
 
 onMounted(() => {
-  posX.value = window.innerWidth - 100;
-  posY.value = window.innerHeight - 100;
+  posX.value = window.innerWidth - 120;
+  posY.value = window.innerHeight - 120;
   updatePosition();
   document.addEventListener('mouseup', stopDrag);
 });
@@ -119,8 +119,8 @@ onUnmounted(() => {
 <style scoped>
 .floating-ball {
   position: fixed;
-  width: 75px;
-  height: 75px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   background-color: rgba(144, 238, 144, 0.7);
   cursor: pointer;
@@ -145,7 +145,7 @@ onUnmounted(() => {
 .ball-text {
   color: white;
   font-weight: bold;
-  font-size: 20px;
+  font-size: 25px;
   user-select: none;
 }
 </style>

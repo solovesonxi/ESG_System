@@ -55,6 +55,7 @@ class EnergyData(Base):
 
     # 能源消耗计算结果
     water_consumption = Column(Float)  # Tce
+    coal_consumption = Column(Float)  # Tce
     power_consumption = Column(Float)  # Tce
     gasoline_consumption = Column(Float)  # Tce
     diesel_consumption = Column(Float)  # Tce
@@ -62,6 +63,7 @@ class EnergyData(Base):
     total_energy_consumption = Column(Float)  # Tce
     turnover = Column(Float)  # 万元
     energy_consumption_intensity = Column(Float)
+    reasons = Column(JSON, nullable=True)
 
 
 class WaterData(Base):

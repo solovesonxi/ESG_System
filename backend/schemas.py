@@ -45,6 +45,7 @@ class EnergySubmission(BaseModel):
 
     # 能源消耗
     waterConsumption: float
+    coalConsumption: float
     powerConsumption: float
     gasolineConsumption: float
     dieselConsumption: float

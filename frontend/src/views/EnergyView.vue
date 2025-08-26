@@ -165,6 +165,10 @@
             <input type="number" v-model.number="waterConsumption" step="1" required>
           </div>
           <div class="form-group">
+            <label>煤炭 (Tce)</label>
+            <input type="number" v-model.number="coalConsumption" step="1" required>
+          </div>
+          <div class="form-group">
             <label>电 (Tce)</label>
             <input type="number" :value="powerConsumption" disabled>
           </div>
@@ -257,11 +261,12 @@ const totalNaturalGas = computed(() => naturalGas.reduce((sum, amount) => sum + 
 const totalOtherEnergy = computed(() => otherEnergy.reduce((sum, amount) => sum + amount, 0));
 
 const waterConsumption = ref(0);
+const coalConsumption = ref(0);
 const powerConsumption = computed(()=>(totalPurchasedPower.value+totalRenewablePower.value) * 0.1229 / 1000);
 const gasolineConsumption = computed(()=>totalGasoline.value * 1.4717);
 const dieselConsumption = computed(()=>totalDiesel.value * 1.4571);
 const naturalGasConsumption = computed(()=>totalNaturalGas.value * 1.33 / 1000);
-const totalEnergyConsumption = computed(() => waterConsumption.value + powerConsumption.value + gasolineConsumption.value +
+const totalEnergyConsumption = computed(() => waterConsumption.value +coalConsumption.value+ powerConsumption.value + gasolineConsumption.value +
     dieselConsumption.value + naturalGasConsumption.value + totalOtherEnergy.value);
 const turnover = ref(0);
 const energyConsumptionIntensity = computed(() => {
@@ -292,6 +297,7 @@ async function submitForm() {
       totalOtherEnergy: totalOtherEnergy.value,
 
       waterConsumption: waterConsumption.value,
+      coalConsumption: coalConsumption.value,
       powerConsumption: powerConsumption.value,
       gasolineConsumption: gasolineConsumption.value,
       dieselConsumption: dieselConsumption.value,
