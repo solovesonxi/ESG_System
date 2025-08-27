@@ -2,9 +2,12 @@
   <div id="app">
     <NavBar ref="navBar"/>
     <main>
-      <router-view/>
+      <router-view v-slot="{ Component }">
+        <component :is="Component" ref="currentComponent" />
+      </router-view>
     </main>
     <FloatingBall @toggleMode="toggleMode" />
+    <EditControls :is-editing="isEditing" @start-edit="handleStartEdit" @cancel-edit="handleCancelEdit" @submit-edit="handleSubmitEdit" />
     <canvas id="starry-bg"></canvas>
   </div>
 </template>
@@ -13,9 +16,14 @@
 import {RouterView} from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
 import FloatingBall from '@/components/FloatingBall.vue'
-import {onMounted, ref} from 'vue'
+import EditControls from '@/components/EditControls.vue'
+import {onMounted, ref, watch} from 'vue'
+import { useRoute } from 'vue-router'
 
 const navBar = ref(null)
+const isEditing = ref(false)
+const currentComponent = ref(null)
+const route = useRoute()
 
 const toggleMode = () => {
   if (navBar.value) {
@@ -23,8 +31,48 @@ const toggleMode = () => {
   }
 }
 
+const handleStartEdit = () => {
+  console.log('Start Edit triggered');
+  console.log('currentComponent:', currentComponent.value);
+  if (currentComponent.value && currentComponent.value.startEditing) {
+    console.log('Calling startEditing on currentComponent');
+    currentComponent.value.startEditing();
+    isEditing.value = true;
+  } else {
+    console.error('当前视图不支持编辑功能');
+  }
+};
+
+const handleCancelEdit = () => {
+  console.log('Cancel Edit triggered');
+  if (currentComponent.value && currentComponent.value.cancelEditing) {
+    console.log('Calling cancelEditing on currentComponent');
+    currentComponent.value.cancelEditing();
+    isEditing.value = false;
+  } else {
+    console.error('当前视图不支持取消编辑功能');
+  }
+};
+
+const handleSubmitEdit = () => {
+  console.log('Submit Edit triggered');
+  if (currentComponent.value && currentComponent.value.submitEdit) {
+    console.log('Calling submitEdit on currentComponent');
+    currentComponent.value.submitEdit();
+    isEditing.value = false;
+  } else {
+    console.error('当前视图不支持提交编辑功能');
+  }
+};
+
+// 监听路由变化，重置编辑状态
+watch(() => route.path, () => {
+  isEditing.value = false;
+});
+
 // 动态星空背景（保持不变）
 onMounted(() => {
+  console.log('App mounted, currentComponent:', currentComponent.value);
   const canvas = document.getElementById('starry-bg')
   const ctx = canvas.getContext('2d')
 
@@ -64,12 +112,9 @@ onMounted(() => {
   })
 
   animateStars()
-
-
 })
-
-
 </script>
+
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Playfair+Display:wght@600;800&display=swap');

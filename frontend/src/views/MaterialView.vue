@@ -160,8 +160,6 @@ const formData = reactive({
   total_revenue: 0,
   packagingMaterial: 0,
   paper: 0,
-  packagingIntensity: 0,
-  paperIntensity: 0,
 })
 
 // 计算进料总量
@@ -215,12 +213,13 @@ async function submitForm() {
       factory: factory.value,
       year: year.value,
       ...formData,
+      packagingIntensity: packagingIntensity.value,
+      paperIntensity: paperIntensity.value,
       totalInput: totalInput.value,
       totalOutput: totalOutput.value,
       renewableInputRatio: renewableInputRatio.value,
       renewableOutputRatio: renewableOutputRatio.value
     }
-
     const response = await axios.post('http://localhost:8000/submit/material', payload)
 
     if (response.data.status === 'success') {

@@ -5,7 +5,7 @@ from database import Base
 
 class MaterialData(Base):
     __tablename__ = 'material'
-
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -32,7 +32,7 @@ class MaterialData(Base):
 
 class EnergyData(Base):
     __tablename__ = 'energy'
-
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -68,7 +68,7 @@ class EnergyData(Base):
 
 class WaterData(Base):
     __tablename__ = 'water'
-
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -103,7 +103,7 @@ class WaterData(Base):
 
 class EmissionData(Base):
     __tablename__ = 'emission'
-
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -132,10 +132,9 @@ class EmissionData(Base):
     reasons = Column(JSON, nullable=True)
 
 
-
 class WasteData(Base):
     __tablename__ = 'waste'
-
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)  # 工厂名称
     year = Column(Integer, nullable=False)
@@ -172,7 +171,7 @@ class WasteData(Base):
 
 class InvestmentData(Base):
     __tablename__ = 'investment'
-
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -190,14 +189,14 @@ class InvestmentData(Base):
     green_income_total = Column(Float, nullable=False)
     total_investment = Column(Float, nullable=False)
     green_income_ratio = Column(Float, nullable=False)
-    total_revenue= Column(Float, nullable=False)
-    env_invest_intensity= Column(Float, nullable=False)
+    total_revenue = Column(Float, nullable=False)
+    env_invest_intensity = Column(Float, nullable=False)
     reasons = Column(JSON, nullable=True)
 
 
 class EmploymentData(Base):
     __tablename__ = "employment"
-
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -258,7 +257,7 @@ class EmploymentData(Base):
 
 class TrainingData(Base):
     __tablename__ = "training"
-
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -289,7 +288,7 @@ class TrainingData(Base):
 
 class OHSData(Base):
     __tablename__ = "ohs"
-
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -325,7 +324,7 @@ class OHSData(Base):
 
 class SatisfactionData(Base):
     __tablename__ = "satisfaction"
-
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -335,7 +334,7 @@ class SatisfactionData(Base):
 
 class SupplyData(Base):
     __tablename__ = "supply"
-
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -364,9 +363,10 @@ class SupplyData(Base):
     soc_ratio = Column(Float, default=0.0)  # 社会标准占比
     local_purchase_ratio = Column(Float, default=0.0)  # 当地采购比例
 
+
 class EnvQuantData(Base):
     __tablename__ = "env_quant"
-
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -374,13 +374,13 @@ class EnvQuantData(Base):
     provincial_green_factory = Column(Integer, default=0)  # 省级绿色工厂
     env_penalty_intensity = Column(Float, default=0.0)  # 环境处罚强度
     env_penalty_amount = Column(Float, default=0.0)  # 环境处罚金额
-    env_violations = Column(Integer, default=0) # 环境违规
+    env_violations = Column(Integer, default=0)  # 环境违规
     reasons = Column(JSON, nullable=True)
 
 
 class EnvQualData(Base):
     __tablename__ = "env_qual"
-
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -396,12 +396,64 @@ class EnvQualData(Base):
     risk_management_process = Column(String(500), nullable=True)  # 管理风险流程
     business_strategy = Column(String(500), nullable=True)  # 纳入业务策略
     ghg_reduction_target = Column(String(500), nullable=True)  # 温室气体排放物减排目标
-    ghg_reduction_rate = Column(Float, nullable=True)  # 温室气体减排目标达成率（%）
+    ghg_reduction_rate = Column(String(500), nullable=True)  # 温室气体减排目标达成率（%）
     ghg_reduction_action = Column(String(500), nullable=True)  # 温室气体排放物减排行动
     carbon_capture_target = Column(String(500), nullable=True)  # 碳捕捉计划目标
-    carbon_capture_rate = Column(Float, nullable=True)  # 碳捕捉计划目标达成率（%）
+    carbon_capture_rate = Column(String(500), nullable=True)  # 碳捕捉计划目标达成率（%）
+    waste_reduction_target = Column(String(500), nullable=True)  # 废弃物减排目标
+    waste_reduction_action = Column(String(500), nullable=True)  # 废弃物减排行动
+    annual_water_use_target = Column(String(500), nullable=True)  # 年度用水目标
+    annual_water_use_target_rate = Column(String(500), nullable=True)  # 年度用水目标达成率
+    annual_reclaimed_water_use_target = Column(String(500), nullable=True)  # 年度再生水使用目标
+    annual_reclaimed_water_use_target_rate = Column(String(500), nullable=True)  # 年度再生水使用目标达成率
+    water_saving_target = Column(String(500), nullable=True)  # 节水目标
+    water_saving_target_rate = Column(String(500), nullable=True)  # 节水目标达成率
+    water_management_policy = Column(String(500), nullable=True)  # 水资源管理政策
+    water_risk_management = Column(String(500), nullable=True)  # 水资源风险管理
+    water_saving_action = Column(String(500), nullable=True)  # 节水行动
+    clean_technology_strategy = Column(String(500), nullable=True)  # 清洁技术战略
+    clean_technology_practice = Column(String(500), nullable=True)  # 清洁技术实践
+    biodiversity_impact = Column(String(500), nullable=True)  # 生物多样性影响
+    ecological_restoration = Column(String(500), nullable=True)  # 生态修复
+    environmental_accident = Column(String(500), nullable=True)  # 环境事故
+    environmental_penalty = Column(String(500), nullable=True)  # 环境处罚
+    environmental_management_system = Column(String(500), nullable=True)  # 环境管理体系
+    environmental_resource_policy = Column(String(500), nullable=True)  # 环境资源政策
+    environmental_emergency_plan = Column(String(500), nullable=True)  # 环境应急预案
+    green_office = Column(String(500), nullable=True)  # 绿色办公
+    green_factory_policy = Column(String(500), nullable=True)  # 绿色工厂政策
+    environmental_committee = Column(String(500), nullable=True)  # 环境委员会
+    key_pollution_unit = Column(String(500), nullable=True)  # 重点排污单位
+    waste_product_recycling = Column(String(500), nullable=True)  # 废弃物产品回收
+    hazardous_waste_emission_target = Column(String(500), nullable=True)  # 危险废弃物排放目标
+    hazardous_waste_emission_target_rate = Column(String(500), nullable=True)  # 危险废弃物排放目标达成率
+    sustainable_product_certification = Column(String(500), nullable=True)  # 可持续产品认证
+    material_reduction_target = Column(String(500), nullable=True)  # 材料减量目标
+    annual_packaging_material_target = Column(String(500), nullable=True)  # 年度包装材料目标
+    annual_packaging_material_target_rate = Column(String(500), nullable=True)  # 年度包装材料目标达成率
+    packaging_material_reduction_target = Column(String(500), nullable=True)  # 包装材料减量目标
+    packaging_material_reduction_target_rate = Column(String(500), nullable=True)  # 包装材料减量目标达成率
+    product_lifecycle_management = Column(String(500), nullable=True)  # 产品生命周期管理
+    annual_office_paper_target = Column(String(500), nullable=True)  # 年度办公用纸目标
+    annual_office_paper_target_rate = Column(String(500), nullable=True)  # 年度办公用纸目标达成率
+    chemical_management = Column(String(500), nullable=True)  # 化学品管理
+    chemical_inventory = Column(String(500), nullable=True)  # 化学品清单
+    energy_reduction_target = Column(String(500), nullable=True)  # 能源减排目标
+    renewable_energy_target = Column(String(500), nullable=True)  # 可再生能源目标
+    renewable_energy_use_development = Column(String(500), nullable=True)  # 可再生能源使用发展
+    energy_saving_action_results = Column(String(500), nullable=True)  # 节能行动成果
+    energy_management_system = Column(String(500), nullable=True)  # 能源管理体系
+    product_carbon_footprint = Column(String(500), nullable=True)  # 产品碳足迹
+    product_carbon_footprint_plan = Column(String(500), nullable=True)  # 产品碳足迹计划
+    carbon_neutrality_target_year = Column(String(500), nullable=True)  # 碳中和目标年份
+    carbon_neutrality_plan = Column(String(500), nullable=True)  # 碳中和计划
+    carbon_neutrality_target_scheme = Column(String(500), nullable=True)  # 碳中和目标方案
+    carbon_neutrality_plan_rate = Column(String(500), nullable=True)  # 碳中和计划达成率
+    carbon_reduction_target = Column(String(500), nullable=True)  # 碳减排目标
+    joined_sbti = Column(String(500), nullable=True)  # 加入SBTi
+    cdp_disclosure = Column(String(500), nullable=True)  # CDP披露
+    carbon_inventory_disclosure = Column(String(500), nullable=True)  # 碳清单披露
+    carbon_inventory_report_verification = Column(String(500), nullable=True)  # 碳清单报告验证
+    greenhouse_gas_verification_system = Column(String(500), nullable=True)  # 温室气体核查体系
     comparison = Column(JSON, nullable=True)
     reasons = Column(JSON, nullable=True)
-    __table_args__ = (
-        UniqueConstraint('factory', 'year', name='uq_factory_year'),
-    )

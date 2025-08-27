@@ -286,7 +286,7 @@ def fetch_and_process_quant_data(db, model, factory, year, fields):
     last_year_data = db.query(model).filter(model.factory == factory,
                                             model.year == year - 1).first() if year > 1 else None
     result = {}
-    reasons = current_data.reasons if current_data else []
+    reasons = current_data.reasons if (current_data and current_data.reasons) else []
     for i, field in enumerate(fields):
         current_value = getattr(current_data, field) if current_data else None
         last_value = getattr(last_year_data, field) if last_year_data else None
@@ -371,7 +371,7 @@ async def get_envqual_data(factory: str, year: int, db: Session = Depends(get_db
     current_data = db.query(EnvQualData).filter_by(factory=factory, year=year).first()
     last_year_data = db.query(EnvQualData).filter_by(factory=factory, year=year - 1).first()
     response_data = {}
-    for key in indicators["env_qual"]["total"]:
+    for key in indicators["env_qual"]:
         current_value = getattr(current_data, key, "") if current_data else ""
         last_year_value = getattr(last_year_data, key, "") if last_year_data else ""
         comparison = current_data.comparison.get(key, "") if current_data and current_data.comparison else ""
@@ -388,17 +388,9 @@ async def save_envqual_data(request: EnvQualDataRequest = Body(...), db: Session
         comparisons = {}
         reasons = {}
         indicator_data = {}
+        logger.info(f"request: {request}")
         for indicator_key, data in request.envQualData.items():
-            value = data.currentYear
-            if indicator_key in indicators["env_qual"]["percentage"]:
-                if value == '':
-                    value = None
-                else:
-                    try:
-                        value = float(value)
-                    except (ValueError, TypeError):
-                        value = None
-            indicator_data[indicator_key] = value
+            indicator_data[indicator_key] = data.currentYear
             comparisons[indicator_key] = data.comparison
             reasons[indicator_key] = data.reason
         if existing_data:

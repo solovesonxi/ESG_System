@@ -83,8 +83,7 @@
       "env_violations"
     ]
   },
-  "env_qual": {
-    "total": [
+  "env_qual": [
       "board_supervision",
       "management_responsibility",
       "environment_strategy",
@@ -156,18 +155,5 @@
       "carbon_inventory_disclosure",
       "carbon_inventory_report_verification",
       "greenhouse_gas_verification_system"
-    ],
-    "percentage": [
-      "ghg_reduction_rate",
-      "carbon_capture_rate",
-      "annual_water_use_target_rate",
-      "annual_reclaimed_water_use_target_rate",
-      "water_saving_target_rate",
-      "hazardous_waste_emission_target_rate",
-      "annual_packaging_material_target_rate",
-      "packaging_material_reduction_target_rate",
-      "annual_office_paper_target_rate",
-      "carbon_neutrality_plan_rate"
     ]
-  }
 }
