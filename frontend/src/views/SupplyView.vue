@@ -168,7 +168,7 @@ const submitSupply = async () => {
       localPurchaseRatio: localPurchaseRatio.value
     }
 
-    const response = await axios.post('http://localhost:8000/submit/supply', payload)
+    const response = await axios.post('http://localhost:8000/quantitative/supply', payload)
 
     if (response.data.status === 'success') {
       alert('供应链数据提交成功!')

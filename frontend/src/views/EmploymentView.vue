@@ -316,7 +316,7 @@ const submitEmployment = async () => {
       generalTurnoverRate: generalTurnoverRate.value
     }
 
-    const response = await axios.post('http://localhost:8000/submit/employment', payload)
+    const response = await axios.post('http://localhost:8000/quantitative/employment', payload)
 
     if (response.data.status === 'success') {
       alert('雇佣数据提交成功!')

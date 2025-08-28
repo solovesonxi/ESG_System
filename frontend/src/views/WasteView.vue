@@ -342,7 +342,7 @@ async function submitForm(){
       wastewaterIntensity: wastewaterIntensity.value
     }
 
-    const resp = await axios.post('http://localhost:8000/submit/waste', payload)
+    const resp = await axios.post('http://localhost:8000/quantitative/waste', payload)
     if(resp.data.status === 'success'){
       alert('废弃物数据提交成功!')
     }

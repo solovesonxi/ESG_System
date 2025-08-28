@@ -328,7 +328,7 @@ const submitOHS = async () => {
       safetyInvestmentTotal: rowSum(formData.safetyInvestment)
     }
 
-    const response = await axios.post('http://localhost:8000/submit/ohs', payload)
+    const response = await axios.post('http://localhost:8000/quantitative/ohs', payload)
 
     if (response.data.status === 'success') {
       alert('职业健康与安全数据提交成功!')

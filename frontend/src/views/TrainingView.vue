@@ -193,7 +193,7 @@ const submitTraining = async () => {
       generalRate: generalRate.value
     }
 
-    const response = await axios.post('http://localhost:8000/submit/training', payload)
+    const response = await axios.post('http://localhost:8000/quantitative/training', payload)
 
     if (response.data.status === 'success') {
       alert('教育与培训数据提交成功!')

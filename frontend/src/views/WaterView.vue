@@ -333,7 +333,7 @@ async function submitForm() {
       waterIntensity: waterIntensity.value,
       waterRecycleRate: waterRecycleRate.value
     };
-    const response = await axios.post('http://localhost:8000/submit/water', payload);
+    const response = await axios.post('http://localhost:8000/quantitative/water', payload);
     if (response.data.status === 'success') {
       alert('水资源数据提交成功!');
     }

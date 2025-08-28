@@ -263,7 +263,7 @@ async function submitResponsibility(){
       satisfactionMonthlyAvg: Array.from({length:12},(_,i)=> Number(averageColumn(customerSatisfaction,i))),
       satisfactionOverallAvg: Number(overallAverage(customerSatisfaction))
     }
-    const resp = await axios.post('http://localhost:8000/submit/responsibility', payload)
+    const resp = await axios.post('http://localhost:8000/quantitative/responsibility', payload)
     if(resp.data.status==='success') alert('产品责任数据提交成功!')
   }catch(e){ console.error(e); alert(`提交失败: ${e.response?.data?.detail || e.message}`) }
   finally{ isSubmitting.value = false }

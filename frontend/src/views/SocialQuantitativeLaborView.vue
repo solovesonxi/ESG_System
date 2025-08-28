@@ -11,8 +11,10 @@
                 {{ factory }}
                 <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
               </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown" :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div v-for="f in factories" :key="f" class="option" :class="{ 'selected-option': f === factory }" @click="selectionStore.selectFactory(f)">
+              <div class="options" v-show="selectionStore.showFactoryDropdown"
+                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
+                <div v-for="f in factories" :key="f" class="option" :class="{ 'selected-option': f === factory }"
+                     @click="selectionStore.selectFactory(f)">
                   {{ f }}
                 </div>
               </div>
@@ -26,7 +28,8 @@
                 <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
               </div>
               <div class="options" v-show="selectionStore.showYearDropdown">
-                <div v-for="y in years" :key="y" class="option" :class="{ 'selected-option': y === year }" @click="selectionStore.selectYear(y)">
+                <div v-for="y in years" :key="y" class="option" :class="{ 'selected-option': y === year }"
+                     @click="selectionStore.selectYear(y)">
                   {{ y }}年
                 </div>
               </div>
@@ -40,37 +43,38 @@
         <div class="form-row">
           <table class="data-table">
             <thead>
-              <tr>
-                <th>大类</th>
-                <th>指标</th>
-                <th>当前年 ({{ year }})</th>
-                <th>上一年 ({{ year - 1 }})</th>
-                <th>对比上期 (%)</th>
-                <th>原因分析</th>
-              </tr>
+            <tr>
+              <th>大类</th>
+              <th>指标</th>
+              <th>当前年 ({{ year }})</th>
+              <th>上一年 ({{ year - 1 }})</th>
+              <th>对比上期 (%)</th>
+              <th>原因分析</th>
+            </tr>
             </thead>
             <tbody>
-              <template v-for="(indicators, category) in laborData" :key="category">
-                <tr v-for="(item, key, index) in indicators" :key="key">
-                  <td v-if="index === 0" :rowspan="Object.keys(indicators).length">{{ category }}</td>
-                  <td>{{ indicatorNames[key] || key }}</td>
-                  <td>{{ formatValue(item.currentYear) }}</td>
-                  <td>{{ formatValue(item.lastYear) }}</td>
-                  <td>{{ formatComparison(item.comparison) }}</td>
-                  <td>
-                    <span v-if="!isEditing">{{ item.reason || 'N/A' }}</span>
-                    <textarea v-else v-model="tempReasons[key]" class="reason-input" :placeholder="item.reason || ''"></textarea>
-                  </td>
-                </tr>
-              </template>
+            <template v-for="(indicators, category) in laborData" :key="category">
+              <tr v-for="(item, key, index) in indicators" :key="key">
+                <td v-if="index === 0" :rowspan="Object.keys(indicators).length">{{ category }}</td>
+                <td>{{ indicatorNames[key] || key }}</td>
+                <td>{{ formatValue(item.currentYear) }}</td>
+                <td>{{ formatValue(item.lastYear) }}</td>
+                <td>{{ formatComparison(item.comparison) }}</td>
+                <td>
+                  <span v-if="!isEditing">{{ item.reason || 'N/A' }}</span>
+                  <textarea v-else v-model="tempReasons[key]" class="reason-input"
+                            :placeholder="item.reason || ''"></textarea>
+                </td>
+              </tr>
+            </template>
             </tbody>
           </table>
-          
+
         </div>
       </fieldset>
     </form>
   </div>
-  
+
 </template>
 
 <script setup>
@@ -169,9 +173,7 @@ const indicatorNames = {
 
 const fetchLaborData = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/api/labor', {
-      params: { factory: factory.value, year: year.value }
-    })
+    const res = await axios.get('http://localhost:8000/api/labor', {params: {factory: factory.value, year: year.value}})
     laborData.value = res.data
   } catch (e) {
     console.error(e)

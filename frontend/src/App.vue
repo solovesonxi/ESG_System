@@ -3,22 +3,22 @@
     <NavBar ref="navBar"/>
     <main>
       <router-view v-slot="{ Component }">
-        <component :is="Component" ref="currentComponent" />
+        <component :is="Component" ref="currentComponent"/>
       </router-view>
     </main>
-    <FloatingBall @toggleMode="toggleMode" />
-    <EditControls :is-editing="isEditing" @start-edit="handleStartEdit" @cancel-edit="handleCancelEdit" @submit-edit="handleSubmitEdit" />
+    <FloatingBall @toggleMode="toggleMode"/>
+    <EditControls :is-editing="isEditing" @start-edit="handleStartEdit" @cancel-edit="handleCancelEdit"
+                  @submit-edit="handleSubmitEdit"/>
     <canvas id="starry-bg"></canvas>
   </div>
 </template>
 
 <script setup>
-import {RouterView} from 'vue-router'
+import {RouterView, useRoute} from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
 import FloatingBall from '@/components/FloatingBall.vue'
 import EditControls from '@/components/EditControls.vue'
 import {onMounted, ref, watch} from 'vue'
-import { useRoute } from 'vue-router'
 
 const navBar = ref(null)
 const isEditing = ref(false)
@@ -65,11 +65,15 @@ const handleSubmitEdit = () => {
   }
 };
 
-// 监听路由变化，重置编辑状态
-watch(() => route.path, () => {
+// 监听路由变化，重置编辑状态并触发数据获取
+watch(() => route.path, (newPath) => {
   isEditing.value = false;
+  setTimeout(() => {
+    if (currentComponent.value && currentComponent.value.fetchData) {
+      currentComponent.value.fetchData();
+    }
+  }, 10);
 });
-
 // 动态星空背景（保持不变）
 onMounted(() => {
   console.log('App mounted, currentComponent:', currentComponent.value);

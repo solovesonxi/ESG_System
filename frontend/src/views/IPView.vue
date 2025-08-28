@@ -360,7 +360,7 @@ async function submitIP(){
         prevTrademarks: sumArray(prevTrademarks)
       }
     }
-    const resp = await axios.post('http://localhost:8000/submit/ip', payload)
+    const resp = await axios.post('http://localhost:8000/quantitative/ip', payload)
     if(resp.data.status==='success') alert('知识产权数据提交成功!')
   }catch(e){
     console.error(e)

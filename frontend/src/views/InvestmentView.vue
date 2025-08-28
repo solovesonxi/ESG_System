@@ -263,7 +263,7 @@ async function submitForm(){
       envInvestIntensity: envInvestIntensity.value
     }
 
-    const resp = await axios.post('http://localhost:8000/submit/investment', payload)
+    const resp = await axios.post('http://localhost:8000/quantitative/investment', payload)
     if(resp.data.status === 'success'){
       alert('资金投入数据提交成功!')
     }

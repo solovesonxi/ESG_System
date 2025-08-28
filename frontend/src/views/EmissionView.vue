@@ -223,7 +223,7 @@ async function submitForm() {
       wasteGasTotal: wasteGasTotal.value
     }
 
-    const response = await axios.post('http://localhost:8000/submit/emission', payload)
+    const response = await axios.post('http://localhost:8000/quantitative/emission', payload)
     if (response.data.status === 'success') {
       alert('排放数据提交成功!')
     }

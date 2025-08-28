@@ -205,7 +205,7 @@ async function submitCommunity(){
       volunteerHoursTotals: volunteerHours.map(r=> rowSum(r)),
       notes: notes.value || null
     }
-    const resp = await axios.post('http://localhost:8000/submit/community', payload)
+    const resp = await axios.post('http://localhost:8000/quantitative/community', payload)
     if(resp.data.status==='success') alert('社区参与数据提交成功!')
   }catch(e){ console.error(e); alert(`提交失败: ${e.response?.data?.detail || e.message}`) }
   finally{ isSubmitting.value = false }

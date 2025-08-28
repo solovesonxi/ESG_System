@@ -307,7 +307,7 @@ async function submitForm() {
       energyConsumptionIntensity: energyConsumptionIntensity.value,
     };
 
-    const response = await axios.post('http://localhost:8000/submit/energy', payload);
+    const response = await axios.post('http://localhost:8000/quantitative/energy', payload);
 
     if (response.data.status === 'success') {
       alert('能源数据提交成功!');
