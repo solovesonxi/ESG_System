@@ -74,13 +74,7 @@
               </template>
             </tbody>
           </table>
-          <div class="edit-controls">
-            <button v-if="!isEditing" @click="startEditing" class="edit-button">✏️</button>
-            <div v-else class="edit-actions">
-              <button @click="cancelEditing" class="cancel-button">取消</button>
-              <button @click="submitEdits" class="submit-button">保存</button>
-            </div>
-          </div>
+          
         </div>
       </fieldset>
     </form>
@@ -147,7 +141,7 @@ const cancelEditing = () => {
   tempEdits.value = {}
 }
 
-const submitEdits = async () => {
+const submitEdit = async () => {
   try {
     await axios.post('http://localhost:8000/api/labor-qualitative/save', {
       factory: factory.value,
@@ -163,47 +157,9 @@ const submitEdits = async () => {
     alert(`保存失败: ${e.response?.data?.detail || e.message}`)
   }
 }
+defineExpose({
+  startEditing,
+  cancelEditing,
+  submitEdit,
+});
 </script>
-
-<style scoped>
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-}
-
-.data-table th, .data-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-.data-table th {
-  background-color: #f2f2f2;
-}
-
-.reason-input {
-  width: 100%;
-  min-height: 60px;
-}
-
-.edit-controls {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 1000;
-}
-
-.edit-button, .cancel-button, .submit-button {
-  padding: 4px 8px;
-  margin-left: 10px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.edit-button { background-color: #4CAF50; color: white; }
-.cancel-button { background-color: #f44336; color: white; }
-.submit-button { background-color: #2196F3; color: white; }
-</style>

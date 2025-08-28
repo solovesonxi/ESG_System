@@ -1,6 +1,6 @@
 <!-- QualitativeDataTable.vue -->
 <template>
-  <fieldset class="summary-fieldset">
+  <fieldset class="qualitative-fieldset">
     <legend>{{ title }}</legend>
     <div class="form-row">
       <table class="data-table">
@@ -15,22 +15,19 @@
         </thead>
         <tbody>
         <tr v-for="(indicatorKey, index) in Object.keys(data)" :key="index">
-          <td>{{ indicatorNames[indicatorKey] || indicatorKey }}</td>
-          <td>{{ data[indicatorKey].lastYear || '' }}</td>
+          <td class="indicator-name">{{ indicatorNames[indicatorKey] || indicatorKey }}</td>
+          <td class="readonly-cell">{{ data[indicatorKey].lastYear || '' }}</td>
           <td>
-            <span v-if="!isEditing">{{ data[indicatorKey].currentYear || '' }}</span>
-            <input v-else v-model="tempCurrentYear[indicatorKey]"
-                   :placeholder="data[indicatorKey]?.currentYear || ''" />
+            <span v-if="!isEditing" class="readonly-cell">{{ data[indicatorKey].currentYear || '' }}</span>
+            <input v-else v-model="tempCurrentYear[indicatorKey]" :placeholder="data[indicatorKey]?.currentYear || ''" class="editable-field"/>
           </td>
           <td>
-            <span v-if="!isEditing">{{ formatComparison(data[indicatorKey].comparison) }}</span>
-            <input v-else v-model="tempComparisons[indicatorKey]"
-                   :placeholder="data[indicatorKey]?.comparison || ''" />
+            <span v-if="!isEditing" class="readonly-cell">{{ formatComparison(data[indicatorKey].comparison) }}</span>
+            <input v-else v-model="tempComparisons[indicatorKey]" :placeholder="data[indicatorKey]?.comparison || ''" class="editable-field"/>
           </td>
           <td>
-            <span v-if="!isEditing">{{ data[indicatorKey].reason || '' }}</span>
-            <input v-else v-model="tempReasons[indicatorKey]"
-                      :placeholder="data[indicatorKey]?.reason || ''">
+            <span v-if="!isEditing" class="readonly-cell">{{ data[indicatorKey].reason || '' }}</span>
+            <input v-else v-model="tempReasons[indicatorKey]" :placeholder="data[indicatorKey]?.reason || ''" class="editable-field">
           </td>
         </tr>
         </tbody>
@@ -40,8 +37,8 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import { formatComparison } from '@/api/useEnvData.js';
+import {ref, watch} from 'vue';
+import {formatComparison} from '@/api/useEnvData.js';
 
 const props = defineProps({
   title: String,
@@ -77,13 +74,13 @@ watch(() => props.isEditing, (newVal) => {
 
 watch(tempReasons, (newVal) => {
   emit('update:tempReasons', newVal);
-}, { deep: true });
+}, {deep: true});
 
 watch(tempCurrentYear, (newVal) => {
   emit('update:tempCurrentYear', newVal);
-}, { deep: true });
+}, {deep: true});
 
 watch(tempComparisons, (newVal) => {
   emit('update:tempComparisons', newVal);
-}, { deep: true });
+}, {deep: true});
 </script>

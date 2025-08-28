@@ -20,6 +20,7 @@
 input[type="number"] {
     scroll-behavior: unset;
 }
+
 input[type="number"]:focus {
     touch-action: manipulation;
     -ms-touch-action: manipulation;
@@ -37,6 +38,44 @@ h1 {
     margin-bottom: 2rem;
     color: #2c3e50;
     font-size: 1.8rem;
+}
+
+/* 可计算字段样式 - 高级外观 */
+.calculated-field {
+    background: linear-gradient(135deg, rgba(74, 144, 226, 0.2), rgba(36, 110, 185, 0.2));
+    color: rgba(84, 84, 106, 0.6);
+    font-weight: bold;
+    border: 1px solid rgba(74, 144, 226, 0.4);
+}
+
+/* 只读字段样式 */
+input:read-only:not(.calculated-field) {
+    background: rgba(255, 255, 255);
+    color: rgba(10, 10, 10, 0.8);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    cursor: not-allowed;
+}
+
+/* 可编辑字段样式 */
+.editable-field {
+    background: rgba(255, 255, 255, 0.95);
+    color: #2c3e50;
+    border: 1px solid #4dabf7;
+    box-shadow: 0 0 10px rgba(77, 171, 247, 0.5);
+    cursor: text;
+    animation: breathe 5s infinite ease-in-out;
+}
+
+/* 呼吸动画效果 */
+@keyframes breathe {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(77, 171, 247, 0.5);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(77, 171, 247, 0.8);
+        transform: scale(1.02);
+    }
 }
 
 fieldset {
@@ -186,7 +225,6 @@ input {
 }
 
 
-
 button {
     display: block;
     width: 100%;
@@ -249,5 +287,8 @@ button {
     background-color: #f2f2f2;
 }
 
-
+.reason-input {
+    width: 100%;
+    min-height: 60px;
+}
 

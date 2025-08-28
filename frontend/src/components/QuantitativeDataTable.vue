@@ -15,14 +15,14 @@
         </thead>
         <tbody>
         <tr v-for="(indicatorKey, index) in Object.keys(data)" :key="index">
-          <td>{{ indicatorNames[indicatorKey] || indicatorKey }}</td>
-          <td>{{ data[indicatorKey].lastYear || '' }}</td>
+          <td class="indicator-name">{{ indicatorNames[indicatorKey] || indicatorKey }}</td>
+          <td class="readonly-cell">{{ data[indicatorKey].lastYear || '' }}</td>
           <td><span>{{ data[indicatorKey].currentYear || '' }}</span></td>
           <td><span>{{ formatComparison(data[indicatorKey].comparison) }}</span></td>
           <td>
-            <span v-if="!isEditing">{{ data[indicatorKey].reason || '' }}</span>
+            <span v-if="!isEditing" class="readonly-cell">{{ data[indicatorKey].reason || '' }}</span>
             <input v-else v-model="tempReasons[indicatorKey]"
-                   :placeholder="data[indicatorKey]?.reason || ''">
+                   :placeholder="data[indicatorKey]?.reason || ''" class="editable-field" >
           </td>
         </tr>
         </tbody>

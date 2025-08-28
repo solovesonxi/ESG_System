@@ -5,7 +5,7 @@ from database import Base
 
 class MaterialData(Base):
     __tablename__ = 'material'
-    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_material_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -32,7 +32,7 @@ class MaterialData(Base):
 
 class EnergyData(Base):
     __tablename__ = 'energy'
-    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_energy_factory_year'),)
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -68,7 +68,7 @@ class EnergyData(Base):
 
 class WaterData(Base):
     __tablename__ = 'water'
-    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_water_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -103,7 +103,7 @@ class WaterData(Base):
 
 class EmissionData(Base):
     __tablename__ = 'emission'
-    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_emission_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -134,7 +134,7 @@ class EmissionData(Base):
 
 class WasteData(Base):
     __tablename__ = 'waste'
-    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_waste_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)  # 工厂名称
     year = Column(Integer, nullable=False)
@@ -171,7 +171,7 @@ class WasteData(Base):
 
 class InvestmentData(Base):
     __tablename__ = 'investment'
-    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_investment_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -196,7 +196,7 @@ class InvestmentData(Base):
 
 class EmploymentData(Base):
     __tablename__ = "employment"
-    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_employment_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -257,7 +257,7 @@ class EmploymentData(Base):
 
 class TrainingData(Base):
     __tablename__ = "training"
-    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_training_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -288,7 +288,7 @@ class TrainingData(Base):
 
 class OHSData(Base):
     __tablename__ = "ohs"
-    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_ohs_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -324,7 +324,7 @@ class OHSData(Base):
 
 class SatisfactionData(Base):
     __tablename__ = "satisfaction"
-    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_satisfaction_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -334,7 +334,7 @@ class SatisfactionData(Base):
 
 class SupplyData(Base):
     __tablename__ = "supply"
-    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_supply_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -368,130 +368,9 @@ class SupplyData(Base):
     soc_assessment_count = Column(Integer, default=0)
 
 
-class LaborReason(Base):
-    __tablename__ = "labor_reasons"
-
-    id = Column(Integer, primary_key=True, index=True)
-    factory = Column(String(100), nullable=False)
-    year = Column(Integer, nullable=False)
-    indicator = Column(String(200), nullable=False)
-    reason = Column(String(2000), nullable=True)
-
-    __table_args__ = (
-        UniqueConstraint('factory', 'year', 'indicator', name='uq_labor_reason_factory_year_indicator'),
-    )
-
-
-class ProductResponsibilityData(Base):
-    __tablename__ = "product_responsibility"
-
-    id = Column(Integer, primary_key=True, index=True)
-    factory = Column(String(100), nullable=False)
-    year = Column(Integer, nullable=False)
-
-    complaints_total = Column(Integer, default=0)  # 客户投诉总数
-    complaints_handled = Column(Integer, default=0)  # 有效处理件数
-    complaints_handle_rate = Column(Float, default=0.0)  # 客户投诉有效处理率
-    customer_satisfaction = Column(Float, default=0.0)  # 客户满意度结果
-    recall_count = Column(Integer, default=0)  # 发生产品召回的次数
-    recall_percent = Column(Float, default=0.0)  # 产品召回百分比
-    product_quality_issues = Column(Integer, default=0)  # 产品安全质量问题
-    cyber_incidents = Column(Integer, default=0)  # 网络数据安全事件
-
-
-class IPRData(Base):
-    __tablename__ = "ipr"
-
-    id = Column(Integer, primary_key=True, index=True)
-    factory = Column(String(100), nullable=False)
-    year = Column(Integer, nullable=False)
-
-    patents_total = Column(Integer, default=0)  # 累计获得专利数量
-    invention_total = Column(Integer, default=0)  # 累计发明专利数量
-    invention_applications = Column(Integer, default=0)  # 发明专利申请数量
-    utility_model_total = Column(Integer, default=0)  # 累计实用新型专利数量
-    design_total = Column(Integer, default=0)  # 累计外观设计专利数量
-    authorized_total = Column(Integer, default=0)  # 累计被授权专利数
-    new_patents_year = Column(Integer, default=0)  # 本年新增专利数量
-    software_copyright_total = Column(Integer, default=0)  # 累计软件著作权数量
-    trademarks_total = Column(Integer, default=0)  # 累计商标注册数量
-
-
-class CommunityData(Base):
-    __tablename__ = "community"
-
-    id = Column(Integer, primary_key=True, index=True)
-    factory = Column(String(100), nullable=False)
-    year = Column(Integer, nullable=False)
-
-    donation_total = Column(Float, default=0.0)  # 公益慈善捐赠总额
-    community_investment = Column(Float, default=0.0)  # 社区发展投入金额
-
-
-class VolunteerData(Base):
-    __tablename__ = "volunteer"
-
-    id = Column(Integer, primary_key=True, index=True)
-    factory = Column(String(100), nullable=False)
-    year = Column(Integer, nullable=False)
-
-    participants = Column(Integer, default=0)  # 志愿者活动参与人次
-    hours_total = Column(Float, default=0.0)  # 志愿者服务总时长
-
-
-class OtherReason(Base):
-    __tablename__ = "other_reasons"
-
-    id = Column(Integer, primary_key=True, index=True)
-    factory = Column(String(100), nullable=False)
-    year = Column(Integer, nullable=False)
-    indicator = Column(String(200), nullable=False)
-    reason = Column(String(2000), nullable=True)
-
-    __table_args__ = (
-        UniqueConstraint('factory', 'year', 'indicator', name='uq_other_reason_factory_year_indicator'),
-    )
-
-
-class LaborQualitative(Base):
-    __tablename__ = "labor_qualitative"
-
-    id = Column(Integer, primary_key=True, index=True)
-    factory = Column(String(100), nullable=False)
-    year = Column(Integer, nullable=False)
-    indicator = Column(String(200), nullable=False)
-
-    current_text = Column(String(4000), nullable=True)
-    last_text = Column(String(4000), nullable=True)
-    comparison_text = Column(String(1000), nullable=True)
-    reason = Column(String(2000), nullable=True)
-
-    __table_args__ = (
-        UniqueConstraint('factory', 'year', 'indicator', name='uq_labor_qual_factory_year_indicator'),
-    )
-
-
-class OtherQualitative(Base):
-    __tablename__ = "other_qualitative"
-
-    id = Column(Integer, primary_key=True, index=True)
-    factory = Column(String(100), nullable=False)
-    year = Column(Integer, nullable=False)
-    indicator = Column(String(200), nullable=False)
-
-    current_text = Column(String(4000), nullable=True)
-    last_text = Column(String(4000), nullable=True)
-    comparison_text = Column(String(1000), nullable=True)
-    reason = Column(String(2000), nullable=True)
-
-    __table_args__ = (
-        UniqueConstraint('factory', 'year', 'indicator', name='uq_other_qual_factory_year_indicator'),
-    )
-
-
 class EnvQuantData(Base):
     __tablename__ = "env_quant"
-    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_env_quant_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -505,7 +384,7 @@ class EnvQuantData(Base):
 
 class EnvQualData(Base):
     __tablename__ = "env_qual"
-    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_factory_year'),)
+    __table_args__ = (UniqueConstraint('factory', 'year', name='uq_env_qual_factory_year'),)
     id = Column(Integer, primary_key=True, index=True)
     factory = Column(String(100), nullable=False)
     year = Column(Integer, nullable=False)
@@ -582,3 +461,116 @@ class EnvQualData(Base):
     greenhouse_gas_verification_system = Column(String(500), nullable=True)  # 温室气体核查体系
     comparison = Column(JSON, nullable=True)
     reasons = Column(JSON, nullable=True)
+
+
+class LaborReason(Base):
+    __tablename__ = "labor_reasons"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+    indicator = Column(String(200), nullable=False)
+    reason = Column(String(2000), nullable=True)
+
+    __table_args__ = (UniqueConstraint('factory', 'year', 'indicator', name='uq_labor_reason_factory_year_indicator'),)
+
+
+class ProductResponsibilityData(Base):
+    __tablename__ = "product_responsibility"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+
+    complaints_total = Column(Integer, default=0)  # 客户投诉总数
+    complaints_handled = Column(Integer, default=0)  # 有效处理件数
+    complaints_handle_rate = Column(Float, default=0.0)  # 客户投诉有效处理率
+    customer_satisfaction = Column(Float, default=0.0)  # 客户满意度结果
+    recall_count = Column(Integer, default=0)  # 发生产品召回的次数
+    recall_percent = Column(Float, default=0.0)  # 产品召回百分比
+    product_quality_issues = Column(Integer, default=0)  # 产品安全质量问题
+    cyber_incidents = Column(Integer, default=0)  # 网络数据安全事件
+
+
+class IPRData(Base):
+    __tablename__ = "ipr"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+
+    patents_total = Column(Integer, default=0)  # 累计获得专利数量
+    invention_total = Column(Integer, default=0)  # 累计发明专利数量
+    invention_applications = Column(Integer, default=0)  # 发明专利申请数量
+    utility_model_total = Column(Integer, default=0)  # 累计实用新型专利数量
+    design_total = Column(Integer, default=0)  # 累计外观设计专利数量
+    authorized_total = Column(Integer, default=0)  # 累计被授权专利数
+    new_patents_year = Column(Integer, default=0)  # 本年新增专利数量
+    software_copyright_total = Column(Integer, default=0)  # 累计软件著作权数量
+    trademarks_total = Column(Integer, default=0)  # 累计商标注册数量
+
+
+class CommunityData(Base):
+    __tablename__ = "community"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+
+    donation_total = Column(Float, default=0.0)  # 公益慈善捐赠总额
+    community_investment = Column(Float, default=0.0)  # 社区发展投入金额
+
+
+class VolunteerData(Base):
+    __tablename__ = "volunteer"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+
+    participants = Column(Integer, default=0)  # 志愿者活动参与人次
+    hours_total = Column(Float, default=0.0)  # 志愿者服务总时长
+
+
+class OtherReason(Base):
+    __tablename__ = "other_reasons"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+    indicator = Column(String(200), nullable=False)
+    reason = Column(String(2000), nullable=True)
+
+    __table_args__ = (UniqueConstraint('factory', 'year', 'indicator', name='uq_other_reason_factory_year_indicator'),)
+
+
+class LaborQualitative(Base):
+    __tablename__ = "labor_qualitative"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+    indicator = Column(String(200), nullable=False)
+
+    current_text = Column(String(4000), nullable=True)
+    last_text = Column(String(4000), nullable=True)
+    comparison_text = Column(String(1000), nullable=True)
+    reason = Column(String(2000), nullable=True)
+
+    __table_args__ = (UniqueConstraint('factory', 'year', 'indicator', name='uq_labor_qual_factory_year_indicator'),)
+
+
+class OtherQualitative(Base):
+    __tablename__ = "other_qualitative"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+    indicator = Column(String(200), nullable=False)
+
+    current_text = Column(String(4000), nullable=True)
+    last_text = Column(String(4000), nullable=True)
+    comparison_text = Column(String(1000), nullable=True)
+    reason = Column(String(2000), nullable=True)
+
+    __table_args__ = (UniqueConstraint('factory', 'year', 'indicator', name='uq_other_qual_factory_year_indicator'),)

@@ -1,6 +1,6 @@
 <template>
   <div class="shared-form">
-    <form @submit.prevent="submitForm">
+    <form @submit.prevent="submitEdit">
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -55,81 +55,87 @@
           <!-- 进料部分 -->
           <div class="form-group">
             <label>进料-可再生料总量 (T)</label>
-            <input type="number" v-model.number="formData.renewableInput" step="0.1" required>
+            <input type="number" v-model.number="tempFormData.renewableInput" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div class="form-group">
             <label>进料-不可再生料总量 (T)</label>
-            <input type="number" v-model.number="formData.nonRenewableInput" step="0.1" required>
+            <input type="number" v-model.number="tempFormData.nonRenewableInput" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div class="form-group">
             <label>进料总量 (T)</label>
-            <input type="number" :value="totalInput" disabled>
+            <input type="number" :value="totalInput" disabled class="calculated-field">
           </div>
           <div class="form-group">
             <label>可再生进料占比 (%)</label>
-            <input type="number" :value="renewableInputRatio" disabled>
+            <input type="number" :value="renewableInputRatio" disabled class="calculated-field">
           </div>
 
           <!-- 出料部分 -->
           <div class="form-group">
             <label>出料-可再生料总量 (T)</label>
-            <input type="number" v-model.number="formData.renewableOutput" step="0.1" required>
+            <input type="number" v-model.number="tempFormData.renewableOutput" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div class="form-group">
-            <label>进料-不可再生料总量 (T)</label>
-            <input type="number" v-model.number="formData.nonRenewableOutput" step="0.1" required>
+            <label>出料-不可再生料总量 (T)</label>
+            <input type="number" v-model.number="tempFormData.nonRenewableOutput" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div class="form-group">
             <label>出料总量 (T)</label>
-            <input type="number" v-model.number="totalOutput" disabled>
+            <input type="number" :value="totalOutput" disabled class="calculated-field">
           </div>
           <div class="form-group">
             <label>可再生出料占比 (%)</label>
-            <input type="number" :value="renewableOutputRatio" disabled>
+            <input type="number" :value="renewableOutputRatio" disabled class="calculated-field">
           </div>
 
           <!-- 消耗部分 -->
           <div class="form-group">
             <label>物料消耗总量 (T)</label>
-            <input type="number" v-model.number="formData.materialConsumption" step="0.1" required>
+            <input type="number" v-model.number="tempFormData.materialConsumption" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
 
           <div class="form-group">
             <label>木纤维 (T)</label>
-            <input type="number" v-model.number="formData.woodFiber" step="0.1" required>
+            <input type="number" v-model.number="tempFormData.woodFiber" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div class="form-group">
             <label>铝 (T)</label>
-            <input type="number" v-model.number="formData.aluminum" step="0.1" required>
+            <input type="number" v-model.number="tempFormData.aluminum" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
 
           <div class="form-group">
             <label>总营收 (万元)</label>
-            <input type="number" v-model.number="formData.total_revenue" step="0.1" required>
+            <input type="number" v-model.number="tempFormData.total_revenue" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
 
           <div class="form-group">
             <label>包装材料总量 (T)</label>
-            <input type="number" v-model.number="formData.packagingMaterial" step="0.1" required>
+            <input type="number" v-model.number="tempFormData.packagingMaterial" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div class="form-group">
             <label>纸张总量 (T)</label>
-            <input type="number" v-model.number="formData.paper" step="0.1" required>
+            <input type="number" v-model.number="tempFormData.paper" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div class="form-group">
             <label>包装材料消耗强度 (T/万元)</label>
-            <input type="number" v-model.number="packagingIntensity" disabled>
+            <input type="number" :value="packagingIntensity" disabled class="calculated-field">
           </div>
           <div class="form-group">
             <label>纸张消耗强度 (T/万元)</label>
-            <input type="number" v-model.number="paperIntensity" disabled>
+            <input type="number" :value="paperIntensity" disabled class="calculated-field">
           </div>
         </div>
       </fieldset>
-
-      <button type="submit" :disabled="isSubmitting">
-        {{ isSubmitting ? '提交中...' : '提交数据' }}
-      </button>
     </form>
   </div>
 </template>
@@ -139,16 +145,15 @@ import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import axios from 'axios'
 import {useSelectionStore} from "@/stores/selectionStore.js";
 
-
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
 const factories = computed(() => selectionStore.factories)
 const year = computed(() => selectionStore.selectedYear)
 const years = computed(() => selectionStore.years)
 const isSubmitting = ref(false)
+const isEditing = ref(false)
 
-
-// 表单数据结构
+// 原始表单数据结构
 const formData = reactive({
   renewableInput: 0,
   nonRenewableInput: 0,
@@ -162,14 +167,17 @@ const formData = reactive({
   paper: 0,
 })
 
+// 临时表单数据结构（用于编辑）
+const tempFormData = reactive({...formData})
+
 // 计算进料总量
-const totalInput = computed(() => (formData.renewableInput + formData.nonRenewableInput).toFixed(2))
-const totalOutput = computed(() => (formData.renewableOutput + formData.nonRenewableOutput).toFixed(2))
+const totalInput = computed(() => (tempFormData.renewableInput + tempFormData.nonRenewableInput).toFixed(2))
+const totalOutput = computed(() => (tempFormData.renewableOutput + tempFormData.nonRenewableOutput).toFixed(2))
 
 // 计算可再生进料占比
 const renewableInputRatio = computed(() => {
   if (totalInput.value > 0) {
-    return ((formData.renewableInput / totalInput.value) * 100).toFixed(2)
+    return ((tempFormData.renewableInput / totalInput.value) * 100).toFixed(2)
   }
   return 0
 })
@@ -177,24 +185,25 @@ const renewableInputRatio = computed(() => {
 // 计算可再生出料占比
 const renewableOutputRatio = computed(() => {
   if (totalOutput.value > 0) {
-    return ((formData.renewableOutput / totalOutput.value) * 100).toFixed(2)
+    return ((tempFormData.renewableOutput / totalOutput.value) * 100).toFixed(2)
   }
   return 0
 })
 
 const packagingIntensity = computed(() => {
-  if (formData.total_revenue > 0) {
-    return (formData.packagingMaterial / formData.total_revenue).toFixed(2)
+  if (tempFormData.total_revenue > 0) {
+    return (tempFormData.packagingMaterial / tempFormData.total_revenue).toFixed(2)
   }
   return 0
 })
 
 const paperIntensity = computed(() => {
-  if (formData.total_revenue > 0) {
-    return (formData.paper / formData.total_revenue)
+  if (tempFormData.total_revenue > 0) {
+    return (tempFormData.paper / tempFormData.total_revenue).toFixed(2)
   }
   return 0
 })
+
 // 初始化年份列表
 onMounted(() => {
   selectionStore.initYears()
@@ -205,14 +214,28 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', selectionStore.handleClickOutside)
 })
 
+// 开始编辑方法
+const startEditing = () => {
+  isEditing.value = true
+  // 将当前数据复制到临时数据
+  Object.assign(tempFormData, formData)
+}
 
-async function submitForm() {
+// 取消编辑方法
+const cancelEditing = () => {
+  isEditing.value = false
+  // 将临时数据恢复为原始数据
+  Object.assign(tempFormData, formData)
+}
+
+// 提交编辑方法
+const submitEdit = async () => {
   isSubmitting.value = true
   try {
     const payload = {
       factory: factory.value,
       year: year.value,
-      ...formData,
+      ...tempFormData,
       packagingIntensity: packagingIntensity.value,
       paperIntensity: paperIntensity.value,
       totalInput: totalInput.value,
@@ -223,6 +246,9 @@ async function submitForm() {
     const response = await axios.post('http://localhost:8000/submit/material', payload)
 
     if (response.data.status === 'success') {
+      // 更新原始数据
+      Object.assign(formData, tempFormData)
+      isEditing.value = false
       alert('数据提交成功!')
     }
   } catch (error) {
@@ -232,4 +258,13 @@ async function submitForm() {
     isSubmitting.value = false
   }
 }
+
+// 暴露方法给父组件
+defineExpose({
+  startEditing,
+  cancelEditing,
+  submitEdit,
+});
 </script>
+
+
