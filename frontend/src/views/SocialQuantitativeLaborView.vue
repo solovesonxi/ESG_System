@@ -173,7 +173,7 @@ const indicatorNames = {
 
 const fetchLaborData = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/api/labor', {params: {factory: factory.value, year: year.value}})
+    const res = await axios.get('http://localhost:8000/analytical/social_quantitative_labor', {params: {factory: factory.value, year: year.value}})
     laborData.value = res.data
   } catch (e) {
     console.error(e)
@@ -222,7 +222,7 @@ const submitEdit = async () => {
     Object.entries(tempReasons.value).forEach(([indicator, reason]) => {
       if (reason && reason.trim() !== '') reasonsMap[indicator] = reason
     })
-    await axios.post('http://localhost:8000/api/labor/reasons', {
+    await axios.post('http://localhost:8000/analytical/social_quantitative_labor', {
       factory: factory.value,
       year: parseInt(year.value),
       reasons: reasonsMap

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from core.dependencies import get_db
-from models import MaterialData
-from schemas import MaterialSubmission
+from src.core.database import get_db
+from src.core.models import MaterialData
+from src.core.schemas import MaterialSubmission
 
 router = APIRouter(prefix="/quantitative/material", tags=["定量数据-物料"])
 

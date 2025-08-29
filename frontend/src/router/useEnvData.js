@@ -1,6 +1,6 @@
 import {computed, onMounted, ref, watch} from 'vue';
 import {useSelectionStore} from "@/stores/selectionStore.js";
-import {fetchQualData, fetchQuantData} from '@/api/envData';
+import {fetchQualData, fetchQuantData} from '@/router/envData.js';
 
 export const useEnvData = (fetchFunction, isQualitative = false) => {
     const selectionStore = useSelectionStore();

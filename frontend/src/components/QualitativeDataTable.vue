@@ -38,7 +38,7 @@
 
 <script setup>
 import {ref, watch} from 'vue';
-import {formatComparison} from '@/api/useEnvData.js';
+import {formatComparison} from '@/router/useEnvData.js';
 
 const props = defineProps({
   title: String,

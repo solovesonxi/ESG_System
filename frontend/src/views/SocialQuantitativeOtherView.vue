@@ -133,7 +133,7 @@ const indicatorNames = {
 
 const fetchOtherData = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/api/other', {
+    const res = await axios.get('http://localhost:8000/analytical/social_quantitative_other', {
       params: { factory: factory.value, year: year.value }
     })
     otherData.value = res.data
@@ -184,7 +184,7 @@ const submitEdit = async () => {
     Object.entries(tempReasons.value).forEach(([indicator, reason]) => {
       if (reason && reason.trim() !== '') reasonsMap[indicator] = reason
     })
-    await axios.post('http://localhost:8000/api/other/reasons', {
+    await axios.post('http://localhost:8000/analytical/social_quantitative_other', {
       factory: factory.value,
       year: parseInt(year.value),
       reasons: reasonsMap

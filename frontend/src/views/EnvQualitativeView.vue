@@ -25,9 +25,9 @@
 import {ref} from 'vue';
 import BaseInfoSelector from '@/components/BaseInfoSelector.vue';
 import QualitativeDataTable from '@/components/QualitativeDataTable.vue';
-import { useQualData } from '@/api/useEnvData';
-import { ENV_QUAL_INDICATORS, INDICATOR_CATEGORIES } from '@/api/indicators';
-import {fetchQualData, postQualData} from '@/api/envData';
+import { useQualData } from '@/router/useEnvData.js';
+import { ENV_QUAL_INDICATORS, INDICATOR_CATEGORIES } from '@/router/indicators.js';
+import {fetchQualData, postQualData} from '@/router/envData.js';
 
 // 使用组合函数获取数据
 const { data: envQualData, factory, year } = useQualData();

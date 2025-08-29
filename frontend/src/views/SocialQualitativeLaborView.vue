@@ -98,7 +98,7 @@ const tempEdits = ref({})
 
 const fetchQualData = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/api/labor-qualitative', {
+    const res = await axios.get('http://localhost:8000/analytical/social_qualitative_other', {
       params: { factory: factory.value, year: year.value }
     })
     qualData.value = res.data
@@ -143,7 +143,7 @@ const cancelEditing = () => {
 
 const submitEdit = async () => {
   try {
-    await axios.post('http://localhost:8000/api/labor-qualitative/save', {
+    await axios.post('http://localhost:8000/analytical/social_qualitative_other', {
       factory: factory.value,
       year: parseInt(year.value),
       data: tempEdits.value

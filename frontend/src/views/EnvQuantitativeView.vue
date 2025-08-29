@@ -73,7 +73,7 @@
 import {computed, ref} from 'vue';
 import BaseInfoSelector from '@/components/BaseInfoSelector.vue';
 import QuantitativeDataTable from '@/components/QuantitativeDataTable.vue';
-import {useQuantData} from '@/api/useEnvData';
+import {useQuantData} from '@/router/useEnvData.js';
 import {
   EMISSION_INDICATORS,
   ENERGY_INDICATORS,
@@ -82,9 +82,9 @@ import {
   MATERIAL_INDICATORS,
   WASTE_INDICATORS,
   WATER_INDICATORS
-} from '@/api/indicators';
-import {fetchQuantData, postQuantReasons} from '@/api/envData';
-import {formatComparison} from '@/api/useEnvData.js';
+} from '@/router/indicators.js';
+import {fetchQuantData, postQuantReasons} from '@/router/envData.js';
+import {formatComparison} from '@/router/useEnvData.js';
 
 // 使用组合函数获取数据
 const {data, factory, year} = useQuantData();
