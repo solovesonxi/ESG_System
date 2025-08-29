@@ -14,7 +14,10 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
         data = db.query(EnergyData).filter(EnergyData.factory == factory, EnergyData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
-        data_dict = {}
+        data_dict = {"purchased_power": data.purchased_power, "renewable_power": data.renewable_power,
+            "gasoline": data.gasoline, "diesel": data.diesel, "natural_gas": data.natural_gas,
+            "other_energy": data.other_energy, "water_consumption": data.water_consumption,
+            "coal_consumption": data.coal_consumption, "turnover": data.turnover}
 
         return {"status": "success", "data": data_dict}
     except Exception as e:

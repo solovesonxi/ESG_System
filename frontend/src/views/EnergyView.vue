@@ -1,6 +1,6 @@
 <template>
   <div class="shared-form">
-    <form @submit.prevent="submitForm">
+    <form @submit.prevent="submitEdit">
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -11,7 +11,8 @@
                 {{ factory }}
                 <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
               </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown" :style="{ maxHeight: '200px', overflowY: 'auto' }">
+              <div class="options" v-show="selectionStore.showFactoryDropdown"
+                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
                 <div
                     v-for="f in factories"
                     :key="f"
@@ -47,199 +48,198 @@
         </div>
       </fieldset>
 
-
-      <!-- 外购电量统计 -->
-      <fieldset>
-        <legend>{{ year }}年外购电量统计 (kWh)</legend>
-        <div class="monthly-grid">
-          <div v-for="(month, index) in purchasedPower" :key="index" class="month-input">
-            <label>{{ getMonthName(index) }}</label>
-            <input
-                type="number"
-                v-model.number="purchasedPower[index]"
-                :placeholder="`${getMonthName(index)}电量`"
-                min="0"
-                step="1"
-                required
-            >
-          </div>
-        </div>
-      </fieldset>
-
-      <!-- 再生能源电量统计 -->
-      <fieldset>
-        <legend>{{ year }}年再生能源电量统计 (kWh)</legend>
-        <div class="monthly-grid">
-          <div v-for="(month, index) in renewableEnergyPower" :key="index" class="month-input">
-            <label>{{ getMonthName(index) }}</label>
-            <input
-                type="number"
-                v-model.number="renewableEnergyPower[index]"
-                :placeholder="`${getMonthName(index)}再生能源电量`"
-                min="0"
-                step="1"
-                required
-            >
-          </div>
-        </div>
-      </fieldset>
-
-      <!-- 汽油用量统计 -->
-      <fieldset>
-        <legend>{{ year }}年汽油用量统计 (T)</legend>
-        <div class="monthly-grid">
-          <div v-for="(month, index) in gasoline" :key="index" class="month-input">
-            <label>{{ getMonthName(index) }}</label>
-            <input
-                type="number"
-                v-model.number="gasoline[index]"
-                :placeholder="`${getMonthName(index)}汽油用量`"
-                min="0"
-                step="1"
-                required
-            >
-          </div>
-        </div>
-      </fieldset>
-
-      <!-- 柴油用量统计 -->
-      <fieldset>
-        <legend>{{ year }}年柴油用量统计 (T)</legend>
-        <div class="monthly-grid">
-          <div v-for="(month, index) in diesel" :key="index" class="month-input">
-            <label>{{ getMonthName(index) }}</label>
-            <input
-                type="number"
-                v-model.number="diesel[index]"
-                :placeholder="`${getMonthName(index)}柴油用量`"
-                min="0"
-                step="1"
-                required
-            >
-          </div>
-        </div>
-      </fieldset>
-
-      <!-- 天然气用量统计 -->
-      <fieldset>
-        <legend>{{ year }}年天然气用量统计 (m³)</legend>
-        <div class="monthly-grid">
-          <div v-for="(month, index) in naturalGas" :key="index" class="month-input">
-            <label>{{ getMonthName(index) }}</label>
-            <input
-                type="number"
-                v-model.number="naturalGas[index]"
-                :placeholder="`${getMonthName(index)}天然气用量`"
-                min="0"
-                step="1"
-                required
-            >
-          </div>
-        </div>
-      </fieldset>
-
-      <!-- 其他能源用量统计 -->
-      <fieldset>
-        <legend>{{ year }}年其他能源用量统计 (Tce)</legend>
-        <div class="monthly-grid">
-          <div v-for="(month, index) in otherEnergy" :key="index" class="month-input">
-            <label>{{ getMonthName(index) }}</label>
-            <input
-                type="number"
-                v-model.number="otherEnergy[index]"
-                :placeholder="`${getMonthName(index)}其他能源用量`"
-                min="0"
-                step="1"
-                required
-            >
-          </div>
-        </div>
-      </fieldset>
-
-      <!-- 能源消耗合计 -->
+      <!-- 能源数据部分 -->
       <fieldset class="summary-fieldset">
-        <legend>{{ year }}年综合能耗合计</legend>
-        <div class="form-row">
-          <div class="form-group">
-            <label>水 (Tce)</label>
-            <input type="number" v-model.number="waterConsumption" step="1" required>
-          </div>
-          <div class="form-group">
-            <label>煤炭 (Tce)</label>
-            <input type="number" v-model.number="coalConsumption" step="1" required>
-          </div>
-          <div class="form-group">
-            <label>电 (Tce)</label>
-            <input type="number" :value="powerConsumption" disabled>
-          </div>
-          <div class="form-group">
-            <label>汽油 (Tce)</label>
-            <input type="number" :value="gasolineConsumption" disabled>
-          </div>
-          <div class="form-group">
-            <label>柴油 (Tce)</label>
-            <input type="number" :value="dieselConsumption" disabled>
-          </div>
-          <div class="form-group">
-            <label>天然气 (Tce)</label>
-            <input type="number" :value="naturalGasConsumption" disabled>
-          </div>
-          <div class="form-group">
-            <label>其他能源 (Tce)</label>
-            <input type="number" :value="totalOtherEnergy" disabled>
-          </div>
-          <div class="form-group">
-            <label>合计 (Tce)</label>
-            <input type="number" :value="totalEnergyConsumption" disabled>
-          </div>
-          <div class="form-group">
-            <label>营业额 (万元)</label>
-            <input type="number" v-model.number="turnover" step="1" required>
-          </div>
-          <div class="form-group">
-            <label>能源消耗强度 (Tce/万元)</label>
-            <input type="number" :value="energyConsumptionIntensity" disabled>
-          </div>
+        <legend>能源数据统计</legend>
+        <div class="loading" v-if="isLoading">数据加载中...</div>
+        <div>
+          <!-- 外购电量统计 -->
+          <fieldset>
+            <legend>{{ year }}年外购电量统计 (kWh)</legend>
+            <div class="monthly-grid">
+              <div v-for="(month, index) in formData.purchasedPower" :key="index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                    type="number"
+                    v-model.number="formData.purchasedPower[index]"
+                    :placeholder="`${getMonthName(index)}电量`"
+                    min="0"
+                    step="1"
+                    :readonly="!isEditing"
+                    :class="{ 'editable-field': isEditing }"
+                    required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 再生能源电量统计 -->
+          <fieldset>
+            <legend>{{ year }}年再生能源电量统计 (kWh)</legend>
+            <div class="monthly-grid">
+              <div v-for="(month, index) in formData.renewableEnergyPower" :key="index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                    type="number"
+                    v-model.number="formData.renewableEnergyPower[index]"
+                    :placeholder="`${getMonthName(index)}再生能源电量`"
+                    min="0"
+                    step="1"
+                    :readonly="!isEditing"
+                    :class="{ 'editable-field': isEditing }"
+                    required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 汽油用量统计 -->
+          <fieldset>
+            <legend>{{ year }}年汽油用量统计 (T)</legend>
+            <div class="monthly-grid">
+              <div v-for="(month, index) in formData.gasoline" :key="index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                    type="number"
+                    v-model.number="formData.gasoline[index]"
+                    :placeholder="`${getMonthName(index)}汽油用量`"
+                    min="0"
+                    step="1"
+                    :readonly="!isEditing"
+                    :class="{ 'editable-field': isEditing }"
+                    required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 柴油用量统计 -->
+          <fieldset>
+            <legend>{{ year }}年柴油用量统计 (T)</legend>
+            <div class="monthly-grid">
+              <div v-for="(month, index) in formData.diesel" :key="index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                    type="number"
+                    v-model.number="formData.diesel[index]"
+                    :placeholder="`${getMonthName(index)}柴油用量`"
+                    min="0"
+                    step="1"
+                    :readonly="!isEditing"
+                    :class="{ 'editable-field': isEditing }"
+                    required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 天然气用量统计 -->
+          <fieldset>
+            <legend>{{ year }}年天然气用量统计 (m³)</legend>
+            <div class="monthly-grid">
+              <div v-for="(month, index) in formData.naturalGas" :key="index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                    type="number"
+                    v-model.number="formData.naturalGas[index]"
+                    :placeholder="`${getMonthName(index)}天然气用量`"
+                    min="0"
+                    step="1"
+                    :readonly="!isEditing"
+                    :class="{ 'editable-field': isEditing }"
+                    required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 其他能源用量统计 -->
+          <fieldset>
+            <legend>{{ year }}年其他能源用量统计 (Tce)</legend>
+            <div class="monthly-grid">
+              <div v-for="(month, index) in formData.otherEnergy" :key="index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                    type="number"
+                    v-model.number="formData.otherEnergy[index]"
+                    :placeholder="`${getMonthName(index)}其他能源用量`"
+                    min="0"
+                    step="1"
+                    :readonly="!isEditing"
+                    :class="{ 'editable-field': isEditing }"
+                    required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 能源消耗合计 -->
+          <fieldset class="summary-fieldset">
+            <legend>{{ year }}年综合能耗合计</legend>
+            <div class="form-row">
+              <div class="form-group">
+                <label>水 (Tce)</label>
+                <input type="number" v-model.number="formData.waterConsumption" step="1"
+                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+              </div>
+              <div class="form-group">
+                <label>煤炭 (Tce)</label>
+                <input type="number" v-model.number="formData.coalConsumption" step="1"
+                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+              </div>
+              <div class="form-group">
+                <label>电 (Tce)</label>
+                <input type="number" :value="powerConsumption" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>汽油 (Tce)</label>
+                <input type="number" :value="gasolineConsumption" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>柴油 (Tce)</label>
+                <input type="number" :value="dieselConsumption" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>天然气 (Tce)</label>
+                <input type="number" :value="naturalGasConsumption" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>其他能源 (Tce)</label>
+                <input type="number" :value="totalOtherEnergy" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>合计 (Tce)</label>
+                <input type="number" :value="totalEnergyConsumption" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>营业额 (万元)</label>
+                <input type="number" v-model.number="formData.turnover" step="1"
+                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+              </div>
+              <div class="form-group">
+                <label>能源消耗强度 (Tce/万元)</label>
+                <input type="number" :value="energyConsumptionIntensity" disabled class="calculated-field">
+              </div>
+            </div>
+          </fieldset>
         </div>
       </fieldset>
-
-      <button type="submit" :disabled="isSubmitting">
-        {{ isSubmitting ? '提交中...' : '提交数据' }}
-      </button>
     </form>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onBeforeUnmount, computed } from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import axios from 'axios'
-import { useSelectionStore } from "@/stores/selectionStore.js";
+import {useSelectionStore} from "@/stores/selectionStore.js";
 
 const selectionStore = useSelectionStore();
 const factory = computed(() => selectionStore.selectedFactory);
 const factories = computed(() => selectionStore.factories);
 const year = computed(() => selectionStore.selectedYear);
 const years = computed(() => selectionStore.years);
-const isSubmitting = ref(false);
-
-// 初始化年份列表
-onMounted(() => {
-  selectionStore.initYears();
-  document.addEventListener('click', selectionStore.handleClickOutside);
-});
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', selectionStore.handleClickOutside);
-});
-
-
-// 各种能源的数据
-const purchasedPower = reactive(Array(12).fill(0)); // 外购电量 (kWh)
-const renewableEnergyPower = reactive(Array(12).fill(0)); // 再生能源电量 (kWh)
-const gasoline = reactive(Array(12).fill(0)); // 汽油 (T)
-const diesel = reactive(Array(12).fill(0)); // 柴油 (T)
-const naturalGas = reactive(Array(12).fill(0)); // 天然气 (m³)
-const otherEnergy = reactive(Array(12).fill(0)); // 其他能源 (Tce)
+const isEditing = ref(false);
+const isLoading = ref(false);
 
 // 月份名称映射
 const monthNames = [
@@ -252,71 +252,168 @@ const getMonthName = (index) => {
   return monthNames[index];
 };
 
-// 计算各种能源的年度合计值
-const totalPurchasedPower = computed(() => purchasedPower.reduce((sum, power) => sum + power, 0));
-const totalRenewablePower = computed(() => renewableEnergyPower.reduce((sum, energy) => sum + energy, 0));
-const totalGasoline = computed(() => gasoline.reduce((sum, amount) => sum + amount, 0));
-const totalDiesel = computed(() => diesel.reduce((sum, amount) => sum + amount, 0));
-const totalNaturalGas = computed(() => naturalGas.reduce((sum, amount) => sum + amount, 0));
-const totalOtherEnergy = computed(() => otherEnergy.reduce((sum, amount) => sum + amount, 0));
-
-const waterConsumption = ref(0);
-const coalConsumption = ref(0);
-const powerConsumption = computed(()=>(totalPurchasedPower.value+totalRenewablePower.value) * 0.1229 / 1000);
-const gasolineConsumption = computed(()=>totalGasoline.value * 1.4717);
-const dieselConsumption = computed(()=>totalDiesel.value * 1.4571);
-const naturalGasConsumption = computed(()=>totalNaturalGas.value * 1.33 / 1000);
-const totalEnergyConsumption = computed(() => waterConsumption.value +coalConsumption.value+ powerConsumption.value + gasolineConsumption.value +
-    dieselConsumption.value + naturalGasConsumption.value + totalOtherEnergy.value);
-const turnover = ref(0);
-const energyConsumptionIntensity = computed(() => {
-  if (turnover.value <= 0) return 0;
-  return totalEnergyConsumption.value / turnover.value;
+// 表单数据结构
+const formData = ref({
+  purchasedPower: Array(12).fill(0),
+  renewableEnergyPower: Array(12).fill(0),
+  gasoline: Array(12).fill(0),
+  diesel: Array(12).fill(0),
+  naturalGas: Array(12).fill(0),
+  otherEnergy: Array(12).fill(0),
+  waterConsumption: 0,
+  coalConsumption: 0,
+  turnover: 0
 });
 
+// 计算各种能源的年度合计值
+const totalPurchasedPower = computed(() => formData.value.purchasedPower.reduce((sum, power) => sum + power, 0));
+const totalRenewablePower = computed(() => formData.value.renewableEnergyPower.reduce((sum, energy) => sum + energy, 0));
+const totalGasoline = computed(() => formData.value.gasoline.reduce((sum, amount) => sum + amount, 0));
+const totalDiesel = computed(() => formData.value.diesel.reduce((sum, amount) => sum + amount, 0));
+const totalNaturalGas = computed(() => formData.value.naturalGas.reduce((sum, amount) => sum + amount, 0));
+const totalOtherEnergy = computed(() => formData.value.otherEnergy.reduce((sum, amount) => sum + amount, 0));
 
-// 提交表单
-async function submitForm() {
-  isSubmitting.value = true;
+// 计算各种能源的消耗量 (Tce)
+const powerConsumption = computed(() => (totalPurchasedPower.value + totalRenewablePower.value) * 0.1229 / 1000);
+const gasolineConsumption = computed(() => totalGasoline.value * 1.4717);
+const dieselConsumption = computed(() => totalDiesel.value * 1.4571);
+const naturalGasConsumption = computed(() => totalNaturalGas.value * 1.33 / 1000);
+const totalEnergyConsumption = computed(() =>
+    formData.value.waterConsumption +
+    formData.value.coalConsumption +
+    powerConsumption.value +
+    gasolineConsumption.value +
+    dieselConsumption.value +
+    naturalGasConsumption.value +
+    totalOtherEnergy.value
+);
+const energyConsumptionIntensity = computed(() => {
+  if (formData.value.turnover <= 0) return 0;
+  return totalEnergyConsumption.value / formData.value.turnover;
+});
+
+// 监听工厂和年份变化
+watch([factory, year], () => {
+  fetchData();
+});
+
+onMounted(() => {
+  selectionStore.initYears();
+  document.addEventListener("click", selectionStore.handleClickOutside);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener("click", selectionStore.handleClickOutside);
+});
+// 获取数据方法
+const fetchData = async () => {
+  if (!factory.value || !year.value) {
+    resetFormData();
+    return;
+  }
+
+  isLoading.value = true;
   try {
+    const response = await axios.get(`http://localhost:8000/quantitative/energy`, {
+      params: {factory: factory.value, year: year.value}
+    });
+    console.log(response.data);
+    if (response.data && response.data.data) {
+      formData.value = {
+        purchasedPower: response.data.data.purchased_power || Array(12).fill(0),
+        renewableEnergyPower: response.data.data.renewable_power || Array(12).fill(0),
+        gasoline: response.data.data.gasoline || Array(12).fill(0),
+        diesel: response.data.data.diesel || Array(12).fill(0),
+        naturalGas: response.data.data.natural_gas || Array(12).fill(0),
+        otherEnergy: response.data.data.other_energy || Array(12).fill(0),
+        waterConsumption: response.data.data.water_consumption || 0,
+        coalConsumption: response.data.data.coal_consumption || 0,
+        turnover: response.data.data.turnover || 0
+      };
+    } else {
+      // 没有数据时重置表单为全0
+      resetFormData();
+    }
+  } catch (error) {
+    if (error.response?.status === 404) {
+      resetFormData();
+    } else {
+      console.error('获取数据失败:', error);
+      resetFormData();
+    }
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// 重置表单数据
+const resetFormData = () => {
+  formData.value = {
+    purchasedPower: Array(12).fill(0),
+    renewableEnergyPower: Array(12).fill(0),
+    gasoline: Array(12).fill(0),
+    diesel: Array(12).fill(0),
+    naturalGas: Array(12).fill(0),
+    otherEnergy: Array(12).fill(0),
+    waterConsumption: 0,
+    coalConsumption: 0,
+    turnover: 0
+  };
+};
+
+// 提交编辑方法
+// 提交编辑方法
+const submitEdit = async () => {
+  try {
+    // 准备提交的数据，确保字段名与后端一致
     const payload = {
       factory: factory.value,
       year: year.value,
-      purchasedPower: [...purchasedPower],
-      renewableEnergyPower: [...renewableEnergyPower],
-      gasoline: [...gasoline],
-      diesel: [...diesel],
-      naturalGas: [...naturalGas],
-      otherEnergy: [...otherEnergy],
-
+      purchasedPower: formData.value.purchasedPower,
+      renewableEnergyPower: formData.value.renewableEnergyPower,
+      gasoline: formData.value.gasoline,
+      diesel: formData.value.diesel,
+      naturalGas: formData.value.naturalGas,
+      otherEnergy: formData.value.otherEnergy,
       totalPurchasedPower: totalPurchasedPower.value,
       totalRenewablePower: totalRenewablePower.value,
       totalGasoline: totalGasoline.value,
       totalDiesel: totalDiesel.value,
       totalNaturalGas: totalNaturalGas.value,
       totalOtherEnergy: totalOtherEnergy.value,
-
-      waterConsumption: waterConsumption.value,
-      coalConsumption: coalConsumption.value,
+      waterConsumption: formData.value.waterConsumption,
+      coalConsumption: formData.value.coalConsumption,
       powerConsumption: powerConsumption.value,
       gasolineConsumption: gasolineConsumption.value,
       dieselConsumption: dieselConsumption.value,
       naturalGasConsumption: naturalGasConsumption.value,
       totalEnergyConsumption: totalEnergyConsumption.value,
-      turnover: turnover.value,
-      energyConsumptionIntensity: energyConsumptionIntensity.value,
+      turnover: formData.value.turnover,
+      energyConsumptionIntensity: energyConsumptionIntensity.value
     };
 
     const response = await axios.post('http://localhost:8000/quantitative/energy', payload);
 
     if (response.data.status === 'success') {
-      alert('能源数据提交成功!');
+      isEditing.value = false;
+      alert('数据提交成功!');
+
+      // 重新获取数据以确保计算字段正确
+      await fetchData();
     }
   } catch (error) {
     console.error('提交失败:', error);
     alert(`提交失败: ${error.response?.data?.detail || error.message}`);
-  } finally {
-    isSubmitting.value = false;
   }
-}
+};
+
+// 暴露方法给父组件
+defineExpose({
+  startEditing: () => isEditing.value = true,
+  cancelEditing: () => {
+    isEditing.value = false;
+    fetchData();
+  },
+  submitEdit,
+  fetchData
+});
 </script>

@@ -53,7 +53,6 @@
       <fieldset class="summary-fieldset">
         <legend>物料进出统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
-        <div v-else-if="!hasData" class="no-data">暂无数据</div>
         <div class="form-row" v-else>
           <!-- 进料部分 -->
           <div class="form-group">
@@ -144,7 +143,7 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import axios from 'axios'
 import {useSelectionStore} from "@/stores/selectionStore.js"
 
@@ -153,7 +152,6 @@ const factory = computed(() => selectionStore.selectedFactory)
 const year = computed(() => selectionStore.selectedYear)
 const isEditing = ref(false)
 const isLoading = ref(false)
-const hasData = ref(false)
 
 // 表单数据结构
 const formData = ref({
@@ -194,7 +192,13 @@ const paperIntensity = computed(() => {
 watch([factory, year], () => {
   fetchData()
 })
-
+onMounted(() => {
+  selectionStore.initYears();
+  document.addEventListener("click", selectionStore.handleClickOutside);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener("click", selectionStore.handleClickOutside);
+});
 // 获取数据方法
 const fetchData = async () => {
   if (!factory.value || !year.value) {
@@ -203,14 +207,36 @@ const fetchData = async () => {
   }
   isLoading.value = true
   try {
-    const response = await axios.get(`http://localhost:8000/quantitative/material`, {params: {factory: factory.value, year: year.value}})
+    const response = await axios.get(`http://localhost:8000/quantitative/material`, {
+      params: {
+        factory: factory.value,
+        year: year.value
+      }
+    })
     console.log(response.data)
-    formData.value = response.data.data
-    hasData.value = true
+
+    // 检查返回的数据是否为null
+    if (response.data && response.data.data) {
+      // 将后端数据映射到前端表单
+      formData.value = {
+        renewableInput: response.data.data.renewableInput || 0,
+        nonRenewableInput: response.data.data.nonRenewableInput || 0,
+        renewableOutput: response.data.data.renewableOutput || 0,
+        nonRenewableOutput: response.data.data.nonRenewableOutput || 0,
+        materialConsumption: response.data.data.materialConsumption || 0,
+        woodFiber: response.data.data.woodFiber || 0,
+        aluminum: response.data.data.aluminum || 0,
+        total_revenue: response.data.data.total_revenue || 0,
+        packagingMaterial: response.data.data.packagingMaterial || 0,
+        paper: response.data.data.paper || 0
+      }
+    } else {
+      // 如果没有数据，重置表单
+      resetFormData()
+    }
   } catch (error) {
     if (error.response?.status === 404) {
       resetFormData()
-      hasData.value = false
     } else {
       console.error('获取数据失败:', error)
     }
