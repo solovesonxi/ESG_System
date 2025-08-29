@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.core.models import InvestmentData
-from src.core.schemas import InvestmentSubmission
+from core.dependencies import get_db
+from core.models import InvestmentData
+from core.schemas import InvestmentSubmission
 
 router = APIRouter(prefix="/quantitative/investment", tags=["定量数据-资金投入"])
 

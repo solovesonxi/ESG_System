@@ -3,9 +3,8 @@ from typing import Any, List, Dict
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.main import indicators, logger
-from src.core.models import MaterialData, EnergyData, WaterData, EmissionData, WasteData, InvestmentData, EnvQuantData
+from core.dependencies import get_db, indicators
+from core.models import MaterialData, EnergyData, WaterData, EmissionData, WasteData, InvestmentData, EnvQuantData
 
 router = APIRouter(prefix="/analytical/env_quantitative", tags=["分析模式-环境定量"])
 
@@ -68,8 +67,6 @@ async def save_reasons(factory: str = Body(..., description="工厂名称"),
         for model_class, reasons in reason_mapping.values():
             if data := db.query(model_class).filter_by(factory=factory, year=year).first():
                 data.reasons = reasons
-        logger.info(
-            f"materialReasons: {materialReasons}, energyReasons: {energyReasons}, waterReasons: {waterReasons}, emissionReasons: {emissionReasons}, wasteReasons: {wasteReasons}, investmentReasons: {investmentReasons}, envQuantReasons: {envQuantReasons}")
         db.commit()
         return {"status": "success", "message": "原因分析提交成功"}
     except Exception as e:

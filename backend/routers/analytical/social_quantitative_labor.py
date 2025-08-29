@@ -3,9 +3,9 @@ from typing import Dict
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.core.models import EmploymentData, TrainingData, OHSData, SatisfactionData, LaborReason
-from src.utils import _calc_comparison
+from core.dependencies import get_db
+from core.models import EmploymentData, TrainingData, OHSData, SatisfactionData, LaborReason
+from utils import _calc_comparison
 
 router = APIRouter(prefix="/analytical/social_quantitative_labor", tags=["分析模式-社会定量-劳工"])
 

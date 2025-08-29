@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.core.models import EmploymentData
-from src.core.schemas import EmploymentSubmission
+from core.dependencies import get_db
+from core.models import EmploymentData
+from core.schemas import EmploymentSubmission
 
 router = APIRouter(prefix="/quantitative/employment", tags=["定量数据-雇佣"])
 

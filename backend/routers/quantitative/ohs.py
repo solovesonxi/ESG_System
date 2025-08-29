@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.core.models import OHSData
-from src.core.schemas import OHSSubmission
+from core.dependencies import get_db
+from core.models import OHSData
+from core.schemas import OHSSubmission
 
 router = APIRouter(prefix="/quantitative/ohs", tags=["定量数据-职健与安全"])
 

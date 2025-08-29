@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.core.models import WaterData
-from src.core.schemas import WaterSubmission
+from core.dependencies import get_db
+from core.models import WaterData
+from core.schemas import WaterSubmission
 
 router = APIRouter(prefix="/quantitative/water", tags=["定量数据-水资源"])
 

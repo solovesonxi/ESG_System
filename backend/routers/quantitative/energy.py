@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.core.models import EnergyData
-from src.core.schemas import EnergySubmission
+from core.dependencies import get_db
+from core.models import EnergyData
+from core.schemas import EnergySubmission
 
 router = APIRouter(prefix="/quantitative/energy", tags=["定量数据-能源"])
 

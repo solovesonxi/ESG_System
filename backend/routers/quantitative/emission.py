@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.core.models import EmissionData
-from src.core.schemas import EmissionSubmission
+from core.dependencies import get_db
+from core.models import EmissionData
+from core.schemas import EmissionSubmission
 
 router = APIRouter(prefix="/quantitative/emission", tags=["定量数据-排放"])
 

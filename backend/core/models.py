@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, JSON, UniqueConstraint
 
-from src.core.database import Base
+from core.dependencies import Base
 
 
 class MaterialData(Base):

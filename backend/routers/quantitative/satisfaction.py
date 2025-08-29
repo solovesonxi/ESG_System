@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.core.models import SatisfactionData
-from src.core.schemas import SatisfactionSubmission
+from core.dependencies import get_db
+from core.models import SatisfactionData
+from core.schemas import SatisfactionSubmission
 
 router = APIRouter(prefix="/quantitative/satisfaction", tags=["定量数据-员工满意度"])
 

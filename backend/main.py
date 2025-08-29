@@ -1,5 +1,3 @@
-import json
-import logging
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -7,37 +5,18 @@ from pathlib import Path
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from core.database import engine
+from core.dependencies import engine
 from core.models import Base
-from routers.analytical import env_quantitative, env_qualitative
+from routers.analytical import env_quantitative, env_qualitative, social_qualitative_other, social_quantitative_labor, \
+    social_qualitative_labor, social_quantitative_other, governance
 from routers.quantitative import material, energy, water, emission, waste, investment, employment, training, ohs, \
-    satisfaction, supply
-from src.routers.analytical import social_quantitative_labor, social_quantitative_other, social_qualitative_labor, \
-    social_qualitative_other, governance
-from src.routers.quantitative import ip, responsibility, community
+    satisfaction, supply, community, responsibility, ip
 
 sys.path.append(str(Path(__file__).parent.parent))
-# 配置日志
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)  # 设置日志级别为DEBUG
-
-# 创建一个控制台处理器
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
-
-# 定义日志格式
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-console_handler.setFormatter(formatter)
-
-# 添加处理器到logger
-logger.addHandler(console_handler)
 
 # 创建数据库表
 Base.metadata.create_all(bind=engine)
 
-config_path = Path(__file__).parent / "static" / "indicators.json"
-with open(config_path, "r", encoding="utf-8") as f:
-    indicators = json.load(f)
 app = FastAPI()
 # 添加CORS中间件
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"],

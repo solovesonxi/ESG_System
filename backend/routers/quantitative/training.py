@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.core.models import TrainingData
-from src.core.schemas import TrainingSubmission
+from core.dependencies import get_db
+from core.models import TrainingData
+from core.schemas import TrainingSubmission
 
 router = APIRouter(prefix="/quantitative/training", tags=["定量数据-教育与培训"])
 

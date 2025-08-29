@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.main import indicators, logger
-from src.core.models import EnvQualData
-from src.core.schemas import EnvQualDataRequest
+from core.dependencies import get_db
+from core.dependencies import indicators
+from core.models import EnvQualData
+from core.schemas import EnvQualDataRequest
 
 router = APIRouter(prefix="/analytical/env_qualitative", tags=["分析模式-环境定性"])
 
@@ -31,7 +31,6 @@ async def save_data(request: EnvQualDataRequest = Body(...), db: Session = Depen
         comparisons = {}
         reasons = {}
         indicator_data = {}
-        logger.info(f"request: {request}")
         for indicator_key, data in request.envQualData.items():
             indicator_data[indicator_key] = data.currentYear
             comparisons[indicator_key] = data.comparison

@@ -204,6 +204,7 @@ const fetchData = async () => {
   isLoading.value = true
   try {
     const response = await axios.get(`http://localhost:8000/quantitative/material`, {params: {factory: factory.value, year: year.value}})
+    console.log(response.data)
     formData.value = response.data.data
     hasData.value = true
   } catch (error) {

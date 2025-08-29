@@ -3,8 +3,8 @@ from typing import Dict
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.core.models import LaborQualitative
+from core.dependencies import get_db
+from core.models import LaborQualitative
 
 router = APIRouter(prefix="/analytical/social_qualitative_labor", tags=["分析模式-社会定性-劳工"])
 

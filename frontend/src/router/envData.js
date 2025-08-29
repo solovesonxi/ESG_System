@@ -5,6 +5,7 @@ const BASE_URL = 'http://localhost:8000';
 // 通用GET请求
 export const fetchData = async (endpoint, params) => {
     try {
+        console.log("fetchData", endpoint,params);
         const response = await axios.get(`${BASE_URL}/${endpoint}`, { params });
         console.log("fetchData", params);
         console.log(response.data);

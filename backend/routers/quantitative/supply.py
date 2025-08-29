@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.core.models import SupplyData
-from src.core.schemas import SupplySubmission
+from core.dependencies import get_db
+from core.models import SupplyData
+from core.schemas import SupplySubmission
 
 router = APIRouter(prefix="/quantitative/satisfaction", tags=["定量数据-供应链"])
 

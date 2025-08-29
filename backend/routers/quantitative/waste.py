@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src.core.database import get_db
-from src.core.models import WasteData
-from src.core.schemas import WasteSubmission
+from core.dependencies import get_db
+from core.models import WasteData
+from core.schemas import WasteSubmission
 
 router = APIRouter(prefix="/quantitative/waste", tags=["定量数据-废弃物"])
 
