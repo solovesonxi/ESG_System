@@ -1,6 +1,7 @@
 <template>
   <div class="shared-form">
     <form @submit.prevent="submitCommunity">
+      <!-- 基础信息 -->
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -58,15 +59,13 @@
           <table class="community-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`cd-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
+              <tr>
                 <td>元</td>
                 <td v-for="c in 12" :key="`cd-c-${c-1}`">
                   <input type="number" min="0" step="0.01" v-model.number="charityDonations[currentFactoryIndex][c-1]" />
@@ -85,15 +84,13 @@
           <table class="community-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`ci-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
+              <tr>
                 <td>元</td>
                 <td v-for="c in 12" :key="`ci-c-${c-1}`">
                   <input type="number" min="0" step="0.01" v-model.number="communityInvestment[currentFactoryIndex][c-1]" />
@@ -112,15 +109,13 @@
           <table class="community-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`vp-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
+              <tr>
                 <td>人次</td>
                 <td v-for="c in 12" :key="`vp-c-${c-1}`">
                   <input type="number" min="0" step="1" v-model.number="volunteerParticipants[currentFactoryIndex][c-1]" />
@@ -139,15 +134,13 @@
           <table class="community-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`vh-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
+              <tr>
                 <td>小时</td>
                 <td v-for="c in 12" :key="`vh-c-${c-1}`">
                   <input type="number" min="0" step="0.1" v-model.number="volunteerHours[currentFactoryIndex][c-1]" />
@@ -224,42 +217,46 @@ async function submitCommunity() {
 
 <style scoped>
 .table-wrapper {
-  overflow: auto;
+  overflow-x: auto;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 20px;
 }
+
 .community-table {
   width: 100%;
+  min-width: 800px;
   border-collapse: collapse;
+  table-layout: fixed;
 }
+
 .community-table th,
 .community-table td {
   border: 1px solid #ddd;
   padding: 6px;
   text-align: center;
+  word-break: break-word;
 }
+
 .community-table thead th {
   position: sticky;
   top: 0;
   background: #f7f7f7;
   z-index: 1;
 }
-.factory-cell {
-  white-space: nowrap;
-  text-align: left;
-}
+
 .total-cell {
   font-weight: 600;
 }
+
 .community-table input {
-  width: 100px;
+  width: 100%;
+  box-sizing: border-box;
 }
-.note {
-  margin-top: 6px;
-  font-size: 12px;
-  color: #666;
-}
+
 @media (max-width: 768px) {
-  .community-table input {
-    width: 80px;
+  .community-table {
+    min-width: 600px;
   }
 }
 </style>

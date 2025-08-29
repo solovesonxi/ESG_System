@@ -1,6 +1,7 @@
 <template>
   <div class="shared-form">
     <form @submit.prevent="submitResponsibility">
+      <!-- 基础信息 -->
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -58,7 +59,6 @@
           <table class="resp-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`cmp-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
@@ -67,8 +67,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
+              <tr>
                 <td>件</td>
                 <td v-for="c in 12" :key="`cmp-c-${c-1}`">
                   <input type="number" min="0" step="1" v-model.number="complaints[currentFactoryIndex][c-1]" />
@@ -93,15 +92,13 @@
           <table class="resp-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`qual-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
+              <tr>
                 <td>次</td>
                 <td v-for="c in 12" :key="`qual-c-${c-1}`">
                   <input type="number" min="0" step="1" v-model.number="qualityIssues[currentFactoryIndex][c-1]" />
@@ -120,7 +117,6 @@
           <table class="resp-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`rec-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
@@ -129,8 +125,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
+              <tr>
                 <td>次</td>
                 <td v-for="c in 12" :key="`rec-c-${c-1}`">
                   <input type="number" min="0" step="1" v-model.number="recalls[currentFactoryIndex][c-1]" />
@@ -148,31 +143,24 @@
         </div>
       </fieldset>
 
-      <!-- 客户满意度统计 - 总部统一调查 -->
+      <!-- 客户满意度统计 -->
       <fieldset>
         <legend>{{ year }}年客户满意度统计 - 总部统一调查 (%)</legend>
         <div class="table-wrapper">
           <table class="resp-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`csat-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
+              <tr>
                 <td>%</td>
                 <td v-for="c in 12" :key="`csat-c-${c-1}`">
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    v-model.number="customerSatisfaction[currentFactoryIndex][c-1]"
-                  />
+                  <input type="number" min="0" max="100" step="0.01"
+                    v-model.number="customerSatisfaction[currentFactoryIndex][c-1]" />
                 </td>
                 <td class="total-cell">{{ averageRow(customerSatisfaction[currentFactoryIndex]) }}</td>
               </tr>
@@ -188,15 +176,13 @@
           <table class="resp-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`cyb-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
+              <tr>
                 <td>次</td>
                 <td v-for="c in 12" :key="`cyb-c-${c-1}`">
                   <input type="number" min="0" step="1" v-model.number="cyberIncidents[currentFactoryIndex][c-1]" />
@@ -284,12 +270,46 @@ async function submitResponsibility() {
 </script>
 
 <style scoped>
-.table-wrapper { overflow: auto }
-.resp-table { width: 100%; border-collapse: collapse }
-.resp-table th,.resp-table td { border: 1px solid #ddd; padding: 6px; text-align: center }
-.resp-table thead th { position: sticky; top: 0; background: #f7f7f7; z-index: 1 }
-.factory-cell { white-space: nowrap; text-align: left }
-.total-cell { font-weight: 600 }
-.resp-table input { width: 100px }
-@media (max-width: 768px){ .resp-table input { width: 80px } }
+.table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 20px;
+}
+
+.resp-table {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.resp-table th, .resp-table td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  text-align: center;
+  word-break: break-word;
+}
+
+.resp-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f7f7f7;
+  z-index: 1;
+}
+
+.total-cell {
+  font-weight: 600;
+}
+
+.resp-table input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .resp-table {
+    min-width: 600px;
+  }
+}
 </style>

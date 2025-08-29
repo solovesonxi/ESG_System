@@ -19,7 +19,7 @@ defineEmits(['start-edit', 'cancel-edit', 'submit-edit']);
 <style scoped>
 .edit-controls {
   position: fixed;
-  top: 20px;       /* 距离顶部 */
+  top: 100px;       /* 距离顶部 */
   right: 20px;     /* 距离右侧 */
   z-index: 9999;
   background: rgba(44, 62, 80, 0.85);
