@@ -19,9 +19,9 @@ defineEmits(['start-edit', 'cancel-edit', 'submit-edit']);
 <style scoped>
 .edit-controls {
   position: fixed;
-  right: 20px;
-  top: 150px;
-  z-index: 9999; /* 确保悬浮在悬浮球上方 */
+  top: 20px;       /* 距离顶部 */
+  right: 20px;     /* 距离右侧 */
+  z-index: 9999;
   background: rgba(44, 62, 80, 0.85);
   padding: 12px;
   border-radius: 24px;
