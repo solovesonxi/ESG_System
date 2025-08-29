@@ -51,7 +51,8 @@
         </div>
       </fieldset>
 
-      <!-- ===== 公共表格块 (每类统计都类似) ===== -->
+      <!-- ===== 七类表格块，已去掉工厂列 ===== -->
+
       <!-- 发明专利 -->
       <fieldset>
         <legend>{{ year }}年知识产权统计 - 发明专利 (件)</legend>
@@ -59,7 +60,6 @@
           <table class="ip-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`inv-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
@@ -68,7 +68,6 @@
             </thead>
             <tbody>
               <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
                 <td>件</td>
                 <td v-for="c in 12" :key="`inv-c-${c-1}`">
                   <input type="number" min="0" step="1" v-model.number="invPatents[currentFactoryIndex][c-1]" />
@@ -90,7 +89,6 @@
           <table class="ip-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`app-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
@@ -99,7 +97,6 @@
             </thead>
             <tbody>
               <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
                 <td>件</td>
                 <td v-for="c in 12" :key="`app-c-${c-1}`">
                   <input type="number" min="0" step="1" v-model.number="invApplications[currentFactoryIndex][c-1]" />
@@ -121,7 +118,6 @@
           <table class="ip-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`util-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
@@ -130,7 +126,6 @@
             </thead>
             <tbody>
               <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
                 <td>件</td>
                 <td v-for="c in 12" :key="`util-c-${c-1}`">
                   <input type="number" min="0" step="1" v-model.number="utilityPatents[currentFactoryIndex][c-1]" />
@@ -152,7 +147,6 @@
           <table class="ip-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`des-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
@@ -161,7 +155,6 @@
             </thead>
             <tbody>
               <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
                 <td>件</td>
                 <td v-for="c in 12" :key="`des-c-${c-1}`">
                   <input type="number" min="0" step="1" v-model.number="designPatents[currentFactoryIndex][c-1]" />
@@ -183,7 +176,6 @@
           <table class="ip-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`grant-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
@@ -192,7 +184,6 @@
             </thead>
             <tbody>
               <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
                 <td>件</td>
                 <td v-for="c in 12" :key="`grant-c-${c-1}`">
                   <input type="number" min="0" step="1" v-model.number="grantedPatents[currentFactoryIndex][c-1]" />
@@ -214,7 +205,6 @@
           <table class="ip-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`soft-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
@@ -223,7 +213,6 @@
             </thead>
             <tbody>
               <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
                 <td>件</td>
                 <td v-for="c in 12" :key="`soft-c-${c-1}`">
                   <input
@@ -255,7 +244,6 @@
           <table class="ip-table">
             <thead>
               <tr>
-                <th>工厂</th>
                 <th>单位</th>
                 <th v-for="(m, idx) in monthNames" :key="`tm-h-${idx}`">{{ m }}</th>
                 <th>合计</th>
@@ -264,7 +252,6 @@
             </thead>
             <tbody>
               <tr v-if="currentFactoryIndex !== -1">
-                <td class="factory-cell">{{ factory }}</td>
                 <td>件</td>
                 <td v-for="c in 12" :key="`tm-c-${c-1}`">
                   <input type="number" min="0" step="1" v-model.number="trademarks[currentFactoryIndex][c-1]" />
@@ -307,18 +294,7 @@ onBeforeUnmount(() => {
 });
 
 const monthNames = [
-  "1月",
-  "2月",
-  "3月",
-  "4月",
-  "5月",
-  "6月",
-  "7月",
-  "8月",
-  "9月",
-  "10月",
-  "11月",
-  "12月",
+  "1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月",
 ];
 function buildMatrix(rows) {
   return Array.from({ length: rows }, () => Array(12).fill(0));
@@ -342,13 +318,8 @@ const prevGrantedPatents = reactive(Array(factories.value.length).fill(0));
 const prevSoftwareCopyrights = reactive(Array(factories.value.length).fill(0));
 const prevTrademarks = reactive(Array(factories.value.length).fill(0));
 
-// 计算工具
 const rowSum = (row) => row.reduce((s, v) => s + (Number(v) || 0), 0);
-
-// 当前选中工厂的 index
-const currentFactoryIndex = computed(() =>
-  factories.value.indexOf(factory.value)
-);
+const currentFactoryIndex = computed(() => factories.value.indexOf(factory.value));
 
 async function submitIP() {
   isSubmitting.value = true;
@@ -381,4 +352,47 @@ async function submitIP() {
   }
 }
 </script>
-<style scoped></style>
+
+<style scoped>
+.shared-form {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+fieldset { border: 1px solid #ddd; padding: 1rem; margin-bottom: 1.5rem; border-radius: 6px; }
+legend { font-weight: 600; padding: 0 0.5rem; }
+
+.custom-select { position: relative; width: 200px; }
+.custom-select .selected {
+  padding: 6px 12px; border: 1px solid #ccc; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center; border-radius: 4px;
+}
+.custom-select .options {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: #fff; border: 1px solid #ccc; z-index: 10; max-height: 200px; overflow-y: auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.custom-select .option { padding: 6px 12px; cursor: pointer; }
+.custom-select .option.selected-option { background-color: #f0f0f0; }
+.arrow { border: solid black; border-width: 0 1px 1px 0; display: inline-block; padding: 4px; transform: rotate(45deg); transition: transform 0.2s; }
+.arrow.up { transform: rotate(-135deg); }
+
+.table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 1rem; }
+.ip-table { width: 100%; min-width: 900px; border-collapse: collapse; table-layout: fixed; }
+.ip-table th, .ip-table td { border: 1px solid #ddd; padding: 6px; text-align: center; white-space: nowrap; }
+.total-cell { font-weight: 600; }
+
+button[type="submit"] {
+  padding: 8px 16px; font-size: 1rem; border: none; border-radius: 4px;
+  background-color: #007bff; color: white; cursor: pointer; transition: background-color 0.2s;
+}
+button[type="submit"]:disabled { background-color: #999; cursor: not-allowed; }
+button[type="submit"]:hover:not(:disabled) { background-color: #0056b3; }
+
+@media (max-width: 768px) { .ip-table { min-width: 600px; } }
+</style>
