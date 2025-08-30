@@ -24,16 +24,16 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
 @router.post("")
 async def submit_data(data: InvestmentSubmission, db: Session = Depends(get_db)):
     try:
-        record = InvestmentData(factory=data.factory, year=data.year, env_invest=data.envInvest,
+        db_record = InvestmentData(factory=data.factory, year=data.year, env_invest=data.envInvest,
                                 clean_tech_invest=data.cleanTechInvest, climate_invest=data.climateInvest,
                                 green_income=data.greenIncome, env_invest_total=data.envInvestTotal,
                                 clean_tech_invest_total=data.cleanTechInvestTotal,
                                 climate_invest_total=data.climateInvestTotal, green_income_total=data.greenIncomeTotal,
                                 total_investment=data.totalInvestment, green_income_ratio=data.greenIncomeRatio,
                                 total_revenue=data.totalRevenue, env_invest_intensity=data.envInvestIntensity)
-        db.add(record)
+        merged_record = db.merge(db_record)
         db.commit()
-        return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
+        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"资金投入数据提交失败: {str(e)}")

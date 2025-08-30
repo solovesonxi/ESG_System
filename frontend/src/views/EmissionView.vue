@@ -1,6 +1,6 @@
 <template>
   <div class="shared-form">
-    <form @submit.prevent="submitForm">
+    <form>
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -54,43 +54,43 @@
         <div class="form-row">
           <div class="form-group">
             <label>范畴一 (类别一)</label>
-            <input type="number" v-model.number="emissionData.categoryOne" step="1" min="0">
+            <input type="number" v-model.number="emissionData.categoryOne" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>范畴二 (类别二)</label>
-            <input type="number" v-model.number="emissionData.categoryTwo" step="1" min="0">
+            <input type="number" v-model.number="emissionData.categoryTwo" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>范畴三 (类别三)</label>
-            <input type="number" v-model.number="emissionData.categoryThree" step="1" min="0">
+            <input type="number" v-model.number="emissionData.categoryThree" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>范畴三 (类别四)</label>
-            <input type="number" v-model.number="emissionData.categoryFour" step="1" min="0">
+            <input type="number" v-model.number="emissionData.categoryFour" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>范畴三 (类别五)</label>
-            <input type="number" v-model.number="emissionData.categoryFive" step="1" min="0">
+            <input type="number" v-model.number="emissionData.categoryFive" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>范畴三 (类别六)</label>
-            <input type="number" v-model.number="emissionData.categorySix" step="1" min="0">
+            <input type="number" v-model.number="emissionData.categorySix" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>范畴三合计</label>
-            <input type="number" :value="categoryThreeTotal" disabled>
+            <input type="number" :value="categoryThreeTotal" disabled class="calculated-field">
           </div>
           <div class="form-group">
             <label>排放总量</label>
-            <input type="number" :value="totalEmission" disabled>
+            <input type="number" :value="totalEmission" disabled class="calculated-field">
           </div>
           <div class="form-group">
             <label>营业收入 (万元)</label>
-            <input type="number" v-model.number="emissionData.total_revenue" step="1" min="0" required>
+            <input type="number" v-model.number="emissionData.total_revenue" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div class="form-group">
             <label>排放强度</label>
-            <input type="number" :value="emissionIntensity" disabled>
+            <input type="number" :value="emissionIntensity" disabled class="calculated-field">
           </div>
         </div>
       </fieldset>
@@ -101,35 +101,31 @@
         <div class="form-row">
           <div class="form-group">
             <label>挥发性有机物 (VOC)</label>
-            <input type="number" v-model.number="wasteGasData.voc" step="1" min="0">
+            <input type="number" v-model.number="wasteGasData.voc" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>碳氢化合物 (非甲烷总烃)</label>
-            <input type="number" v-model.number="wasteGasData.nmhc" step="1" min="0">
+            <input type="number" v-model.number="wasteGasData.nmhc" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>苯类 (苯、甲苯、二甲苯)</label>
-            <input type="number" v-model.number="wasteGasData.benzene" step="1" min="0">
+            <input type="number" v-model.number="wasteGasData.benzene" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>颗粒物</label>
-            <input type="number" v-model.number="wasteGasData.particulate" step="1" min="0">
+            <input type="number" v-model.number="wasteGasData.particulate" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>氮氧化物 (NOx)、硫氧化物 (SOx)和其他重大气体排放</label>
-            <input type="number" v-model.number="wasteGasData.nox_sox_other" step="1" min="0">
+            <input type="number" v-model.number="wasteGasData.nox_sox_other" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
           </div>
 
           <div class="form-group">
             <label>合计</label>
-            <input type="number" :value="wasteGasTotal" disabled>
+            <input type="number" :value="wasteGasTotal" disabled class="calculated-field">
           </div>
         </div>
       </fieldset>
-
-      <button type="submit" :disabled="isSubmitting">
-        {{ isSubmitting ? '提交中...' : '提交数据' }}
-      </button>
     </form>
   </div>
 </template>
@@ -144,7 +140,7 @@ const factory = computed(() => selectionStore.selectedFactory)
 const factories = computed(() => selectionStore.factories)
 const year = computed(() => selectionStore.selectedYear)
 const years = computed(() => selectionStore.years)
-const isSubmitting = ref(false)
+const isEditing = ref(false)
 
 
 // 温室气体排放数据结构
@@ -209,8 +205,37 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', selectionStore.handleClickOutside)
 })
 
-async function submitForm() {
-  isSubmitting.value = true
+
+const fetchData = async () => {
+  if (!factory.value || !year.value) {
+    return;
+  }
+  try {
+    const response = await axios.get(`http://localhost:8000/quantitative/emission`, {
+      params: { factory: factory.value, year: year.value }
+    });
+    if (response.data && response.data.data) {
+      const data = response.data.data;
+      emissionData.categoryOne = data.category_one || 0;
+      emissionData.categoryTwo = data.category_two || 0;
+      emissionData.categoryThree = data.category_three || 0;
+      emissionData.categoryFour = data.category_four || 0;
+      emissionData.categoryFive = data.category_five || 0;
+      emissionData.categorySix = data.category_six || 0;
+      emissionData.total_revenue = data.total_revenue || 0;
+      wasteGasData.voc = data.voc || 0;
+      wasteGasData.nmhc = data.nmhc || 0;
+      wasteGasData.benzene = data.benzene || 0;
+      wasteGasData.particulate = data.particulate || 0;
+      wasteGasData.nox_sox_other = data.nox_sox_other || 0;
+    }
+  } catch (error) {
+    console.error('获取数据失败:', error);
+    alert(`获取数据失败: ${error.response?.data?.detail || error.message}`);
+  }
+};
+
+async function submitEdit() {
   try {
     const payload = {
       factory: factory.value,
@@ -222,7 +247,6 @@ async function submitForm() {
       ...wasteGasData,
       wasteGasTotal: wasteGasTotal.value
     }
-
     const response = await axios.post('http://localhost:8000/quantitative/emission', payload)
     if (response.data.status === 'success') {
       alert('排放数据提交成功!')
@@ -231,7 +255,21 @@ async function submitForm() {
     console.error('提交失败:', error)
     alert(`提交失败: ${error.response?.data?.detail || error.message}`)
   } finally {
-    isSubmitting.value = false
+    console.log('提交完成，即将刷新');
+    isEditing.value = false;
+    await fetchData();
   }
 }
+
+
+// 暴露方法给父组件
+defineExpose({
+  startEditing: () => isEditing.value = true,
+  cancelEditing: () => {
+    isEditing.value = false;
+    fetchData();
+  },
+  submitEdit,
+  fetchData
+});
 </script>

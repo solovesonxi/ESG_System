@@ -24,7 +24,7 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
 @router.post("")
 async def submit_data(data: WasteSubmission, db: Session = Depends(get_db)):
     try:
-        record = WasteData(factory=data.factory, year=data.year, epe=data.epe, plastic_paper=data.plasticPaper,
+        db_record = WasteData(factory=data.factory, year=data.year, epe=data.epe, plastic_paper=data.plasticPaper,
                            domestic_industrial=data.domesticIndustrial, hazardous=data.hazardous,
                            wastewater=data.wastewater, epe_total=data.epeTotal,
                            plastic_paper_total=data.plasticPaperTotal,
@@ -35,9 +35,9 @@ async def submit_data(data: WasteSubmission, db: Session = Depends(get_db)):
                            total_revenue=data.total_revenue, protective_reuse_rate=data.protectiveReuseRate,
                            exceed_events=data.exceedEvents, hazardous_intensity=data.hazardousIntensity,
                            wastewater_intensity=data.wastewaterIntensity)
-        db.add(record)
+        merged_record = db.merge(db_record)
         db.commit()
-        return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
+        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"废弃物数据提交失败: {str(e)}")

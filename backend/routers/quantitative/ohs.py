@@ -24,7 +24,7 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
 @router.post("")
 async def submit_data(data: OHSSubmission, db: Session = Depends(get_db)):
     try:
-        record = OHSData(factory=data.factory, year=data.year, training_count=data.trainingCount,
+        db_record = OHSData(factory=data.factory, year=data.year, training_count=data.trainingCount,
                          training_participants=data.trainingParticipants, training_hours=data.trainingHours,
                          injury_count=data.injuryCount, incident_count=data.incidentCount,
                          fatality_count=data.fatalityCount, lost_workdays=data.lostWorkdays,
@@ -36,9 +36,9 @@ async def submit_data(data: OHSSubmission, db: Session = Depends(get_db)):
                          safety_managers=data.safetyManagers, medical_checks=data.medicalChecks,
                          coverage_rate=data.coverageRate, emergency_drills=data.emergencyDrills,
                          hazards_found=data.hazardsFound, occupational_checks=data.occupationalChecks)
-        db.add(record)
+        merged_record = db.merge(db_record)
         db.commit()
-        return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
+        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")

@@ -14,8 +14,16 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
         data = db.query(WaterData).filter(WaterData.factory == factory, WaterData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
-        data_dict = {}
-
+        data_dict = {"industrial": data.industrial, "domestic": data.domestic, "reclaimed": data.reclaimed,
+            "total": data.total, "industrialDrainage": data.industrial_drainage,
+            "industrialConsumption": data.industrial_consumption, "industrialRecycled": data.industrial_recycled,
+            "domesticDrainage": data.domestic_drainage, "domesticConsumption": data.domestic_consumption,
+            "domesticRecycled": data.domestic_recycled, "totalRevenue": data.total_revenue,
+            "reclaimedTotal": data.reclaimed_total, "industrialTotal": data.industrial_total,
+            "domesticTotal": data.domestic_total, "totalIntake": data.total_intake,
+            "totalDrainage": data.total_drainage, "totalConsumption": data.total_consumption,
+            "totalRecycled": data.total_recycled, "waterIntensity": data.water_intensity,
+            "waterRecycleRate": data.water_recycle_rate, "reclaimedIntensity": data.reclaimed_intensity}
         return {"status": "success", "data": data_dict}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -24,21 +32,21 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
 @router.post("")
 async def submit_data(data: WaterSubmission, db: Session = Depends(get_db)):
     try:
-        db_data = WaterData(factory=data.factory, year=data.year, industrial=data.industrial, domestic=data.domestic,
-                            reclaimed=data.reclaimed, total=data.total, industrial_total=data.industrialTotal,
-                            industrial_drainage=data.industrialDrainage,
-                            industrial_consumption=data.industrialConsumption,
-                            industrial_recycled=data.industrialRecycled, domestic_total=data.domesticTotal,
-                            domestic_drainage=data.domesticDrainage, domestic_consumption=data.domesticConsumption,
-                            domestic_recycled=data.domesticRecycled, reclaimed_total=data.reclaimedTotal,
-                            total_revenue=data.totalRevenue, reclaimed_intensity=data.reclaimedIntensity,
-                            total_intake=data.totalIntake, total_drainage=data.totalDrainage,
-                            total_consumption=data.totalConsumption, total_recycled=data.totalRecycled,
-                            water_intensity=data.waterIntensity, water_recycle_rate=data.waterRecycleRate)
+        db_record = WaterData(factory=data.factory, year=data.year, industrial=data.industrial, domestic=data.domestic,
+                              reclaimed=data.reclaimed, total=data.total, industrial_total=data.industrialTotal,
+                              industrial_drainage=data.industrialDrainage,
+                              industrial_consumption=data.industrialConsumption,
+                              industrial_recycled=data.industrialRecycled, domestic_total=data.domesticTotal,
+                              domestic_drainage=data.domesticDrainage, domestic_consumption=data.domesticConsumption,
+                              domestic_recycled=data.domesticRecycled, reclaimed_total=data.reclaimedTotal,
+                              total_revenue=data.totalRevenue, reclaimed_intensity=data.reclaimedIntensity,
+                              total_intake=data.totalIntake, total_drainage=data.totalDrainage,
+                              total_consumption=data.totalConsumption, total_recycled=data.totalRecycled,
+                              water_intensity=data.waterIntensity, water_recycle_rate=data.waterRecycleRate)
 
-        db.add(db_data)
+        merged_record = db.merge(db_record)
         db.commit()
-        return {"status": "success", "id": db_data.id}
+        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
     finally:

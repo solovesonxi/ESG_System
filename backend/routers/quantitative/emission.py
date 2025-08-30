@@ -14,8 +14,11 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
         data = db.query(EmissionData).filter(EmissionData.factory == factory, EmissionData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
-        data_dict = {}
-
+        data_dict = {"category_one": data.category_one, "category_two": data.category_two,
+            "category_three": data.category_three, "category_four": data.category_four,
+            "category_five": data.category_five, "category_six": data.category_six, "total_revenue": data.total_revenue,
+            "voc": data.voc, "nmhc": data.nmhc, "benzene": data.benzene, "particulate": data.particulate,
+            "nox_sox_other": data.nox_sox_other, }
         return {"status": "success", "data": data_dict}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -24,17 +27,17 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
 @router.post("")
 async def submit_data(data: EmissionSubmission, db: Session = Depends(get_db)):
     try:
-        db_data = EmissionData(factory=data.factory, year=data.year, category_one=data.categoryOne,
-                               category_two=data.categoryTwo, category_three=data.categoryThree,
-                               category_four=data.categoryFour, category_five=data.categoryFive,
-                               category_six=data.categorySix, total_revenue=data.total_revenue,
-                               category_three_total=data.categoryThreeTotal, total_emission=data.totalEmission,
-                               emission_intensity=data.emissionIntensity, voc=data.voc, nmhc=data.nmhc,
-                               benzene=data.benzene, particulate=data.particulate, nox_sox_other=data.nox_sox_other,
-                               waste_gas_total=data.wasteGasTotal)
-        db.add(db_data)
+        db_record = EmissionData(factory=data.factory, year=data.year, category_one=data.categoryOne,
+                                 category_two=data.categoryTwo, category_three=data.categoryThree,
+                                 category_four=data.categoryFour, category_five=data.categoryFive,
+                                 category_six=data.categorySix, total_revenue=data.total_revenue,
+                                 category_three_total=data.categoryThreeTotal, total_emission=data.totalEmission,
+                                 emission_intensity=data.emissionIntensity, voc=data.voc, nmhc=data.nmhc,
+                                 benzene=data.benzene, particulate=data.particulate, nox_sox_other=data.nox_sox_other,
+                                 waste_gas_total=data.wasteGasTotal)
+        merged_record = db.merge(db_record)
         db.commit()
-        return {"status": "success", "id": db_data.id}
+        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")

@@ -15,9 +15,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
         data_dict = {"purchased_power": data.purchased_power, "renewable_power": data.renewable_power,
-            "gasoline": data.gasoline, "diesel": data.diesel, "natural_gas": data.natural_gas,
-            "other_energy": data.other_energy, "water_consumption": data.water_consumption,
-            "coal_consumption": data.coal_consumption, "turnover": data.turnover}
+                     "gasoline": data.gasoline, "diesel": data.diesel, "natural_gas": data.natural_gas,
+                     "other_energy": data.other_energy, "water_consumption": data.water_consumption,
+                     "coal_consumption": data.coal_consumption, "turnover": data.turnover}
 
         return {"status": "success", "data": data_dict}
     except Exception as e:
@@ -39,10 +39,9 @@ async def submit_data(data: EnergySubmission, db: Session = Depends(get_db)):
                                natural_gas_consumption=data.naturalGasConsumption,
                                total_energy_consumption=data.totalEnergyConsumption, turnover=data.turnover,
                                energy_consumption_intensity=data.energyConsumptionIntensity)
-        db.add(db_record)
+        merged_record = db.merge(db_record)
         db.commit()
-        return {"status": "success", "id": db_record.id, "factory": db_record.factory, "year": db_record.year}
-
+        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")

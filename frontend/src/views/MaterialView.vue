@@ -1,6 +1,6 @@
 <template>
   <div class="shared-form">
-    <form @submit.prevent="submitEdit">
+    <form>
       <!-- 基础信息部分保持不变 -->
       <fieldset>
         <legend>基础信息</legend>
@@ -214,24 +214,21 @@ const fetchData = async () => {
       }
     })
     console.log(response.data)
-
-    // 检查返回的数据是否为null
     if (response.data && response.data.data) {
-      // 将后端数据映射到前端表单
+      const data = response.data.data;
       formData.value = {
-        renewableInput: response.data.data.renewableInput || 0,
-        nonRenewableInput: response.data.data.nonRenewableInput || 0,
-        renewableOutput: response.data.data.renewableOutput || 0,
-        nonRenewableOutput: response.data.data.nonRenewableOutput || 0,
-        materialConsumption: response.data.data.materialConsumption || 0,
-        woodFiber: response.data.data.woodFiber || 0,
-        aluminum: response.data.data.aluminum || 0,
-        total_revenue: response.data.data.total_revenue || 0,
-        packagingMaterial: response.data.data.packagingMaterial || 0,
-        paper: response.data.data.paper || 0
+        renewableInput: data.renewableInput || 0,
+        nonRenewableInput: data.nonRenewableInput || 0,
+        renewableOutput: data.renewableOutput || 0,
+        nonRenewableOutput: data.nonRenewableOutput || 0,
+        materialConsumption: data.materialConsumption || 0,
+        woodFiber: data.woodFiber || 0,
+        aluminum: data.aluminum || 0,
+        total_revenue: data.total_revenue || 0,
+        packagingMaterial: data.packagingMaterial || 0,
+        paper: data.paper || 0
       }
     } else {
-      // 如果没有数据，重置表单
       resetFormData()
     }
   } catch (error) {
@@ -258,21 +255,22 @@ const submitEdit = async () => {
     const payload = {
       factory: factory.value,
       year: year.value,
-      ...formData.value
+      ...formData.value,
+      packagingIntensity: packagingIntensity.value, paperIntensity: paperIntensity.value,
+      totalInput: totalInput.value, totalOutput: totalOutput.value,
+      renewableInputRatio: renewableInputRatio.value, renewableOutputRatio: renewableOutputRatio.value
     }
-
     const response = await axios.post('http://localhost:8000/quantitative/material', payload)
-
     if (response.data.status === 'success') {
-      isEditing.value = false
       alert('数据提交成功!')
-
-      // 重新获取数据以确保计算字段正确
-      await fetchData()
     }
   } catch (error) {
     console.error('提交失败:', error)
     alert(`提交失败: ${error.response?.data?.detail || error.message}`)
+  }finally {
+    console.log('提交完成，即将刷新');
+    isEditing.value = false;
+    await fetchData();
   }
 }
 

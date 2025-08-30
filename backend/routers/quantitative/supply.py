@@ -24,15 +24,15 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
 @router.post("")
 async def submit_data(data: SupplySubmission, db: Session = Depends(get_db)):
     try:
-        record = SupplyData(factory=data.factory, year=data.year, east=data.east, south=data.south, other=data.other,
+        db_record = SupplyData(factory=data.factory, year=data.year, east=data.east, south=data.south, other=data.other,
                             total_suppliers=data.totalSuppliers, env_screened=data.envScreened,
                             soc_screened=data.socScreened, local_amount=data.localAmount, total_amount=data.totalAmount,
                             env_penalty_count=data.envPenaltyCount, env_penalty_amount=data.envPenaltyAmount,
                             cyber_incidents=data.cyberIncidents, env_ratio=data.envRatio, soc_ratio=data.socRatio,
                             local_purchase_ratio=data.localPurchaseRatio)
-        db.add(record)
+        merged_record = db.merge(db_record)
         db.commit()
-        return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
+        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"供应链数据提交失败: {str(e)}")

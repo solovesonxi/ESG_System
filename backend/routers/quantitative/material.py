@@ -7,6 +7,7 @@ from core.schemas import MaterialSubmission
 
 router = APIRouter(prefix="/quantitative/material", tags=["定量数据-物料"])
 
+
 @router.get("")
 async def fetch_material_data(factory: str, year: int, db: Session = Depends(get_db)):
     try:
@@ -27,26 +28,25 @@ async def fetch_material_data(factory: str, year: int, db: Session = Depends(get
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("")
 async def submit_material_data(data: MaterialSubmission, db: Session = Depends(get_db)):
     try:
-        db_item = MaterialData(factory=data.factory, year=data.year, renewable_input=data.renewableInput,
-                               non_renewable_input=data.nonRenewableInput, renewable_output=data.renewableOutput,
-                               non_renewable_output=data.nonRenewableOutput,
-                               material_consumption=data.materialConsumption, wood_fiber=data.woodFiber,
-                               aluminum=data.aluminum, total_revenue=data.total_revenue,
-                               packaging_material=data.packagingMaterial, paper_consumption=data.paper,
-                               packaging_intensity=data.packagingIntensity, paper_intensity=data.paperIntensity,
-                               total_input=data.totalInput, total_output=data.totalOutput,
-                               renewable_input_ratio=data.renewableInputRatio,
-                               renewable_output_ratio=data.renewableOutputRatio)
-        db.add(db_item)
+        db_record = MaterialData(factory=data.factory, year=data.year, renewable_input=data.renewableInput,
+            non_renewable_input=data.nonRenewableInput, renewable_output=data.renewableOutput,
+            non_renewable_output=data.nonRenewableOutput, material_consumption=data.materialConsumption,
+            wood_fiber=data.woodFiber, aluminum=data.aluminum, total_revenue=data.total_revenue,
+            packaging_material=data.packagingMaterial, paper_consumption=data.paper,
+            packaging_intensity=data.packagingIntensity, paper_intensity=data.paperIntensity,
+            total_input=data.totalInput, total_output=data.totalOutput,
+            renewable_input_ratio=data.renewableInputRatio, renewable_output_ratio=data.renewableOutputRatio)
+        merged_record = db.merge(db_record)
         db.commit()
-        return {"status": "success", "id": db_item.id}
-
+        return {"status": "success",  "factory": merged_record.factory, "year": merged_record.year}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/{factory}/{year}")
 async def get_material_data(factory: str, year: int, db: Session = Depends(get_db)):

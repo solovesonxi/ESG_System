@@ -24,11 +24,11 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
 @router.post("")
 async def submit_data(data: SatisfactionSubmission, db: Session = Depends(get_db)):
     try:
-        record = SatisfactionData(factory=data.factory, year=data.year, satisfaction=data.satisfaction,
+        db_record = SatisfactionData(factory=data.factory, year=data.year, satisfaction=data.satisfaction,
                                   annual_average=data.annualAverage)
-        db.add(record)
+        merged_record = db.merge(db_record)
         db.commit()
-        return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
+        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"满意度数据提交失败: {str(e)}")

@@ -24,7 +24,7 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
 @router.post("")
 async def submit_data(data: EmploymentSubmission, db: Session = Depends(get_db)):
     try:
-        record = EmploymentData(factory=data.factory, year=data.year, full_time=data.fullTime, part_time=data.partTime,
+        db_record = EmploymentData(factory=data.factory, year=data.year, full_time=data.fullTime, part_time=data.partTime,
                                 male=data.male, female=data.female, management=data.management,
                                 management_female=data.managementFemale, middle=data.middle, general=data.general,
                                 mainland=data.mainland, overseas=data.overseas, edu_phd=data.eduPhd,
@@ -46,9 +46,9 @@ async def submit_data(data: EmploymentSubmission, db: Session = Depends(get_db))
                                 management_turnover_rate=data.managementTurnoverRate,
                                 middle_turnover_rate=data.middleTurnoverRate,
                                 general_turnover_rate=data.generalTurnoverRate)
-        db.add(record)
+        merged_record = db.merge(db_record)
         db.commit()
-        return {"status": "success", "id": record.id, "factory": record.factory, "year": record.year}
+        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"雇佣数据提交失败: {str(e)}")

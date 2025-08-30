@@ -1,6 +1,6 @@
 <template>
   <div class="shared-form">
-    <form @submit.prevent="submitForm">
+    <form>
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -57,26 +57,32 @@
             <input
                 type="number"
                 v-model.number="monthlyWater.industrial[index]"
+                :placeholder="`${getMonthName(index)}工业用水量`"
                 min="0"
                 step="1"
+                :readonly="!isEditing"
+                :class="{ 'editable-field': isEditing }"
                 required
             >
           </div>
           <div>
-            <label>合计</label>
-            <input type="number" v-model.number="industrialTotal" disabled>
-          </div>
-          <div>
             <label>排水量</label>
-            <input type="number" v-model.number="waterData.industrialDrainage" step="1" min="0">
+            <input type="number" v-model.number="waterData.industrialDrainage" step="1" min="0"
+                :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div>
             <label>耗水量</label>
-            <input type="number" v-model.number="waterData.industrialConsumption" step="1" min="0">
+            <input type="number" v-model.number="waterData.industrialConsumption" step="1" min="0"
+                :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div>
             <label>循环水用量</label>
-            <input type="number" v-model.number="waterData.industrialRecycled" step="1" min="0">
+            <input type="number" v-model.number="waterData.industrialRecycled" step="1" min="0"
+                :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+          </div>
+          <div>
+            <label>合计</label>
+            <input type="number" :value="industrialTotal" disabled class="calculated-field">
           </div>
         </div>
       </fieldset>
@@ -90,26 +96,32 @@
             <input
                 type="number"
                 v-model.number="monthlyWater.domestic[index]"
+                :placeholder="`${getMonthName(index)}生活用水量`"
                 min="0"
                 step="1"
+                :readonly="!isEditing"
+                :class="{ 'editable-field': isEditing }"
                 required
             >
           </div>
           <div>
-            <label>合计</label>
-            <input type="number" v-model.number="domesticTotal" disabled>
-          </div>
-          <div>
             <label>排水量</label>
-            <input type="number" v-model.number="waterData.domesticDrainage" step="1" min="0">
+            <input type="number" v-model.number="waterData.domesticDrainage" step="1" min="0"
+                :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div>
             <label>耗水量</label>
-            <input type="number" v-model.number="waterData.domesticConsumption" step="1" min="0">
+            <input type="number" v-model.number="waterData.domesticConsumption" step="1" min="0"
+                :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div>
             <label>循环水用量</label>
-            <input type="number" v-model.number="waterData.domesticRecycled" step="1" min="0">
+            <input type="number" v-model.number="waterData.domesticRecycled" step="1" min="0"
+                :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+          </div>
+          <div>
+            <label>合计</label>
+            <input type="number" :value="domesticTotal" disabled class="calculated-field">
           </div>
         </div>
       </fieldset>
@@ -123,22 +135,27 @@
             <input
                 type="number"
                 v-model.number="monthlyWater.reclaimed[index]"
+                :placeholder="`${getMonthName(index)}再生水用量`"
                 min="0"
                 step="1"
+                :readonly="!isEditing"
+                :class="{ 'editable-field': isEditing }"
                 required
             >
           </div>
-          <div>
-            <label>总中水用水量 (T)</label>
-            <input type="number" v-model.number="reclaimedTotal" step="1" min="0">
-          </div>
           <div class="form-group">
             <label>营业收入 (万元)</label>
-            <input type="number" v-model.number="waterData.totalRevenue" step="1" min="0">
+            <input type="number" v-model.number="waterData.totalRevenue" step="1" min="0"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div>
+            <label>总中水用水量 (T)</label>
+            <input type="number" :value="reclaimedTotal" disabled class="calculated-field">
+          </div>
+
+          <div>
             <label>中水用水强度 (T/万元)</label>
-            <input type="number" :value="reclaimedIntensity" disabled>
+            <input type="number" :value="reclaimedIntensity" disabled class="calculated-field">
           </div>
         </div>
       </fieldset>
@@ -152,40 +169,36 @@
             <input
                 type="number"
                 v-model.number="monthlyWater.total[index]"
-                min="0" disabled
+                min="0" disabled class="calculated-field"
             >
           </div>
           <div>
             <label>合计 (T)</label>
-            <input type="number" v-model.number="totalIntake" disabled>
+            <input type="number" :value="totalIntake" disabled class="calculated-field">
           </div>
           <div>
             <label>总排水量 (T)</label>
-            <input type="number" :value="totalDrainage" disabled>
+            <input type="number" :value="totalDrainage" disabled class="calculated-field">
           </div>
           <div>
             <label>总耗水量 (T)</label>
-            <input type="number" :value="totalConsumption" disabled>
+            <input type="number" :value="totalConsumption" disabled class="calculated-field">
           </div>
           <div>
             <label>总循环水用量 (T)</label>
-            <input type="number" :value="totalRecycled" disabled>
+            <input type="number" :value="totalRecycled" disabled class="calculated-field">
           </div>
           <div>
             <label>用水强度 (T/万元)</label>
-            <input type="number" :value="waterIntensity" disabled>
+            <input type="number" :value="waterIntensity" disabled class="calculated-field">
           </div>
           <div>
             <label>水资源回收率 (%)</label>
-            <input type="number" :value="waterRecycleRate" disabled>
+            <input type="number" :value="waterRecycleRate" disabled class="calculated-field">
           </div>
 
         </div>
       </fieldset>
-
-      <button type="submit" :disabled="isSubmitting">
-        {{ isSubmitting ? '提交中...' : '提交数据' }}
-      </button>
     </form>
   </div>
 </template>
@@ -200,7 +213,7 @@ const factory = computed(() => selectionStore.selectedFactory);
 const factories = computed(() => selectionStore.factories);
 const year = computed(() => selectionStore.selectedYear);
 const years = computed(() => selectionStore.years);
-const isSubmitting = ref(false);
+const isEditing = ref(false);
 // 月份名称
 const monthNames = [
   '1月', '2月', '3月', '4月', '5月', '6月',
@@ -298,9 +311,59 @@ const reclaimedIntensity = computed(() => {
   return 0;
 });
 
+
+// 获取数据方法
+const fetchData = async () => {
+  if (!factory.value || !year.value) {
+    resetFormData();
+    return;
+  }
+  try {
+    const response = await axios.get(`http://localhost:8000/quantitative/water`, {
+      params: { factory: factory.value, year: year.value }
+    });
+    if (response.data && response.data.data) {
+      const data = response.data.data;
+      monthlyWater.industrial = data.industrial || Array(12).fill(0);
+      monthlyWater.domestic = data.domestic || Array(12).fill(0);
+      monthlyWater.reclaimed = data.reclaimed || Array(12).fill(0);
+      monthlyWater.total = data.total || Array(12).fill(0);
+      waterData.industrialDrainage = data.industrialDrainage || 0;
+      waterData.industrialConsumption = data.industrialConsumption || 0;
+      waterData.industrialRecycled = data.industrialRecycled || 0;
+      waterData.domesticDrainage = data.domesticDrainage || 0;
+      waterData.domesticConsumption = data.domesticConsumption || 0;
+      waterData.domesticRecycled = data.domesticRecycled || 0;
+      waterData.totalRevenue = data.totalRevenue || 0;
+    } else {
+      resetFormData();
+    }
+  } catch (error) {
+    if (error.response?.status === 404) {
+      resetFormData();
+    } else {
+      console.error('获取数据失败:', error);
+    }
+  }
+};
+
+// 重置表单数据
+const resetFormData = () => {
+  monthlyWater.industrial = Array(12).fill(0);
+  monthlyWater.domestic = Array(12).fill(0);
+  monthlyWater.reclaimed = Array(12).fill(0);
+  monthlyWater.total = Array(12).fill(0);
+  waterData.industrialDrainage = 0;
+  waterData.industrialConsumption = 0;
+  waterData.industrialRecycled = 0;
+  waterData.domesticDrainage = 0;
+  waterData.domesticConsumption = 0;
+  waterData.domesticRecycled = 0;
+  waterData.totalRevenue = 0;
+};
+
 // 提交表单
-async function submitForm() {
-  isSubmitting.value = true;
+async function submitEdit() {
   try {
     const payload = {
       factory: factory.value,
@@ -341,16 +404,36 @@ async function submitForm() {
     console.error('提交失败:', error);
     alert(`提交失败: ${error.response?.data?.detail || error.message}`);
   } finally {
-    isSubmitting.value = false;
+    console.log('提交完成，即将刷新');
+    isEditing.value = false;
+    await fetchData();
   }
 }
+
+
+// 监听工厂和年份变化
+watch([factory, year], () => {
+  fetchData();
+});
 
 onMounted(() => {
   selectionStore.initYears();
   document.addEventListener('click', selectionStore.handleClickOutside);
+  fetchData();
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', selectionStore.handleClickOutside);
+});
+
+// 暴露方法给父组件
+defineExpose({
+  startEditing: () => isEditing.value = true,
+  cancelEditing: () => {
+    isEditing.value = false;
+    fetchData();
+  },
+  submitEdit,
+  fetchData
 });
 </script>

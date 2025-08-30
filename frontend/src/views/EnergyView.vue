@@ -1,6 +1,6 @@
 <template>
   <div class="shared-form">
-    <form @submit.prevent="submitEdit">
+    <form>
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -57,7 +57,7 @@
           <fieldset>
             <legend>{{ year }}年外购电量统计 (kWh)</legend>
             <div class="monthly-grid">
-              <div v-for="(month, index) in formData.purchasedPower" :key="index" class="month-input">
+              <div v-for="(_, index) in formData.purchasedPower" :key="index" class="month-input">
                 <label>{{ getMonthName(index) }}</label>
                 <input
                     type="number"
@@ -77,7 +77,7 @@
           <fieldset>
             <legend>{{ year }}年再生能源电量统计 (kWh)</legend>
             <div class="monthly-grid">
-              <div v-for="(month, index) in formData.renewableEnergyPower" :key="index" class="month-input">
+              <div v-for="(_, index) in formData.renewableEnergyPower" :key="index" class="month-input">
                 <label>{{ getMonthName(index) }}</label>
                 <input
                     type="number"
@@ -97,7 +97,7 @@
           <fieldset>
             <legend>{{ year }}年汽油用量统计 (T)</legend>
             <div class="monthly-grid">
-              <div v-for="(month, index) in formData.gasoline" :key="index" class="month-input">
+              <div v-for="(_, index) in formData.gasoline" :key="index" class="month-input">
                 <label>{{ getMonthName(index) }}</label>
                 <input
                     type="number"
@@ -117,7 +117,7 @@
           <fieldset>
             <legend>{{ year }}年柴油用量统计 (T)</legend>
             <div class="monthly-grid">
-              <div v-for="(month, index) in formData.diesel" :key="index" class="month-input">
+              <div v-for="(_, index) in formData.diesel" :key="index" class="month-input">
                 <label>{{ getMonthName(index) }}</label>
                 <input
                     type="number"
@@ -137,7 +137,7 @@
           <fieldset>
             <legend>{{ year }}年天然气用量统计 (m³)</legend>
             <div class="monthly-grid">
-              <div v-for="(month, index) in formData.naturalGas" :key="index" class="month-input">
+              <div v-for="(_, index) in formData.naturalGas" :key="index" class="month-input">
                 <label>{{ getMonthName(index) }}</label>
                 <input
                     type="number"
@@ -157,7 +157,7 @@
           <fieldset>
             <legend>{{ year }}年其他能源用量统计 (Tce)</legend>
             <div class="monthly-grid">
-              <div v-for="(month, index) in formData.otherEnergy" :key="index" class="month-input">
+              <div v-for="(_, index) in formData.otherEnergy" :key="index" class="month-input">
                 <label>{{ getMonthName(index) }}</label>
                 <input
                     type="number"
@@ -304,13 +304,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener("click", selectionStore.handleClickOutside);
 });
+
 // 获取数据方法
 const fetchData = async () => {
   if (!factory.value || !year.value) {
     resetFormData();
     return;
   }
-
   isLoading.value = true;
   try {
     const response = await axios.get(`http://localhost:8000/quantitative/energy`, {
@@ -318,19 +318,19 @@ const fetchData = async () => {
     });
     console.log(response.data);
     if (response.data && response.data.data) {
+      const data = response.data.data;
       formData.value = {
-        purchasedPower: response.data.data.purchased_power || Array(12).fill(0),
-        renewableEnergyPower: response.data.data.renewable_power || Array(12).fill(0),
-        gasoline: response.data.data.gasoline || Array(12).fill(0),
-        diesel: response.data.data.diesel || Array(12).fill(0),
-        naturalGas: response.data.data.natural_gas || Array(12).fill(0),
-        otherEnergy: response.data.data.other_energy || Array(12).fill(0),
-        waterConsumption: response.data.data.water_consumption || 0,
-        coalConsumption: response.data.data.coal_consumption || 0,
-        turnover: response.data.data.turnover || 0
+        purchasedPower: data.purchased_power || Array(12).fill(0),
+        renewableEnergyPower: data.renewable_power || Array(12).fill(0),
+        gasoline: data.gasoline || Array(12).fill(0),
+        diesel: data.diesel || Array(12).fill(0),
+        naturalGas: data.natural_gas || Array(12).fill(0),
+        otherEnergy: data.other_energy || Array(12).fill(0),
+        waterConsumption: data.water_consumption || 0,
+        coalConsumption: data.coal_consumption || 0,
+        turnover: data.turnover || 0
       };
     } else {
-      // 没有数据时重置表单为全0
       resetFormData();
     }
   } catch (error) {
@@ -361,7 +361,6 @@ const resetFormData = () => {
 };
 
 // 提交编辑方法
-// 提交编辑方法
 const submitEdit = async () => {
   try {
     // 准备提交的数据，确保字段名与后端一致
@@ -390,19 +389,17 @@ const submitEdit = async () => {
       turnover: formData.value.turnover,
       energyConsumptionIntensity: energyConsumptionIntensity.value
     };
-
     const response = await axios.post('http://localhost:8000/quantitative/energy', payload);
-
     if (response.data.status === 'success') {
-      isEditing.value = false;
       alert('数据提交成功!');
-
-      // 重新获取数据以确保计算字段正确
-      await fetchData();
     }
   } catch (error) {
     console.error('提交失败:', error);
     alert(`提交失败: ${error.response?.data?.detail || error.message}`);
+  }finally {
+    console.log('提交完成，即将刷新');
+    isEditing.value = false;
+    await fetchData();
   }
 };
 
