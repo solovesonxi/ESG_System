@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from pydantic import BaseModel
 
@@ -386,3 +386,16 @@ class VolunteerSubmission(BaseModel):
     year: int
     participants: int
     hours_total: float
+
+class GovernanceQualitativeItem(BaseModel):
+    explanation: Optional[str] = None
+    source: Optional[str] = None
+    current_text: Optional[str] = None
+    last_text: Optional[str] = None
+    comparison_text: Optional[str] = None
+    reason: Optional[str] = None
+
+class GovernanceQualitativeSubmission(BaseModel):
+    factory: str
+    year: int
+    data: Dict[str, Dict[str, GovernanceQualitativeItem]]
