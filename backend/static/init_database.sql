@@ -508,3 +508,22 @@ CREATE TABLE IF NOT EXISTS other_qualitative
     comparison_text TEXT,
     reason          TEXT
 );
+-- 管治定性数据表
+CREATE TABLE IF NOT EXISTS governance_qualitative
+(
+    factory         VARCHAR(100) NOT NULL,
+    year            INTEGER      NOT NULL,
+    indicator       VARCHAR(200) NOT NULL,
+    PRIMARY KEY (factory, year, indicator),
+    explanation     TEXT,          -- 指标释义
+    source          TEXT,          -- 来源
+    last_text       TEXT,          -- 2023年的方针、政策、文件、记录等
+    current_text    TEXT,          -- 2024年的方针、政策、文件、记录等
+    comparison_text TEXT,          -- 对比去年
+    reason          TEXT           -- 原因分析
+);
+
+-- 添加索引
+CREATE INDEX IF NOT EXISTS idx_governance_qualitative_factory_year ON governance_qualitative (factory, year);
+CREATE INDEX IF NOT EXISTS idx_governance_qualitative_factory ON governance_qualitative (factory);
+CREATE INDEX IF NOT EXISTS idx_governance_qualitative_year ON governance_qualitative (year);
