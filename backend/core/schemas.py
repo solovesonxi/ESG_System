@@ -346,3 +346,43 @@ class EnvQualDataRequest(BaseModel):
     factory: str
     year: int
     envQualData: Dict[str, IndicatorData]
+# 产品责任
+class ProductResponsibilitySubmission(BaseModel):
+    factory: str
+    year: int
+    complaints_total: int
+    complaints_handled: int
+    complaints_handle_rate: float
+    customer_satisfaction: float
+    recall_count: int
+    recall_percent: float
+    product_quality_issues: int
+    cyber_incidents: int
+
+# 知识产权
+class IPRSubmission(BaseModel):
+    factory: str
+    year: int
+    patents_total: int
+    invention_total: int
+    invention_applications: int
+    utility_model_total: int
+    design_total: int
+    authorized_total: int
+    new_patents_year: int
+    software_copyright_total: int
+    trademarks_total: int
+
+# 社区参与
+class CommunitySubmission(BaseModel):
+    factory: str
+    year: int
+    donation_total: float
+    community_investment: float
+
+# 志愿活动
+class VolunteerSubmission(BaseModel):
+    factory: str
+    year: int
+    participants: int
+    hours_total: float
