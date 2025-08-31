@@ -528,4 +528,59 @@ class OtherQualitative(Base):
     last_text = Column(String(4000), nullable=True)
     comparison_text = Column(String(1000), nullable=True)
     reason = Column(String(2000), nullable=True)
+class ProductResponsibilityData(Base):
+    __tablename__ = "product_responsibility"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+
+    complaints_total = Column(Integer, default=0)  # 客户投诉总数
+    complaints_handled = Column(Integer, default=0)  # 有效处理件数
+    complaints_handle_rate = Column(Float, default=0.0)  # 客户投诉有效处理率
+    customer_satisfaction = Column(Float, default=0.0)  # 客户满意度结果
+    recall_count = Column(Integer, default=0)  # 发生产品召回的次数
+    recall_percent = Column(Float, default=0.0)  # 产品召回百分比
+    product_quality_issues = Column(Integer, default=0)  # 产品安全质量问题
+    cyber_incidents = Column(Integer, default=0)  # 网络数据安全事件
+
+
+class IPRData(Base):
+    __tablename__ = "ipr"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+
+    patents_total = Column(Integer, default=0)  # 累计获得专利数量
+    invention_total = Column(Integer, default=0)  # 累计发明专利数量
+    invention_applications = Column(Integer, default=0)  # 发明专利申请数量
+    utility_model_total = Column(Integer, default=0)  # 累计实用新型专利数量
+    design_total = Column(Integer, default=0)  # 累计外观设计专利数量
+    authorized_total = Column(Integer, default=0)  # 累计被授权专利数
+    new_patents_year = Column(Integer, default=0)  # 本年新增专利数量
+    software_copyright_total = Column(Integer, default=0)  # 累计软件著作权数量
+    trademarks_total = Column(Integer, default=0)  # 累计商标注册数量
+
+
+class CommunityData(Base):
+    __tablename__ = "community"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+
+    donation_total = Column(Float, default=0.0)  # 公益慈善捐赠总额
+    community_investment = Column(Float, default=0.0)  # 社区发展投入金额
+
+
+class VolunteerData(Base):
+    __tablename__ = "volunteer"
+
+    id = Column(Integer, primary_key=True, index=True)
+    factory = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
+
+    participants = Column(Integer, default=0)  # 志愿者活动参与人次
+    hours_total = Column(Float, default=0.0)  # 志愿者服务总时长
 
