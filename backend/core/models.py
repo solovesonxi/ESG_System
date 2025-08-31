@@ -583,4 +583,15 @@ class VolunteerData(Base):
 
     participants = Column(Integer, default=0)  # 志愿者活动参与人次
     hours_total = Column(Float, default=0.0)  # 志愿者服务总时长
-
+class GovernanceQualitative(Base):
+    __tablename__ = "governance_qualitative"
+    
+    factory = Column(String(100), primary_key=True)
+    year = Column(Integer, primary_key=True)
+    indicator = Column(String(200), primary_key=True)
+    explanation = Column(Text)
+    source = Column(Text)
+    last_text = Column(Text)
+    current_text = Column(Text)
+    comparison_text = Column(Text)
+    reason = Column(Text)
