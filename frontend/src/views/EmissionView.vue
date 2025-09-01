@@ -131,7 +131,7 @@
 </template>
 
 <script setup>
-import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
+import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue'
 import axios from 'axios'
 import {useSelectionStore} from "@/stores/selectionStore.js";
 
@@ -205,9 +205,28 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', selectionStore.handleClickOutside)
 })
 
+watch([factory, year], () => {
+  fetchData();
+});
+
+const resetFormData = () => {
+  emissionData.categoryOne = 0;
+  emissionData.categoryTwo = 0;
+  emissionData.categoryThree = 0;
+  emissionData.categoryFour = 0;
+  emissionData.categoryFive = 0;
+  emissionData.categorySix = 0;
+  emissionData.total_revenue = 0;
+  wasteGasData.voc = 0;
+  wasteGasData.nmhc = 0;
+  wasteGasData.benzene = 0;
+  wasteGasData.particulate = 0;
+  wasteGasData.nox_sox_other = 0;
+};
 
 const fetchData = async () => {
   if (!factory.value || !year.value) {
+    resetFormData();
     return;
   }
   try {

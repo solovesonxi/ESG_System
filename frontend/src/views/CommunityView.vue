@@ -157,7 +157,6 @@ const factory = computed(() => selectionStore.selectedFactory);
 const factories = computed(() => selectionStore.factories);
 const year = computed(() => selectionStore.selectedYear);
 const years = computed(() => selectionStore.years);
-const isSubmitting = ref(false);
 const isEditing = ref(false);
 
 onMounted(() => {
@@ -219,7 +218,6 @@ const resetFormData = () => {
 };
 
 async function submitEdit() {
-  isSubmitting.value = true;
   try {
     const payload = {
       year: Number(year.value),
@@ -235,7 +233,6 @@ async function submitEdit() {
     console.error(e);
     alert(`提交失败: ${e.response?.data?.detail || e.message}`);
   } finally {
-    isSubmitting.value = false;
     isEditing.value = false;
     await fetchData();
   }
