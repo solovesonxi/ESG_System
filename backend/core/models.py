@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, JSON, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Float, JSON, Text
 
 from core.dependencies import Base
 
@@ -446,63 +446,12 @@ class LaborReason(Base):
     reason = Column(String(2000), nullable=True)
 
 
-
-class ProductResponsibilityData(Base):
-    __tablename__ = "product_responsibility"
-    factory = Column(String(100), primary_key=True)
-    year = Column(Integer, primary_key=True)
-
-    complaints_total = Column(Integer, default=0)  # 客户投诉总数
-    complaints_handled = Column(Integer, default=0)  # 有效处理件数
-    complaints_handle_rate = Column(Float, default=0.0)  # 客户投诉有效处理率
-    customer_satisfaction = Column(Float, default=0.0)  # 客户满意度结果
-    recall_count = Column(Integer, default=0)  # 发生产品召回的次数
-    recall_percent = Column(Float, default=0.0)  # 产品召回百分比
-    product_quality_issues = Column(Integer, default=0)  # 产品安全质量问题
-    cyber_incidents = Column(Integer, default=0)  # 网络数据安全事件
-
-
-class IPRData(Base):
-    __tablename__ = "ipr"
-    factory = Column(String(100), primary_key=True)
-    year = Column(Integer, primary_key=True)
-
-    patents_total = Column(Integer, default=0)  # 累计获得专利数量
-    invention_total = Column(Integer, default=0)  # 累计发明专利数量
-    invention_applications = Column(Integer, default=0)  # 发明专利申请数量
-    utility_model_total = Column(Integer, default=0)  # 累计实用新型专利数量
-    design_total = Column(Integer, default=0)  # 累计外观设计专利数量
-    authorized_total = Column(Integer, default=0)  # 累计被授权专利数
-    new_patents_year = Column(Integer, default=0)  # 本年新增专利数量
-    software_copyright_total = Column(Integer, default=0)  # 累计软件著作权数量
-    trademarks_total = Column(Integer, default=0)  # 累计商标注册数量
-
-
-class CommunityData(Base):
-    __tablename__ = "community"
-    factory = Column(String(100), primary_key=True)
-    year = Column(Integer, primary_key=True)
-
-    donation_total = Column(Float, default=0.0)  # 公益慈善捐赠总额
-    community_investment = Column(Float, default=0.0)  # 社区发展投入金额
-
-
-class VolunteerData(Base):
-    __tablename__ = "volunteer"
-    factory = Column(String(100), primary_key=True)
-    year = Column(Integer, primary_key=True)
-
-    participants = Column(Integer, default=0)  # 志愿者活动参与人次
-    hours_total = Column(Float, default=0.0)  # 志愿者服务总时长
-
-
 class OtherReason(Base):
     __tablename__ = "other_reasons"
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
     indicator = Column(String(200), nullable=False)
     reason = Column(String(2000), nullable=True)
-
 
 
 class LaborQualitative(Base):
@@ -517,7 +466,6 @@ class LaborQualitative(Base):
     reason = Column(String(2000), nullable=True)
 
 
-
 class OtherQualitative(Base):
     __tablename__ = "other_qualitative"
     factory = Column(String(100), primary_key=True)
@@ -528,12 +476,12 @@ class OtherQualitative(Base):
     last_text = Column(String(4000), nullable=True)
     comparison_text = Column(String(1000), nullable=True)
     reason = Column(String(2000), nullable=True)
+
+
 class ProductResponsibilityData(Base):
     __tablename__ = "product_responsibility"
-
-    id = Column(Integer, primary_key=True, index=True)
-    factory = Column(String(100), nullable=False)
-    year = Column(Integer, nullable=False)
+    factory = Column(String(100), primary_key=True)
+    year = Column(Integer, primary_key=True)
 
     complaints_total = Column(Integer, default=0)  # 客户投诉总数
     complaints_handled = Column(Integer, default=0)  # 有效处理件数
@@ -547,10 +495,8 @@ class ProductResponsibilityData(Base):
 
 class IPRData(Base):
     __tablename__ = "ipr"
-
-    id = Column(Integer, primary_key=True, index=True)
-    factory = Column(String(100), nullable=False)
-    year = Column(Integer, nullable=False)
+    factory = Column(String(100), primary_key=True)
+    year = Column(Integer, primary_key=True)
 
     patents_total = Column(Integer, default=0)  # 累计获得专利数量
     invention_total = Column(Integer, default=0)  # 累计发明专利数量
@@ -565,30 +511,28 @@ class IPRData(Base):
 
 class CommunityData(Base):
     __tablename__ = "community"
+    factory = Column(String(100), primary_key=True)
+    year = Column(Integer, primary_key=True)
 
-    id = Column(Integer, primary_key=True, index=True)
-    factory = Column(String(100), nullable=False)
-    year = Column(Integer, nullable=False)
-
-    donation_total = Column(Float, default=0.0)  # 公益慈善捐赠总额
-    community_investment = Column(Float, default=0.0)  # 社区发展投入金额
+    charity_donations = Column(JSON, default=0.0)  # 公益慈善捐赠总额
+    community_investment = Column(JSON, default=0.0)  # 社区发展投入金额
 
 
 class VolunteerData(Base):
     __tablename__ = "volunteer"
+    factory = Column(String(100), primary_key=True)
+    year = Column(Integer, primary_key=True)
 
-    id = Column(Integer, primary_key=True, index=True)
-    factory = Column(String(100), nullable=False)
-    year = Column(Integer, nullable=False)
+    volunteer_participants = Column(JSON, default=0)  # 志愿者活动参与人次
+    volunteer_hours = Column(JSON, default=0.0)  # 志愿者服务总时长
 
-    participants = Column(Integer, default=0)  # 志愿者活动参与人次
-    hours_total = Column(Float, default=0.0)  # 志愿者服务总时长
+
 class GovernanceQualitative(Base):
     __tablename__ = "governance_qualitative"
-    
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
     indicator = Column(String(200), primary_key=True)
+
     explanation = Column(Text)
     source = Column(Text)
     last_text = Column(Text)

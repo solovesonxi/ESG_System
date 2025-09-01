@@ -375,17 +375,13 @@ class IPRSubmission(BaseModel):
 
 # 社区参与
 class CommunitySubmission(BaseModel):
-    factory: str
     year: int
-    donation_total: float
-    community_investment: float
+    factory: str
+    charityDonations: List[float]
+    communityInvestment: List[float]
+    volunteerParticipants: List[int]
+    volunteerHours: List[float]
 
-# 志愿活动
-class VolunteerSubmission(BaseModel):
-    factory: str
-    year: int
-    participants: int
-    hours_total: float
 
 class GovernanceQualitativeItem(BaseModel):
     explanation: Optional[str] = None

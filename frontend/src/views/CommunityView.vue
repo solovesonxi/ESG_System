@@ -1,6 +1,6 @@
 <template>
   <div class="shared-form">
-    <form @submit.prevent="submitCommunity">
+    <form>
       <!-- 基础信息 -->
       <fieldset>
         <legend>基础信息</legend>
@@ -13,16 +13,16 @@
                 <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
               </div>
               <div
-                class="options"
-                v-show="selectionStore.showFactoryDropdown"
-                :style="{ maxHeight: '200px', overflowY: 'auto' }"
+                  class="options"
+                  v-show="selectionStore.showFactoryDropdown"
+                  :style="{ maxHeight: '200px', overflowY: 'auto' }"
               >
                 <div
-                  v-for="f in factories"
-                  :key="f"
-                  class="option"
-                  :class="{ 'selected-option': f === factory }"
-                  @click="selectionStore.selectFactory(f)"
+                    v-for="f in factories"
+                    :key="f"
+                    class="option"
+                    :class="{ 'selected-option': f === factory }"
+                    @click="selectionStore.selectFactory(f)"
                 >
                   {{ f }}
                 </div>
@@ -38,11 +38,11 @@
               </div>
               <div class="options" v-show="selectionStore.showYearDropdown">
                 <div
-                  v-for="y in years"
-                  :key="y"
-                  class="option"
-                  :class="{ 'selected-option': y === year }"
-                  @click="selectionStore.selectYear(y)"
+                    v-for="y in years"
+                    :key="y"
+                    class="option"
+                    :class="{ 'selected-option': y === year }"
+                    @click="selectionStore.selectYear(y)"
                 >
                   {{ y }}年
                 </div>
@@ -58,20 +58,18 @@
         <div class="table-wrapper">
           <table class="community-table">
             <thead>
-              <tr>
-                <th>单位</th>
-                <th v-for="(m, idx) in monthNames" :key="`cd-h-${idx}`">{{ m }}</th>
-                <th>合计</th>
-              </tr>
+            <tr>
+              <th v-for="(m, idx) in monthNames" :key="`cd-h-${idx}`">{{ m }}</th>
+              <th>合计</th>
+            </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>元</td>
-                <td v-for="c in 12" :key="`cd-c-${c-1}`">
-                  <input type="number" min="0" step="0.01" v-model.number="charityDonations[currentFactoryIndex][c-1]" />
-                </td>
-                <td class="total-cell">{{ rowSum(charityDonations[currentFactoryIndex]) }}</td>
-              </tr>
+            <tr>
+              <td v-for="c in 12" :key="`cd-c-${c-1}`">
+                <input type="number" min="0" step="1" v-model.number="charityDonations[c-1]" :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required />
+              </td>
+              <td class="total-cell">{{ rowSum(charityDonations) }}</td>
+            </tr>
             </tbody>
           </table>
         </div>
@@ -83,20 +81,18 @@
         <div class="table-wrapper">
           <table class="community-table">
             <thead>
-              <tr>
-                <th>单位</th>
-                <th v-for="(m, idx) in monthNames" :key="`ci-h-${idx}`">{{ m }}</th>
-                <th>合计</th>
-              </tr>
+            <tr>
+              <th v-for="(m, idx) in monthNames" :key="`ci-h-${idx}`">{{ m }}</th>
+              <th>合计</th>
+            </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>元</td>
-                <td v-for="c in 12" :key="`ci-c-${c-1}`">
-                  <input type="number" min="0" step="0.01" v-model.number="communityInvestment[currentFactoryIndex][c-1]" />
-                </td>
-                <td class="total-cell">{{ rowSum(communityInvestment[currentFactoryIndex]) }}</td>
-              </tr>
+            <tr>
+              <td v-for="c in 12" :key="`ci-c-${c-1}`">
+                <input type="number" min="0" step="1" v-model.number="communityInvestment[c-1]" :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required />
+              </td>
+              <td class="total-cell">{{ rowSum(communityInvestment) }}</td>
+            </tr>
             </tbody>
           </table>
         </div>
@@ -108,20 +104,18 @@
         <div class="table-wrapper">
           <table class="community-table">
             <thead>
-              <tr>
-                <th>单位</th>
-                <th v-for="(m, idx) in monthNames" :key="`vp-h-${idx}`">{{ m }}</th>
-                <th>合计</th>
-              </tr>
+            <tr>
+              <th v-for="(m, idx) in monthNames" :key="`vp-h-${idx}`">{{ m }}</th>
+              <th>合计</th>
+            </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>人次</td>
-                <td v-for="c in 12" :key="`vp-c-${c-1}`">
-                  <input type="number" min="0" step="1" v-model.number="volunteerParticipants[currentFactoryIndex][c-1]" />
-                </td>
-                <td class="total-cell">{{ rowSum(volunteerParticipants[currentFactoryIndex]) }}</td>
-              </tr>
+            <tr>
+              <td v-for="c in 12" :key="`vp-c-${c-1}`">
+                <input type="number" min="0" step="1" v-model.number="volunteerParticipants[c-1]" :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required />
+              </td>
+              <td class="total-cell">{{ rowSum(volunteerParticipants) }}</td>
+            </tr>
             </tbody>
           </table>
         </div>
@@ -133,34 +127,28 @@
         <div class="table-wrapper">
           <table class="community-table">
             <thead>
-              <tr>
-                <th>单位</th>
-                <th v-for="(m, idx) in monthNames" :key="`vh-h-${idx}`">{{ m }}</th>
-                <th>合计</th>
-              </tr>
+            <tr>
+              <th v-for="(m, idx) in monthNames" :key="`vh-h-${idx}`">{{ m }}</th>
+              <th>合计</th>
+            </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>小时</td>
-                <td v-for="c in 12" :key="`vh-c-${c-1}`">
-                  <input type="number" min="0" step="0.1" v-model.number="volunteerHours[currentFactoryIndex][c-1]" />
-                </td>
-                <td class="total-cell">{{ rowSum(volunteerHours[currentFactoryIndex]) }}</td>
-              </tr>
+            <tr>
+              <td v-for="c in 12" :key="`vh-c-${c-1}`">
+                <input type="number" min="0" step="0.1" v-model.number="volunteerHours[c-1]" :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required />
+              </td>
+              <td class="total-cell">{{ rowSum(volunteerHours) }}</td>
+            </tr>
             </tbody>
           </table>
         </div>
       </fieldset>
-
-      <button type="submit" :disabled="isSubmitting">
-        {{ isSubmitting ? '提交中...' : '提交社区参与数据' }}
-      </button>
     </form>
   </div>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from "vue";
 import axios from "axios";
 import { useSelectionStore } from "@/stores/selectionStore";
 
@@ -170,39 +158,76 @@ const factories = computed(() => selectionStore.factories);
 const year = computed(() => selectionStore.selectedYear);
 const years = computed(() => selectionStore.years);
 const isSubmitting = ref(false);
+const isEditing = ref(false);
 
 onMounted(() => {
   selectionStore.initYears();
   document.addEventListener("click", selectionStore.handleClickOutside);
+  fetchData();
 });
 onBeforeUnmount(() => {
   document.removeEventListener("click", selectionStore.handleClickOutside);
 });
 
 const monthNames = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
-function buildMatrix(rows) {
-  return Array.from({ length: rows }, () => Array(12).fill(0));
-}
 
-const charityDonations = reactive(buildMatrix(factories.value.length));
-const communityInvestment = reactive(buildMatrix(factories.value.length));
-const volunteerParticipants = reactive(buildMatrix(factories.value.length));
-const volunteerHours = reactive(buildMatrix(factories.value.length));
 
-const currentFactoryIndex = computed(() => factories.value.indexOf(factory.value));
-
+const charityDonations = reactive(Array(12).fill(0));
+const communityInvestment = reactive(Array(12).fill(0));
+const volunteerParticipants = reactive(Array(12).fill(0));
+const volunteerHours = reactive(Array(12).fill(0));
 const rowSum = (row) => row.reduce((s, v) => s + (Number(v) || 0), 0);
 
-async function submitCommunity() {
+watch([factory, year], () => {
+  fetchData();
+});
+
+// 获取数据方法
+const fetchData = async () => {
+  if (!factory.value || !year.value) {
+    resetFormData();
+    return;
+  }
+  try {
+    const response = await axios.get(`http://localhost:8000/quantitative/community`, {
+      params: { factory: factory.value, year: year.value }
+    });
+    if (response.data && response.data.data) {
+      const data = response.data.data;
+      charityDonations.splice(0, 12, ...(data.charityDonations || Array(12).fill(0)));
+      communityInvestment.splice(0, 12, ...(data.communityInvestment || Array(12).fill(0)));
+      volunteerParticipants.splice(0, 12, ...(data.volunteerParticipants || Array(12).fill(0)));
+      volunteerHours.splice(0, 12, ...(data.volunteerHours || Array(12).fill(0)));
+    } else {
+      resetFormData();
+    }
+  } catch (error) {
+    if (error.response?.status === 404) {
+      resetFormData();
+    } else {
+      console.error('获取数据失败:', error);
+    }
+  }
+};
+
+// 重置表单数据
+const resetFormData = () => {
+  charityDonations.splice(0, 12, ...Array(12).fill(0));
+  communityInvestment.splice(0, 12, ...Array(12).fill(0));
+  volunteerParticipants.splice(0, 12, ...Array(12).fill(0));
+  volunteerHours.splice(0, 12, ...Array(12).fill(0));
+};
+
+async function submitEdit() {
   isSubmitting.value = true;
   try {
     const payload = {
       year: Number(year.value),
       factory: factory.value,
-      charityDonations: charityDonations[currentFactoryIndex.value],
-      communityInvestment: communityInvestment[currentFactoryIndex.value],
-      volunteerParticipants: volunteerParticipants[currentFactoryIndex.value],
-      volunteerHours: volunteerHours[currentFactoryIndex.value],
+      charityDonations: charityDonations,
+      communityInvestment: communityInvestment,
+      volunteerParticipants: volunteerParticipants,
+      volunteerHours: volunteerHours,
     };
     const resp = await axios.post("http://localhost:8000/quantitative/community", payload);
     if (resp.data.status === "success") alert("社区参与数据提交成功!");
@@ -211,52 +236,19 @@ async function submitCommunity() {
     alert(`提交失败: ${e.response?.data?.detail || e.message}`);
   } finally {
     isSubmitting.value = false;
+    isEditing.value = false;
+    await fetchData();
   }
 }
+// 暴露方法给父组件
+defineExpose({
+  startEditing: () => isEditing.value = true,
+  cancelEditing: () => {
+    isEditing.value = false;
+    fetchData();
+  },
+  submitEdit,
+  fetchData
+});
 </script>
 
-<style scoped>
-.table-wrapper {
-  overflow-x: auto;
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 20px;
-}
-
-.community-table {
-  width: 100%;
-  min-width: 800px;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.community-table th,
-.community-table td {
-  border: 1px solid #ddd;
-  padding: 6px;
-  text-align: center;
-  word-break: break-word;
-}
-
-.community-table thead th {
-  position: sticky;
-  top: 0;
-  background: #f7f7f7;
-  z-index: 1;
-}
-
-.total-cell {
-  font-weight: 600;
-}
-
-.community-table input {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-@media (max-width: 768px) {
-  .community-table {
-    min-width: 600px;
-  }
-}
-</style>
