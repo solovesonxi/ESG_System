@@ -22,11 +22,11 @@ export const useEnvData = (fetchFunction, isQualitative = false) => {
 
     onMounted(() => {
         selectionStore.initYears();
-        fetchData();
+        fetchData().then(r =>  console.log(r));
     });
 
     watch([factory, year], () => {
-        fetchData();
+        fetchData().then(r =>  console.log(r));
     });
 
     return {

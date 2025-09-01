@@ -228,14 +228,14 @@ const submitReasons = async () => {
         envQuantData.value[key].reason = tempEnvQuantReasons.value[key];
       }
     });
-
-    isEditing.value = false;
     alert('原因分析提交成功！');
-    // 提交成功后重新加载数据
-    await fetchQuantData(factory.value, year.value);
   } catch (error) {
     console.error('提交原因分析失败:', error);
     alert(`提交原因分析失败: ${error.response?.data?.detail || error.message}`);
+  }finally {
+    console.log('提交完成，即将刷新');
+    isEditing.value = false;
+    await fetchQuantData(factory.value, year.value);
   }
 };
 
