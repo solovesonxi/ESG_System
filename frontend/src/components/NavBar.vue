@@ -1,26 +1,70 @@
 <template>
-  <nav class="navbar" :style="navbarStyle">
-    <ul class="nav-list">
-      <li v-for="route in menuItems" :key="route.name">
-        <router-link
-            :to="route.path"
-            :class="{ 'router-link-active': $route.path === route.path || $route.path.startsWith(route.path + '/') }"
-            
-        >
-          {{ route.label }}
-        </router-link>
-      </li>
-    </ul>
-  </nav>
+  <div class="navbar-container">
+    <nav
+        class="navbar"
+        :style="navbarStyle"
+        @mouseenter="handleNavbarEnter"
+        @mouseleave="handleNavbarLeave"
+    >
+      <ul class="nav-list">
+        <li v-for="route in menuItems" :key="route.name">
+          <router-link
+              :to="route.path"
+              :class="{ 'router-link-active': $route.path === route.path || $route.path.startsWith(route.path + '/') }"
+          >
+            {{ route.label }}
+          </router-link>
+        </li>
+      </ul>
+    </nav>
+
+    <div
+        class="logout-dropdown"
+        v-if="showLogout"
+        @mouseenter="handleDropdownEnter"
+        @mouseleave="handleDropdownLeave"
+    >
+      <span class="welcome-text">你好, {{ authStore.user?.username }}</span>
+      <button class="logout-btn" @click="handleLogout">登出</button>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import {useRoute} from 'vue-router'
-import {ref, computed, watch} from 'vue';
+import {computed, ref, watch} from 'vue';
 import router from "@/router/index.js";
+import {useAuthStore} from '@/stores/authStore';
 
+const authStore = useAuthStore();
+const showLogout = ref(false);
+let hideTimeout = null;
+
+const handleNavbarEnter = () => {
+  clearTimeout(hideTimeout);
+  showLogout.value = true;
+};
+
+const handleNavbarLeave = () => {
+  hideTimeout = setTimeout(() => {
+    if (!document.querySelector('.logout-dropdown:hover')) {
+      showLogout.value = false;
+    }
+  }, 300);
+};
+
+const handleDropdownEnter = () => {
+  clearTimeout(hideTimeout);
+};
+
+const handleDropdownLeave = () => {
+  showLogout.value = false;
+};
+
+const handleLogout = () => {
+  authStore.logout();
+};
 const emit = defineEmits(['toggleMode']);
-
 const route = useRoute()
 const isDataMode = ref(false)
 
@@ -43,6 +87,7 @@ const defaultModeItems = [
   {name: 'ip', path: '/ip', label: '知识产权'},
   {name: 'responsibility', path: '/responsibility', label: '产品责任'},
   {name: 'community', path: '/community', label: '社区参与'},
+  {name: 'profile', path: '/profile', label: '个人中心'}
 ]
 
 const dataModeItems = [
@@ -53,6 +98,7 @@ const dataModeItems = [
   {name: 'social-quantitative-other', path: '/social-quantitative-other', label: '社会定量-其他'},
   {name: 'social-qualitative-other', path: '/social-qualitative-other', label: '社会定性-其他'},
   {name: 'governance', path: '/governance', label: '管治'},
+  {name: 'profile', path: '/profile', label: '个人中心'}
 ]
 
 const navbarStyle = computed(() => {
@@ -61,7 +107,6 @@ const navbarStyle = computed(() => {
   }
 })
 
-// 检查当前路由是否匹配
 // 监听路由变化并更新 localStorage
 watch(() => route.path, (newPath) => {
   const currentMode = isDataMode.value ? 'data' : 'default';
@@ -102,6 +147,10 @@ defineExpose({
 </script>
 
 <style scoped>
+.navbar-container {
+  position: relative;
+}
+
 .navbar {
   position: fixed;
   top: 0;
@@ -147,10 +196,6 @@ defineExpose({
   background: rgba(255, 255, 255, 0.15);
 }
 
-.nav-list a.router-link-active {
-  background: rgba(255, 255, 255, 0.2);
-  font-weight: bold;
-}
 
 @media (max-width: 768px) {
   .nav-list {
@@ -162,5 +207,33 @@ defineExpose({
     width: 100%;
   }
 
+}
+
+.logout-dropdown {
+  position: fixed;
+  top: 70px;
+  right: 10px;
+  background: rgba(44, 62, 80, 0.9);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+}
+
+.welcome-text {
+  margin-right: 0.5rem;
+}
+
+.logout-btn {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: rgba(231, 76, 60, 0.3);
 }
 </style>

@@ -1,16 +1,14 @@
 <template>
-  <div id="app">
-    <NavBar ref="navBar"/>
+    <NavBar v-if="isDataPage || route.path === '/profile'" ref="navBar"/>
     <main>
       <router-view v-slot="{ Component }">
         <component :is="Component" ref="currentComponent"/>
       </router-view>
     </main>
-    <FloatingBall @toggleMode="toggleMode"/>
-    <EditControls :is-editing="isEditing" @start-edit="handleStartEdit" @cancel-edit="handleCancelEdit"
+    <FloatingBall v-if="isDataPage" @toggleMode="toggleMode"/>
+    <EditControls v-if="isDataPage" :is-editing="isEditing" @start-edit="handleStartEdit" @cancel-edit="handleCancelEdit"
                   @submit-edit="handleSubmitEdit"/>
     <canvas id="starry-bg"></canvas>
-  </div>
 </template>
 
 <script setup>
@@ -18,13 +16,13 @@ import {RouterView, useRoute} from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
 import FloatingBall from '@/components/FloatingBall.vue'
 import EditControls from '@/components/EditControls.vue'
-import {onMounted, ref, watch} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 
 const navBar = ref(null)
 const isEditing = ref(false)
 const currentComponent = ref(null)
 const route = useRoute()
-
+const isDataPage = computed(() => route.path !== '/' && route.path !== '/login'  && route.path !== '/profile')
 const toggleMode = () => {
   if (navBar.value) {
     navBar.value.toggleMode()
@@ -66,7 +64,7 @@ const handleSubmitEdit = () => {
 };
 
 // 监听路由变化，重置编辑状态并触发数据获取
-watch(() => route.path, (newPath) => {
+watch(() => route.path, () => {
   isEditing.value = false;
   setTimeout(() => {
     if (currentComponent.value && currentComponent.value.fetchData) {
@@ -74,6 +72,7 @@ watch(() => route.path, (newPath) => {
     }
   }, 10);
 });
+
 // 动态星空背景（保持不变）
 onMounted(() => {
   console.log('App mounted, currentComponent:', currentComponent.value);
@@ -140,12 +139,6 @@ body {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-#app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  position: relative;
-}
 
 #starry-bg {
   position: fixed;

@@ -4,3 +4,8 @@ uvicorn
 sqlalchemy
 pydantic
 python-dotenv
+pyjwt
+passlib
+bcrypt
+aliyun-python-sdk-core
+aliyun-python-sdk-dysmsapi

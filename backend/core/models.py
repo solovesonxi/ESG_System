@@ -3,6 +3,16 @@ from sqlalchemy import Column, Integer, String, Float, JSON, Text
 from core.dependencies import Base
 
 
+class User(Base):
+    __tablename__ = 'users'
+    username = Column(String(50), primary_key=True)
+    hashed_password = Column(String(100), nullable=False)
+    factory = Column(String(100), nullable=False)
+    account_type = Column(String(20), nullable=False, default='factory')  # 'headquarters' 或 'factory'
+    phone = Column(String(20), nullable=True)
+    email = Column(String(50), nullable=True)
+
+
 class MaterialData(Base):
     __tablename__ = 'material'
     factory = Column(String(100), primary_key=True)

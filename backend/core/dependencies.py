@@ -1,5 +1,6 @@
 import json
 import logging
+import redis
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -7,6 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from urllib.parse import quote_plus
 from pathlib import Path
 
+# PostgreSQL 配置
 DB_USER = "postgres"
 DB_PASSWORD = "000000"
 DB_HOST = "localhost"
@@ -35,6 +37,23 @@ def get_db():
         yield db
     finally:
         db.close()
+
+# Redis 配置
+REDIS_HOST = "localhost"
+REDIS_PORT = 6379
+REDIS_DB = 0
+
+def get_redis():
+    redis_client = redis.Redis(
+        host=REDIS_HOST,
+        port=REDIS_PORT,
+        db=REDIS_DB,
+        decode_responses=True
+    )
+    try:
+        yield redis_client
+    finally:
+        redis_client.close()
 
 config_path = Path(__file__).parent.parent / "static" / "indicators.json"
 with open(config_path, "r", encoding="utf-8") as f:

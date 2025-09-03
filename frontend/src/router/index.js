@@ -1,4 +1,5 @@
 import {createRouter, createWebHistory} from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
 import MaterialView from '@/views/MaterialView.vue'
 import EnergyView from "@/views/EnergyView.vue";
 import WaterView from "@/views/WaterView.vue";
@@ -20,9 +21,13 @@ import SocialQualitativeLaborView from "@/views/SocialQualitativeLaborView.vue";
 import SocialQuantitativeOtherView from "@/views/SocialQuantitativeOtherView.vue";
 import SocialQualitativeOtherView from "@/views/SocialQualitativeOtherView.vue";
 import GovernanceView from "@/views/GovernanceView.vue";
+import LoginView from "@/views/LoginView.vue";
+import ProfileView from "@/views/ProfileView.vue";
 
 const routes = [
-    {path: '/', redirect: '/material'},
+    {path: '/', redirect: '/login'},
+    {path: '/login', component: LoginView},
+    {path: '/profile', component: ProfileView },
     {path: '/material', component: MaterialView},
     {path: '/energy', component: EnergyView},
     {path: '/water', component: WaterView},
@@ -48,6 +53,42 @@ const routes = [
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL), routes
+})
+
+// 路由守卫 - 保护需要认证的路由
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  const publicRoutes = ['/login']
+  
+  // 如果访问的是公开路由，直接放行
+  if (publicRoutes.includes(to.path)) {
+    return next()
+  }
+  
+  // 检查是否已认证
+  if (!authStore.isAuthenticated) {
+    // 未认证，重定向到登录页
+    return next('/login')
+  }
+  
+  // 权限验证
+  const headquartersRoutes = [
+    '/env-quantitative', '/env-qualitative', 
+    '/social-quantitative-labor', '/social-qualitative-labor',
+    '/social-quantitative-other', '/social-qualitative-other',
+    '/governance'
+  ]
+  
+  // 检查总部账号权限
+  if (headquartersRoutes.some(route => to.path.startsWith(route))) {
+    if (!authStore.isHeadquarters) {
+      // 工厂账号尝试访问总部页面，重定向到material页面
+      return next('/material')
+    }
+  }
+  
+  // 已认证且权限验证通过，放行
+  next()
 })
 
 export default router

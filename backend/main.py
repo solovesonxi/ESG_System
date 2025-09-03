@@ -7,6 +7,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from core.dependencies import engine
 from core.models import Base
+from routers import register, login
 from routers.analytical import env_quantitative, env_qualitative, social_qualitative_other, social_quantitative_labor, \
     social_qualitative_labor, social_quantitative_other, governance
 from routers.quantitative import material, energy, water, emission, waste, investment, employment, training, ohs, \
@@ -27,6 +28,9 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 async def health_check():
     return {"status": "running", "timestamp": datetime.now(), "service": "ESG System API"}
 
+
+app.include_router(login.router)
+app.include_router(register.router)
 
 app.include_router(material.router)
 app.include_router(energy.router)
