@@ -1,39 +1,46 @@
 <template>
-  <div class="navbar-container">
-    <nav
-        class="navbar"
-        :style="navbarStyle"
-        @mouseenter="handleNavbarEnter"
-        @mouseleave="handleNavbarLeave"
-    >
+  <div class="navbar-wrapper">
+    <nav class="navbar" :style="navbarStyle" @mouseenter="handleNavbarEnter" @mouseleave="handleNavbarLeave">
+      <div class="nav-glow"></div>
+
       <ul class="nav-list">
         <li v-for="route in menuItems" :key="route.name">
           <router-link
               :to="route.path"
-              :class="{ 'router-link-active': $route.path === route.path || $route.path.startsWith(route.path + '/') }"
+              :class="{ 'router-link-active': isActive(route.path) }"
           >
-            {{ route.label }}
+            <span class="link-text">{{ route.label }}</span>
+            <div class="link-hover-effect"></div>
           </router-link>
         </li>
       </ul>
+
+      <div class="nav-particles" id="navParticles"></div>
     </nav>
 
-    <div
-        class="logout-dropdown"
-        v-if="showLogout"
-        @mouseenter="handleDropdownEnter"
-        @mouseleave="handleDropdownLeave"
-    >
-      <span class="welcome-text">你好, {{ authStore.user?.username }}</span>
-      <button class="logout-btn" @click="handleLogout">登出</button>
-    </div>
+    <transition name="dropdown">
+      <div class="logout-dropdown" v-if="showLogout" @mouseenter="handleDropdownEnter" @mouseleave="handleDropdownLeave">
+        <div class="user-avatar">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="40" r="25" fill="#fff" />
+            <circle cx="50" cy="100" r="40" fill="#fff" />
+          </svg>
+        </div>
+        <span class="welcome-text">你好, {{ authStore.user?.username }}</span>
+        <button class="logout-btn" @click="handleLogout">
+          <span>登出</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17 7L21 12M21 12L17 17M21 12H9M13 16V17C13 18.6569 11.6569 20 10 20H7C5.34315 20 4 18.6569 4 17V7C4 5.34315 5.34315 4 7 4H10C11.6569 4 13 5.34315 13 7V8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script setup>
 import {useRoute} from 'vue-router'
-import {computed, ref, watch} from 'vue';
-import router from "@/router/index.js";
+import {computed, onMounted, ref, watch, nextTick} from 'vue';
 import {useAuthStore} from '@/stores/authStore';
 
 const authStore = useAuthStore();
@@ -43,6 +50,7 @@ let hideTimeout = null;
 const handleNavbarEnter = () => {
   clearTimeout(hideTimeout);
   showLogout.value = true;
+  startParticles();
 };
 
 const handleNavbarLeave = () => {
@@ -51,6 +59,7 @@ const handleNavbarLeave = () => {
       showLogout.value = false;
     }
   }, 300);
+  stopParticles();
 };
 
 const handleDropdownEnter = () => {
@@ -64,15 +73,17 @@ const handleDropdownLeave = () => {
 const handleLogout = () => {
   authStore.logout();
 };
-const emit = defineEmits(['toggleMode']);
 const route = useRoute()
-const isDataMode = ref(false)
+
+const isActive = (path) => {
+  return route.path === path || route.path.startsWith(path + '/');
+}
 
 const menuItems = computed(() => {
-  return isDataMode.value ? dataModeItems : defaultModeItems
+  return authStore.isDataMode ? dataModeItems : analyzeModeItems
 })
 
-const defaultModeItems = [
+const dataModeItems = [
   {name: 'material', path: '/material', label: '物料'},
   {name: 'energy', path: '/energy', label: '能源'},
   {name: 'water', path: '/water', label: '水资源'},
@@ -90,7 +101,7 @@ const defaultModeItems = [
   {name: 'profile', path: '/profile', label: '个人中心'}
 ]
 
-const dataModeItems = [
+const analyzeModeItems = [
   {name: 'env-quantitative', path: '/env-quantitative', label: '环境定量'},
   {name: 'env-qualitative', path: '/env-qualitative', label: '环境定性'},
   {name: 'social-quantitative-labor', path: '/social-quantitative-labor', label: '社会定量-劳工'},
@@ -103,52 +114,72 @@ const dataModeItems = [
 
 const navbarStyle = computed(() => {
   return {
-    background: isDataMode.value ? 'linear-gradient(to right, #2c3e50, #90ee90)' : 'linear-gradient(to right, #3498db, #2c3e50)'
+    '--primary-gradient': authStore.isDataMode
+        ? 'linear-gradient(135deg, #4776E6, #8E54E9, #4776E6)'
+        : 'linear-gradient(135deg, #2c3e50, #90ee90, #2c3e50)',
+    '--glow-color': authStore.isDataMode ? 'rgba(71, 118, 230, 0.5)' : 'rgba(144, 238, 144, 0.5)'
   }
 })
 
 // 监听路由变化并更新 localStorage
 watch(() => route.path, (newPath) => {
-  const currentMode = isDataMode.value ? 'data' : 'default';
-  localStorage.setItem(`lastPath_${currentMode}`, newPath);
+  if (authStore.checkTokenValid() === 'valid') {
+    const currentMode = authStore.isDataMode ? 'data' : 'analyze';
+    localStorage.setItem(`lastPath_${currentMode}`, newPath);
+    console.log("路由变化，更新lastPath_" + currentMode + "由" + route.path + "变为" + newPath)
+  }
 });
 
-// 切换模式
-const toggleMode = () => {
-  const currentMode = isDataMode.value ? 'data' : 'default';
-  localStorage.setItem(`lastPath_${currentMode}`, route.path);
+// 粒子动画效果
+let particlesInterval = null;
 
-  isDataMode.value = !isDataMode.value;
-  emit('toggleMode');
+const startParticles = () => {
+  const particlesContainer = document.getElementById('navParticles');
+  if (!particlesContainer || particlesInterval) return;
 
-  console.log('切换模式:', {
-    isActive: isDataMode.value,
-    lastPath_data: localStorage.getItem('lastPath_data'),
-    lastPath_default: localStorage.getItem('lastPath_default'),
-    targetPath: isDataMode.value ? '/env-quantitative' : '/material'
-  });
+  particlesInterval = setInterval(() => {
+    const particle = document.createElement('div');
+    particle.className = 'nav-particle';
 
-  if (isDataMode.value) {
-    // 切换到分析模式
-    const lastPath = localStorage.getItem('lastPath_data');
-    const path = lastPath || '/env-quantitative'; // 确保默认是环境定量
-    router.push(path);
-  } else {
-    // 切换到填报模式
-    const lastPath = localStorage.getItem('lastPath_default');
-    const path = lastPath || '/material'; // 默认是材料页面
-    router.push(path);
+    // 随机位置和大小
+    const size = Math.random() * 4 + 1;
+    const posX = Math.random() * 100;
+
+    particle.style.width = `${size}px`;
+    particle.style.height = `${size}px`;
+    particle.style.left = `${posX}%`;
+    particle.style.background = authStore.isDataMode ? '#4776E6' : '#90ee90';
+    particle.style.opacity = Math.random() * 0.6 + 0.2;
+
+    particlesContainer.appendChild(particle);
+
+    // 动画结束后移除元素
+    setTimeout(() => {
+      if (particle.parentNode) {
+        particle.parentNode.removeChild(particle);
+      }
+    }, 2000);
+  }, 100);
+};
+
+const stopParticles = () => {
+  if (particlesInterval) {
+    clearInterval(particlesInterval);
+    particlesInterval = null;
   }
-}
+};
 
-defineExpose({
-  toggleMode
-})
+onMounted(() => {
+  nextTick(() => {
+    // 初始化代码
+  });
+});
 </script>
 
 <style scoped>
-.navbar-container {
+.navbar-wrapper {
   position: relative;
+  height: 70px;
 }
 
 .navbar {
@@ -156,9 +187,36 @@ defineExpose({
   top: 0;
   left: 0;
   width: 100%;
-  background: linear-gradient(to right, #3498db, #2c3e50);
+  height: 70px;
+  background-size: 200% 200%;
   z-index: 1000;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: gradientShift 8s ease infinite;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.nav-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  filter: blur(10px);
+  animation: pulseGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
 }
 
 .nav-list {
@@ -168,72 +226,273 @@ defineExpose({
   margin: 0;
   padding: 0;
   width: 100%;
+  height: 100%;
 }
 
 .nav-list li {
+  position: relative;
   flex: 1;
   max-width: 200px;
   text-align: center;
-  position: relative;
 }
 
 .nav-list a {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: white;
+  color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   font-weight: 500;
-  padding: 0 20px;
+  padding: 0 15px;
   height: 100%;
-  min-height: 60px;
-  transition: all 0.3s;
-  font-size: 1.1rem;
+  min-height: 70px;
+  transition: all 0.3s ease;
+  font-size: 1rem;
   position: relative;
+  overflow: hidden;
+  border-bottom: 2px solid transparent;
 }
 
 .nav-list a:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-list a:hover .link-hover-effect {
+  transform: translateX(0) scale(1);
+  opacity: 1;
+}
+
+.link-text {
+  position: relative;
+  z-index: 2;
+}
+
+.link-hover-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transform: translateX(-100%) scale(0.8);
+  opacity: 0;
+  transition: all 0.5s ease;
+  z-index: 1;
+}
+
+/* 激活状态样式 - 更加炫酷 */
+.nav-list a.router-link-active {
+  color: #fff;
   background: rgba(255, 255, 255, 0.15);
+  border-bottom: 2px solid #fff;
+  box-shadow:
+      0 0 15px rgba(255, 255, 255, 0.5),
+      inset 0 0 10px rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
-
-@media (max-width: 768px) {
-  .nav-list {
-    flex-direction: column;
-  }
-
-  .nav-list li {
-    max-width: none;
-    width: 100%;
-  }
-
+.nav-list a.router-link-active::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.8);
+  animation: activePulse 1.5s infinite;
 }
 
+@keyframes activePulse {
+  0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.5); }
+}
+
+.nav-list a.router-link-active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #fff, transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* 粒子效果 */
+.nav-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.nav-particle {
+  position: absolute;
+  bottom: 0;
+  border-radius: 50%;
+  animation: riseUp 2s ease-in forwards;
+}
+
+@keyframes riseUp {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-70px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* 登出下拉菜单 */
 .logout-dropdown {
   position: fixed;
-  top: 70px;
-  right: 10px;
-  background: rgba(44, 62, 80, 0.9);
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  top: 75px;
+  right: 5px;
+  background: rgba(25, 25, 35, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  box-shadow:
+      0 10px 30px rgba(0, 0, 0, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.1);
   z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 180px;
+}
+
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.3s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4776E6, #8E54E9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 15px rgba(71, 118, 230, 0.5);
+}
+
+.user-avatar svg {
+  width: 60%;
+  height: 60%;
 }
 
 .welcome-text {
-  margin-right: 0.5rem;
+  color: #fff;
+  font-size: 0.9rem;
+  text-align: center;
 }
 
 .logout-btn {
-  background: rgba(231, 76, 60, 0.2);
-  color: #e74c3c;
-  border: 1px solid rgba(231, 76, 60, 0.3);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  box-shadow: 0 4px 15px rgba(238, 90, 82, 0.3);
 }
 
 .logout-btn:hover {
-  background: rgba(231, 76, 60, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(238, 90, 82, 0.4);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .nav-list li {
+    max-width: 160px;
+  }
+
+  .nav-list a {
+    font-size: 0.9rem;
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 992px) {
+  .navbar {
+    height: 60px;
+  }
+
+  .nav-list {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 0 10px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .nav-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-list li {
+    flex: 0 0 auto;
+    max-width: none;
+  }
+
+  .nav-list a {
+    min-height: 60px;
+    min-width: 100px;
+  }
+
+  .logout-dropdown {
+    top: 65px;
+    right: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .nav-list a {
+    min-width: 80px;
+    font-size: 0.8rem;
+  }
+
+  .welcome-text {
+    font-size: 0.8rem;
+  }
+
+  .logout-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
 }
 </style>

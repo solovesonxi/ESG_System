@@ -185,8 +185,8 @@
 
 <script setup>
 import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
-import axios from 'axios'
 import {useSelectionStore} from '@/stores/selectionStore'
+import apiClient from "@/utils/axios.js";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
@@ -196,7 +196,6 @@ const years = computed(() => selectionStore.years)
 const isSubmitting = ref(false)
 
 onMounted(() => {
-  selectionStore.initYears()
   document.addEventListener('click', selectionStore.handleClickOutside)
 })
 
@@ -263,7 +262,7 @@ async function submitForm(){
       envInvestIntensity: envInvestIntensity.value
     }
 
-    const resp = await axios.post('http://localhost:8000/quantitative/investment', payload)
+    const resp = await apiClient.post('/quantitative/investment', payload)
     if(resp.data.status === 'success'){
       alert('资金投入数据提交成功!')
     }

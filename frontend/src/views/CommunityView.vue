@@ -149,9 +149,9 @@
 
 <script setup>
 import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from "vue";
-import axios from "axios";
-import { useSelectionStore } from "@/stores/selectionStore";
+import apiClient from '@/utils/axios';
 
+import { useSelectionStore } from "@/stores/selectionStore";
 const selectionStore = useSelectionStore();
 const factory = computed(() => selectionStore.selectedFactory);
 const factories = computed(() => selectionStore.factories);
@@ -160,9 +160,7 @@ const years = computed(() => selectionStore.years);
 const isEditing = ref(false);
 
 onMounted(() => {
-  selectionStore.initYears();
   document.addEventListener("click", selectionStore.handleClickOutside);
-  fetchData();
 });
 onBeforeUnmount(() => {
   document.removeEventListener("click", selectionStore.handleClickOutside);
@@ -188,7 +186,7 @@ const fetchData = async () => {
     return;
   }
   try {
-    const response = await axios.get(`http://localhost:8000/quantitative/community`, {
+    const response = await apiClient.get(`/quantitative/community`, {
       params: { factory: factory.value, year: year.value }
     });
     if (response.data && response.data.data) {
@@ -227,7 +225,7 @@ async function submitEdit() {
       volunteerParticipants: volunteerParticipants,
       volunteerHours: volunteerHours,
     };
-    const resp = await axios.post("http://localhost:8000/quantitative/community", payload);
+    const resp = await apiClient.post("/quantitative/community", payload);
     if (resp.data.status === "success") alert("社区参与数据提交成功!");
   } catch (e) {
     console.error(e);

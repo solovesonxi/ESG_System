@@ -205,7 +205,7 @@
 
 <script setup>
 import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue'
-import axios from 'axios'
+import apiClient from '@/utils/axios';
 import {useSelectionStore} from '@/stores/selectionStore'
 
 const selectionStore = useSelectionStore();
@@ -319,7 +319,7 @@ const fetchData = async () => {
     return;
   }
   try {
-    const response = await axios.get(`http://localhost:8000/quantitative/water`, {
+    const response = await apiClient.get(`/quantitative/water`, {
       params: { factory: factory.value, year: year.value }
     });
     if (response.data && response.data.data) {
@@ -396,7 +396,7 @@ async function submitEdit() {
       waterIntensity: waterIntensity.value,
       waterRecycleRate: waterRecycleRate.value
     };
-    const response = await axios.post('http://localhost:8000/quantitative/water', payload);
+    const response = await apiClient.post('/quantitative/water', payload);
     if (response.data.status === 'success') {
       alert('水资源数据提交成功!');
     }
@@ -417,7 +417,6 @@ watch([factory, year], () => {
 });
 
 onMounted(() => {
-  selectionStore.initYears();
   document.addEventListener('click', selectionStore.handleClickOutside);
   fetchData();
 });

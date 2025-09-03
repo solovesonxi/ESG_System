@@ -109,8 +109,8 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue'
-import axios from 'axios'
 import { useSelectionStore } from '@/stores/selectionStore'
+import apiClient from "@/utils/axios.js";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
@@ -193,7 +193,7 @@ const submitTraining = async () => {
       generalRate: generalRate.value
     }
 
-    const response = await axios.post('http://localhost:8000/quantitative/training', payload)
+    const response = await apiClient.post('/quantitative/training', payload)
 
     if (response.data.status === 'success') {
       alert('教育与培训数据提交成功!')

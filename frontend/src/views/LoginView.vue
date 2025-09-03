@@ -200,9 +200,9 @@
 </template>
 
 <script>
-import axios from "axios";
 import router from "@/router/index.js";
 import {useAuthStore} from '@/stores/authStore';
+import apiClient from "@/utils/axios.js";
 
 export default {
   name: 'LoginView',
@@ -250,19 +250,14 @@ export default {
         this.loginError = '请输入用户名和密码';
         return;
       }
-      console.log('登录信息:', this.loginForm);
       const payload = {
         username: this.loginForm.username,
         password: this.loginForm.password
       }
       try {
-        const response = await axios.post('http://localhost:8000/login', payload);
+        const response = await apiClient.post('/login', payload);
         const {token, token_type, user} = response.data;
-        // 使用认证store设置认证信息
-        const authStore = useAuthStore();
-        authStore.setAuth(token, user);
-        // 跳转到主页
-        console.log('登录成功:', response.data);
+        useAuthStore().setAuth(token, user);
         await router.push('/material');
       } catch (error) {
         this.loginError = '用户名或密码错误';
@@ -310,9 +305,9 @@ export default {
         email: this.registerForm.email,
         verificationCode: this.registerForm.verificationCode
       }
-      const response = await axios.post('http://localhost:8000/register', payload)
+      const response = await apiClient.post('/register', payload)
       if (response.data.status === 'success') {
-        alert('已提交注册申请，请耐心等待审核!')
+        alert('注册成功!', response.data.username)
         this.showRegister = false;
       } else {
         alert(response.data.message || '注册失败，请稍后重试。')
@@ -353,7 +348,7 @@ export default {
 
       try {
         // 调用后端接口发送验证码
-        const response = await axios.post('http://localhost:8000/register/send-verification-code', {
+        const response = await apiClient.post('/register/send-verification-code', {
           phone: this.registerForm.phone,
           email: this.registerForm.email
         });

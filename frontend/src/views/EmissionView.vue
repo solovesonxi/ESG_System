@@ -132,8 +132,8 @@
 
 <script setup>
 import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue'
-import axios from 'axios'
 import {useSelectionStore} from "@/stores/selectionStore.js";
+import apiClient from "@/utils/axios.js";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
@@ -197,7 +197,6 @@ const wasteGasTotal = computed(() => {
 
 // 初始化年份列表
 onMounted(() => {
-  selectionStore.initYears()
   document.addEventListener('click', selectionStore.handleClickOutside)
 })
 
@@ -230,7 +229,7 @@ const fetchData = async () => {
     return;
   }
   try {
-    const response = await axios.get(`http://localhost:8000/quantitative/emission`, {
+    const response = await apiClient.get(`/quantitative/emission`, {
       params: { factory: factory.value, year: year.value }
     });
     if (response.data && response.data.data) {
@@ -266,7 +265,7 @@ async function submitEdit() {
       ...wasteGasData,
       wasteGasTotal: wasteGasTotal.value
     }
-    const response = await axios.post('http://localhost:8000/quantitative/emission', payload)
+    const response = await apiClient.post('/quantitative/emission', payload)
     if (response.data.status === 'success') {
       alert('排放数据提交成功!')
     }

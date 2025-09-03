@@ -1,13 +1,11 @@
-import axios from 'axios';
+import apiClient from '@/utils/axios';
 
-const BASE_URL = 'http://localhost:8000';
+
 
 // 通用GET请求
 export const fetchData = async (endpoint, params) => {
     try {
-        console.log("fetchData", endpoint,params);
-        const response = await axios.get(`${BASE_URL}/${endpoint}`, { params });
-        console.log("fetchData", params);
+        const response = await apiClient.get(`/${endpoint}`, { params });
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -18,7 +16,7 @@ export const fetchData = async (endpoint, params) => {
 // 通用POST请求
 export const postData = async (endpoint, data) => {
     try {
-        const response = await axios.post(`${BASE_URL}/${endpoint}`, data);
+        const response = await apiClient.post(`/${endpoint}`, data);
         console.log("postData", data);
         console.log(response.data);
         return response.data;

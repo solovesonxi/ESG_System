@@ -73,7 +73,7 @@
 import {computed, ref} from 'vue';
 import BaseInfoSelector from '@/components/BaseInfoSelector.vue';
 import QuantitativeDataTable from '@/components/QuantitativeDataTable.vue';
-import {useQuantData} from '@/router/useEnvData.js';
+import {formatComparison, useQuantData} from '@/router/useEnvData.js';
 import {
   EMISSION_INDICATORS,
   ENERGY_INDICATORS,
@@ -84,7 +84,6 @@ import {
   WATER_INDICATORS
 } from '@/router/indicators.js';
 import {fetchQuantData, postQuantReasons} from '@/router/envData.js';
-import {formatComparison} from '@/router/useEnvData.js';
 
 // 使用组合函数获取数据
 const {data, factory, year} = useQuantData();
@@ -232,7 +231,7 @@ const submitReasons = async () => {
   } catch (error) {
     console.error('提交原因分析失败:', error);
     alert(`提交原因分析失败: ${error.response?.data?.detail || error.message}`);
-  }finally {
+  } finally {
     console.log('提交完成，即将刷新');
     isEditing.value = false;
     await fetchQuantData(factory.value, year.value);

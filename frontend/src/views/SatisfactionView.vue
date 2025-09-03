@@ -77,8 +77,8 @@
 
 <script setup>
 import {computed, reactive, ref} from 'vue'
-import axios from 'axios'
 import {useSelectionStore} from '@/stores/selectionStore'
+import apiClient from "@/utils/axios.js";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
@@ -118,7 +118,7 @@ const submitSatisfaction = async () => {
       annualAverage: annualAverage.value
     }
 
-    const response = await axios.post('http://localhost:8000/quantitative/satisfaction', payload)
+    const response = await apiClient.post('/quantitative/satisfaction', payload)
 
     if (response.data.status === 'success') {
       alert('满意度数据提交成功!')

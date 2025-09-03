@@ -165,7 +165,8 @@
 
 <script setup>
 import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
-import axios from 'axios'
+import apiClient from '@/utils/axios';
+
 import {useSelectionStore} from '@/stores/selectionStore'
 
 const selectionStore = useSelectionStore()
@@ -176,7 +177,6 @@ const years = computed(() => selectionStore.years)
 const isSubmitting = ref(false)
 
 onMounted(() => {
-  selectionStore.initYears()
   document.addEventListener('click', selectionStore.handleClickOutside)
 })
 
@@ -316,7 +316,7 @@ const submitEmployment = async () => {
       generalTurnoverRate: generalTurnoverRate.value
     }
 
-    const response = await axios.post('http://localhost:8000/quantitative/employment', payload)
+    const response = await apiClient.post('/quantitative/employment', payload)
 
     if (response.data.status === 'success') {
       alert('雇佣数据提交成功!')

@@ -275,7 +275,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
-import axios from "axios";
+import apiClient from '@/utils/axios';
 import { useSelectionStore } from "@/stores/selectionStore";
 
 const selectionStore = useSelectionStore();
@@ -286,7 +286,6 @@ const years = computed(() => selectionStore.years);
 const isSubmitting = ref(false);
 
 onMounted(() => {
-  selectionStore.initYears();
   document.addEventListener("click", selectionStore.handleClickOutside);
 });
 onBeforeUnmount(() => {
@@ -342,7 +341,7 @@ async function submitIP() {
       prevSoftwareCopyrights: [...prevSoftwareCopyrights],
       prevTrademarks: [...prevTrademarks],
     };
-    await axios.post("/api/ipData", payload);
+    await apiClient.post("/api/ipData", payload);
     alert("提交成功!");
   } catch (e) {
     console.error("提交失败:", e);

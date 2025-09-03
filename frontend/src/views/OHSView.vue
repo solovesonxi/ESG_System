@@ -268,8 +268,8 @@
 
 <script setup>
 import {computed, reactive, ref} from 'vue'
-import axios from 'axios'
 import {useSelectionStore} from '@/stores/selectionStore'
+import apiClient from "@/utils/axios.js";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
@@ -328,7 +328,7 @@ const submitOHS = async () => {
       safetyInvestmentTotal: rowSum(formData.safetyInvestment)
     }
 
-    const response = await axios.post('http://localhost:8000/quantitative/ohs', payload)
+    const response = await apiClient.post('/quantitative/ohs', payload)
 
     if (response.data.status === 'success') {
       alert('职业健康与安全数据提交成功!')

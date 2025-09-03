@@ -79,7 +79,7 @@
 
 <script setup>
 import {computed, onMounted, ref, watch} from 'vue'
-import axios from 'axios'
+import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js"
 
 const selectionStore = useSelectionStore()
@@ -173,7 +173,7 @@ const indicatorNames = {
 
 const fetchLaborData = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/analytical/social_quantitative_labor', {params: {factory: factory.value, year: year.value}})
+    const res = await apiClient.get('/analytical/social_quantitative_labor', {params: {factory: factory.value, year: year.value}})
     laborData.value = res.data
   } catch (e) {
     console.error(e)
@@ -192,7 +192,6 @@ const formatValue = (v) => {
 }
 
 onMounted(() => {
-  selectionStore.initYears()
   document.addEventListener('click', selectionStore.handleClickOutside)
   fetchLaborData()
 })
@@ -222,7 +221,7 @@ const submitEdit = async () => {
     Object.entries(tempReasons.value).forEach(([indicator, reason]) => {
       if (reason && reason.trim() !== '') reasonsMap[indicator] = reason
     })
-    await axios.post('http://localhost:8000/analytical/social_quantitative_labor', {
+    await apiClient.post('/analytical/social_quantitative_labor', {
       factory: factory.value,
       year: parseInt(year.value),
       reasons: reasonsMap

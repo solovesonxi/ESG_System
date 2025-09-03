@@ -74,7 +74,8 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import axios from 'axios'
+import apiClient from '@/utils/axios';
+
 import { useSelectionStore } from '@/stores/selectionStore.js'
 
 const selectionStore = useSelectionStore()
@@ -87,7 +88,7 @@ const qualData = ref({})
 
 const fetchQualData = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/analytical/env_quantitative', {
+    const res = await apiClient.get('/analytical/env_quantitative', {
       params: { factory: factory.value, year: year.value }
     })
     qualData.value = res.data || {}
@@ -98,7 +99,6 @@ const fetchQualData = async () => {
 }
 
 onMounted(() => {
-  selectionStore.initYears()
   document.addEventListener('click', selectionStore.handleClickOutside)
   fetchQualData()
 })

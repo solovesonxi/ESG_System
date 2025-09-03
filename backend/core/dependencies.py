@@ -1,6 +1,8 @@
 import json
 import logging
 import redis
+from fastapi.security import OAuth2PasswordBearer
+from passlib.context import CryptContext
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -54,6 +56,8 @@ def get_redis():
         yield redis_client
     finally:
         redis_client.close()
+
+
 
 config_path = Path(__file__).parent.parent / "static" / "indicators.json"
 with open(config_path, "r", encoding="utf-8") as f:

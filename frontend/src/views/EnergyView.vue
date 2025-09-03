@@ -230,7 +230,8 @@
 
 <script setup>
 import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
-import axios from 'axios'
+import apiClient from '@/utils/axios';
+
 import {useSelectionStore} from "@/stores/selectionStore.js";
 
 const selectionStore = useSelectionStore();
@@ -298,7 +299,6 @@ watch([factory, year], () => {
 });
 
 onMounted(() => {
-  selectionStore.initYears();
   document.addEventListener("click", selectionStore.handleClickOutside);
 });
 onBeforeUnmount(() => {
@@ -313,7 +313,7 @@ const fetchData = async () => {
   }
   isLoading.value = true;
   try {
-    const response = await axios.get(`http://localhost:8000/quantitative/energy`, {
+    const response = await apiClient.get(`/quantitative/energy`, {
       params: {factory: factory.value, year: year.value}
     });
     console.log(response.data);
@@ -389,14 +389,14 @@ const submitEdit = async () => {
       turnover: formData.value.turnover,
       energyConsumptionIntensity: energyConsumptionIntensity.value
     };
-    const response = await axios.post('http://localhost:8000/quantitative/energy', payload);
+    const response = await apiClient.post('/quantitative/energy', payload);
     if (response.data.status === 'success') {
       alert('数据提交成功!');
     }
   } catch (error) {
     console.error('提交失败:', error);
     alert(`提交失败: ${error.response?.data?.detail || error.message}`);
-  }finally {
+  } finally {
     console.log('提交完成，即将刷新');
     isEditing.value = false;
     await fetchData();

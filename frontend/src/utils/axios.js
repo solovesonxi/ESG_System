@@ -24,22 +24,28 @@ apiClient.interceptors.request.use(
   }
 )
 
-// 响应拦截器 - 处理认证错误
+// 响应拦截器 - 处理 Token 过期
 apiClient.interceptors.response.use(
-  (response) => {
-    return response
-  },
-  (error) => {
-    const authStore = useAuthStore()
-    
-    if (error.response?.status === 401) {
-      // token过期或无效，清除认证信息并跳转到登录页
-      authStore.clearAuth()
-      window.location.href = '/login'
+    (response) => response,
+    async (error) => {
+        const authStore = useAuthStore();
+        const originalRequest = error.config;
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+            try {
+                const newToken = await authStore.refreshToken();
+                if (newToken) {
+                    originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                    return apiClient(originalRequest);
+                }
+            } catch (refreshError) {
+                authStore.clearAuth();
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
     }
-    
-    return Promise.reject(error)
-  }
-)
+);
+
 
 export default apiClient

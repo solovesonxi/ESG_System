@@ -5,8 +5,8 @@
         <component :is="Component" ref="currentComponent"/>
       </router-view>
     </main>
-    <FloatingBall v-if="isDataPage" @toggleMode="toggleMode"/>
-    <EditControls v-if="isDataPage" :is-editing="isEditing" @start-edit="handleStartEdit" @cancel-edit="handleCancelEdit"
+    <FloatingBall v-if="isDataPage && authStore.isFactory"/>
+    <EditControls v-if="isDataPage && authStore.isFactory" :is-editing="isEditing" @start-edit="handleStartEdit" @cancel-edit="handleCancelEdit"
                   @submit-edit="handleSubmitEdit"/>
     <canvas id="starry-bg"></canvas>
 </template>
@@ -17,17 +17,14 @@ import NavBar from '@/components/NavBar.vue'
 import FloatingBall from '@/components/FloatingBall.vue'
 import EditControls from '@/components/EditControls.vue'
 import {computed, onMounted, ref, watch} from 'vue'
+import { useAuthStore } from '@/stores/authStore';
 
+const authStore = useAuthStore();
 const navBar = ref(null)
 const isEditing = ref(false)
 const currentComponent = ref(null)
 const route = useRoute()
 const isDataPage = computed(() => route.path !== '/' && route.path !== '/login'  && route.path !== '/profile')
-const toggleMode = () => {
-  if (navBar.value) {
-    navBar.value.toggleMode()
-  }
-}
 
 const handleStartEdit = () => {
   console.log('Start Edit triggered');

@@ -226,8 +226,8 @@
 
 <script setup>
 import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
-import axios from 'axios'
 import {useSelectionStore} from '@/stores/selectionStore'
+import apiClient from "@/utils/axios.js";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
@@ -237,7 +237,6 @@ const years = computed(() => selectionStore.years)
 const isSubmitting = ref(false)
 
 onMounted(() => {
-  selectionStore.initYears()
   document.addEventListener('click', selectionStore.handleClickOutside)
 })
 
@@ -342,7 +341,7 @@ async function submitForm(){
       wastewaterIntensity: wastewaterIntensity.value
     }
 
-    const resp = await axios.post('http://localhost:8000/quantitative/waste', payload)
+    const resp = await apiClient.post('/quantitative/waste', payload)
     if(resp.data.status === 'success'){
       alert('废弃物数据提交成功!')
     }

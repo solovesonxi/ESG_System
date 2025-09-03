@@ -144,11 +144,11 @@
 
 <script setup>
 import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
-import axios from 'axios'
+import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js"
 
 const selectionStore = useSelectionStore()
-const factory = computed(() => selectionStore.selectedFactory)
+const factory = computed(() => selectionStore.selectedFactory);
 const year = computed(() => selectionStore.selectedYear)
 const isEditing = ref(false)
 const isLoading = ref(false)
@@ -189,16 +189,18 @@ const paperIntensity = computed(() => {
 
 
 // 监听工厂和年份变化
-watch([factory, year], () => {
-  fetchData()
-})
+watch([factory, year], () => {fetchData()})
+
 onMounted(() => {
+  selectionStore.initFactories();
   selectionStore.initYears();
   document.addEventListener("click", selectionStore.handleClickOutside);
 });
+
 onBeforeUnmount(() => {
   document.removeEventListener("click", selectionStore.handleClickOutside);
 });
+
 // 获取数据方法
 const fetchData = async () => {
   if (!factory.value || !year.value) {
@@ -207,12 +209,7 @@ const fetchData = async () => {
   }
   isLoading.value = true
   try {
-    const response = await axios.get(`http://localhost:8000/quantitative/material`, {
-      params: {
-        factory: factory.value,
-        year: year.value
-      }
-    })
+    const response = await apiClient.get(`/quantitative/material`, {params: {factory: factory.value, year: year.value}})
     console.log(response.data)
     if (response.data && response.data.data) {
       const data = response.data.data;
@@ -260,14 +257,14 @@ const submitEdit = async () => {
       totalInput: totalInput.value, totalOutput: totalOutput.value,
       renewableInputRatio: renewableInputRatio.value, renewableOutputRatio: renewableOutputRatio.value
     }
-    const response = await axios.post('http://localhost:8000/quantitative/material', payload)
+    const response = await apiClient.post('/quantitative/material', payload);
     if (response.data.status === 'success') {
       alert('数据提交成功!')
     }
   } catch (error) {
     console.error('提交失败:', error)
     alert(`提交失败: ${error.response?.data?.detail || error.message}`)
-  }finally {
+  } finally {
     console.log('提交完成，即将刷新');
     isEditing.value = false;
     await fetchData();

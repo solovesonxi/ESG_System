@@ -9,3 +9,4 @@ passlib
 bcrypt
 aliyun-python-sdk-core
 aliyun-python-sdk-dysmsapi
+python-jose

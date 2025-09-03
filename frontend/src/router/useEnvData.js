@@ -1,6 +1,7 @@
 import {computed, onMounted, ref, watch} from 'vue';
 import {useSelectionStore} from "@/stores/selectionStore.js";
 import {fetchQualData, fetchQuantData} from '@/router/envData.js';
+import {useRoute} from 'vue-router'
 
 export const useEnvData = (fetchFunction, isQualitative = false) => {
     const selectionStore = useSelectionStore();
@@ -21,7 +22,12 @@ export const useEnvData = (fetchFunction, isQualitative = false) => {
     };
 
     onMounted(() => {
-        selectionStore.initYears();
+        // 第一次进入分析页面，初始化工厂和年份列表
+        if (localStorage.getItem('lastPath_analyze') === null) {
+            selectionStore.initFactories();
+            selectionStore.initYears();
+            console.log('初始化工厂和年份');
+        }
         fetchData().then(r =>  console.log(r));
     });
 

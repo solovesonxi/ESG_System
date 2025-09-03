@@ -83,7 +83,7 @@
 
 <script setup>
 import {computed, onMounted, ref, watch} from 'vue'
-import axios from 'axios'
+import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js"
 
 const selectionStore = useSelectionStore()
@@ -98,7 +98,7 @@ const tempEdits = ref({})
 
 const fetchQualData = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/analytical/social_qualitative_other', {
+    const res = await apiClient.get('/analytical/social_qualitative_other', {
       params: { factory: factory.value, year: year.value }
     })
     qualData.value = res.data
@@ -109,7 +109,6 @@ const fetchQualData = async () => {
 }
 
 onMounted(() => {
-  selectionStore.initYears()
   document.addEventListener('click', selectionStore.handleClickOutside)
   fetchQualData()
 })
@@ -142,7 +141,7 @@ const cancelEditing = () => {
 
 const submitEdit = async () => {
   try {
-    await axios.post('http://localhost:8000/analytical/social_qualitative_other', {
+    await apiClient.post('/analytical/social_qualitative_other', {
       factory: factory.value,
       year: parseInt(year.value),
       data: tempEdits.value

@@ -74,7 +74,7 @@
 
 <script setup>
 import {computed, onMounted, ref, watch} from 'vue'
-import axios from 'axios'
+import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js"
 
 const selectionStore = useSelectionStore()
@@ -133,7 +133,7 @@ const indicatorNames = {
 
 const fetchOtherData = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/analytical/social_quantitative_other', {
+    const res = await apiClient.get('/analytical/social_quantitative_other', {
       params: { factory: factory.value, year: year.value }
     })
     otherData.value = res.data
@@ -154,7 +154,6 @@ const formatValue = (v) => {
 }
 
 onMounted(() => {
-  selectionStore.initYears()
   document.addEventListener('click', selectionStore.handleClickOutside)
   fetchOtherData()
 })
@@ -184,7 +183,7 @@ const submitEdit = async () => {
     Object.entries(tempReasons.value).forEach(([indicator, reason]) => {
       if (reason && reason.trim() !== '') reasonsMap[indicator] = reason
     })
-    await axios.post('http://localhost:8000/analytical/social_quantitative_other', {
+    await apiClient.post('/analytical/social_quantitative_other', {
       factory: factory.value,
       year: parseInt(year.value),
       reasons: reasonsMap

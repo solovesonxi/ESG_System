@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector />
+      <BaseInfoSelector/>
 
       <!-- 动态生成分类表格 -->
       <QualitativeDataTable
@@ -25,12 +25,12 @@
 import {ref} from 'vue';
 import BaseInfoSelector from '@/components/BaseInfoSelector.vue';
 import QualitativeDataTable from '@/components/QualitativeDataTable.vue';
-import { useQualData } from '@/router/useEnvData.js';
-import { ENV_QUAL_INDICATORS, INDICATOR_CATEGORIES } from '@/router/indicators.js';
+import {useQualData} from '@/router/useEnvData.js';
+import {ENV_QUAL_INDICATORS, INDICATOR_CATEGORIES} from '@/router/indicators.js';
 import {fetchQualData, postQualData} from '@/router/envData.js';
 
 // 使用组合函数获取数据
-const { data: envQualData, factory, year } = useQualData();
+const {data: envQualData, factory, year} = useQualData();
 
 // 本地编辑状态和方法
 const isEditing = ref(false);

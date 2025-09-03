@@ -3,14 +3,17 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import MaterialData
+from core.permissions import get_current_user
 from core.schemas import MaterialSubmission
 
 router = APIRouter(prefix="/quantitative/material", tags=["定量数据-物料"])
 
 
 @router.get("")
-async def fetch_material_data(factory: str, year: int, db: Session = Depends(get_db)):
+async def fetch_material_data(factory: str, year: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
+        if current_user["account_type"] == "factory" and current_user["factory"] != factory:
+            raise HTTPException(status_code=403, detail="无权访问其他工厂数据")
         data = db.query(MaterialData).filter(MaterialData.factory == factory, MaterialData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
@@ -30,8 +33,12 @@ async def fetch_material_data(factory: str, year: int, db: Session = Depends(get
 
 
 @router.post("")
-async def submit_material_data(data: MaterialSubmission, db: Session = Depends(get_db)):
+async def submit_material_data(data: MaterialSubmission, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
+        if current_user["account_type"] == "headquarters":
+            raise HTTPException(status_code=403, detail="总部账号无权提交数据")
+        if current_user["account_type"] == "factory" and current_user["factory"] != data.factory:
+            raise HTTPException(status_code=403, detail="无权提交其他工厂数据")
         db_record = MaterialData(factory=data.factory, year=data.year, renewable_input=data.renewableInput,
             non_renewable_input=data.nonRenewableInput, renewable_output=data.renewableOutput,
             non_renewable_output=data.nonRenewableOutput, material_consumption=data.materialConsumption,

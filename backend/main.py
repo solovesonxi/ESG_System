@@ -22,8 +22,6 @@ app = FastAPI()
 # 添加CORS中间件
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"],
                    allow_headers=["*"], )
-
-
 @app.get("/")
 async def health_check():
     return {"status": "running", "timestamp": datetime.now(), "service": "ESG System API"}

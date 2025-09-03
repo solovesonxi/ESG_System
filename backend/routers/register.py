@@ -12,7 +12,6 @@ import redis
 from aliyunsdkcore.client import AcsClient
 from aliyunsdkcore.request import CommonRequest
 from fastapi import APIRouter, Depends, HTTPException, Body
-from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
@@ -23,13 +22,7 @@ from core.models import User
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", )
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/register", tags=["注册"])
-
-# 密码哈希上下文
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 @router.post("")
@@ -52,11 +45,11 @@ def register(username: str = Body(..., description="用户名"), password: str =
         db.add(new_user)
         db.commit()
         redis_client.delete(f"verification_code:{contact}")
-        return {"message": "注册成功", "username": new_user.username}
+        return {"status": "success", "username": new_user.username}
     except Exception as e:
         db.rollback()
         logger.error(f"注册失败: {e}")
-        raise HTTPException(status_code=500, detail=f"注册失败: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def send_sms(phone: str, code: str):

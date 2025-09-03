@@ -113,7 +113,7 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue'
-import axios from 'axios'
+import apiClient from '@/utils/axios';
 import { useSelectionStore } from '@/stores/selectionStore'
 
 const selectionStore = useSelectionStore()
@@ -168,7 +168,7 @@ const submitSupply = async () => {
       localPurchaseRatio: localPurchaseRatio.value
     }
 
-    const response = await axios.post('http://localhost:8000/quantitative/supply', payload)
+    const response = await apiClient.post('/quantitative/supply', payload)
 
     if (response.data.status === 'success') {
       alert('供应链数据提交成功!')

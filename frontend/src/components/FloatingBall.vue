@@ -2,23 +2,23 @@
   <div
     ref="floatingBall"
     class="floating-ball"
-    :class="{ 'active': isActive }"
+    :class="{ 'active': authStore.isDataMode }"
     @mousedown="startDrag"
     @mouseup="stopDrag"
   >
-    <div class="ball-text">{{ isActive ? '填报': '分析'  }}</div>
+    <div class="ball-text">{{ authStore.isDataMode ? '分析':'填报'  }}</div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import {useAuthStore} from "@/stores/authStore.js";
+const authStore = useAuthStore();
 
-const emit = defineEmits(['toggleMode']);
 const floatingBall = ref(null);
 const route = useRoute();
 const router = useRouter();
-const isActive = ref(false);
 const isDragging = ref(false);
 const posX = ref(0);
 const posY = ref(0);
@@ -48,21 +48,28 @@ const stopDrag = (e) => {
       Math.pow(e.clientX - startPos.value.x, 2) +
       Math.pow(e.clientY - startPos.value.y, 2)
     );
-    
+
     if (dragDistance < 5) {
       toggleMode();
     }
   }
-  
+
   isDragging.value = false;
   document.removeEventListener('mousemove', dragBall);
 };
 
-
+// 切换模式
+const toggleMode = () => {
+  const currentMode = authStore.isDataMode ? 'data' : 'analyze';
+  localStorage.setItem(`lastPath_${currentMode}`, route.path);
+  authStore.isDataMode = !authStore.isDataMode;
+  const targetPath = localStorage.getItem(`lastPath_${authStore.isDataMode ? 'data' : 'analyze'}`) ||
+      (authStore.isDataMode ? '/material' : '/env-quantitative');
+  router.push(targetPath);
+};
 
 const updatePosition = () => {
   if (!floatingBall.value) return;
-  
   const ball = floatingBall.value;
   const ballRect = ball.getBoundingClientRect();
   const windowWidth = window.innerWidth;
@@ -82,30 +89,10 @@ const updatePosition = () => {
   ball.style.top = `${posY.value}px`;
 };
 
-const toggleMode = () => {
-  // 记录当前模式的最后浏览页面
-  const currentMode = isActive.value ? 'data' : 'default';
-  localStorage.setItem(`lastPath_${currentMode}`, route.path);
-  
-  isActive.value = !isActive.value;
-  emit('toggleMode');
-  
-  if (isActive.value) {
-    // 切换到分析模式
-    const lastPath = localStorage.getItem('lastPath_data');
-    const path = lastPath || '/env-quantitative';
-    router.push(path);
-  } else {
-    // 切换到填报模式
-    const lastPath = localStorage.getItem('lastPath_default');
-    const path = lastPath || '/material';
-    router.push(path);
-  }
-};
-
 onMounted(() => {
-  posX.value = window.innerWidth - 120;
-  posY.value = window.innerHeight - 120;
+  updatePosition();
+  posX.value = window.innerWidth - 140;
+  posY.value = window.innerHeight - 130;
   updatePosition();
   document.addEventListener('mouseup', stopDrag);
 });
