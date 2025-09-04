@@ -3,14 +3,17 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import CommunityData, VolunteerData
+from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import CommunitySubmission
 
 router = APIRouter(prefix="/quantitative/community", tags=["定量数据-社区参与"])
 
 
 @router.get("")
-async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
+async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
+                     current_user: dict = Depends(get_current_user)):
     try:
+        require_access(factory, current_user)
         community_data = db.query(CommunityData).filter(CommunityData.factory == factory,
                                                         CommunityData.year == year).first()
         volunteer_data = db.query(VolunteerData).filter(VolunteerData.factory == factory,
@@ -26,8 +29,10 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
 
 
 @router.post("")
-async def submit_data(data: CommunitySubmission, db: Session = Depends(get_db)):
+async def submit_data(data: CommunitySubmission, db: Session = Depends(get_db),
+                      current_user: dict = Depends(get_current_user)):
     try:
+        require_factory(data.factory, current_user)
         # Community Data
         community_record = CommunityData(factory=data.factory, year=data.year, charity_donations=data.charityDonations,
                                          community_investment=data.communityInvestment)

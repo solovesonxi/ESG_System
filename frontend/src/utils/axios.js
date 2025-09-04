@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/authStore'
 // 创建axios实例
 const apiClient = axios.create({
   baseURL: 'http://localhost:8000',
-  timeout: 10000,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -28,8 +28,8 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
-        const authStore = useAuthStore();
         const originalRequest = error.config;
+        const authStore = useAuthStore();
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
             try {
@@ -39,9 +39,10 @@ apiClient.interceptors.response.use(
                     return apiClient(originalRequest);
                 }
             } catch (refreshError) {
-                authStore.clearAuth();
-                window.location.href = '/login';
+                console.error('刷新 Token 失败:', refreshError);
             }
+            authStore.clearAuth();
+            window.location.href = '/login';
         }
         return Promise.reject(error);
     }

@@ -2,6 +2,7 @@ import {defineStore} from 'pinia'
 import {computed, ref} from 'vue'
 import router from '@/router'
 import apiClient from '@/utils/axios';
+import {useSelectionStore} from "@/stores/selectionStore.js";
 
 export const useAuthStore = defineStore('auth', () => {
     const accessToken = ref(localStorage.getItem('access_token'))
@@ -13,8 +14,10 @@ export const useAuthStore = defineStore('auth', () => {
     const isFactory = computed(() => user.value?.account_type === 'factory')
     const factory = computed(() => user.value?.factory)
     const isDataMode = ref(false);
-    // 设置认证信息
-    const setAuth = (token, userData) => {
+    const selectionStore = useSelectionStore();
+
+    // 初始化认证信息
+    const initAuth = (token, userData) => {
         accessToken.value = token
         user.value = userData
         isDataMode.value=isFactory.value;
@@ -22,6 +25,16 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem('user', JSON.stringify(userData))
         localStorage.setItem('lastPath_data', '/material');
         localStorage.removeItem('lastPath_analyze');
+        selectionStore.initFactories();
+        selectionStore.initYears();
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    }
+
+    // 设置认证信息
+    const setAuth = (token, userData) => {
+        accessToken.value = token
+        user.value = userData
+        localStorage.setItem('access_token', token)
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
     }
 
@@ -44,17 +57,11 @@ export const useAuthStore = defineStore('auth', () => {
                 const currentTime = Date.now();
                 const remainingTime = expireTime - currentTime;
                 console.log('Token剩余时间（秒）:', remainingTime/1000);
-                if (remainingTime > 0) {
-                    if (remainingTime < 5 * 60 * 1000) {
-                        refreshToken();
-                    }
-                    return 'valid';
-                }
+                return remainingTime > 0 ? 'valid' : 'expire';
             } catch (error) {
                 console.error('解析 Token 失败:', error);
             }
         }
-        router.push('/login').then(r => console.log(r));
         return 'expire'
     }
 
@@ -70,7 +77,6 @@ export const useAuthStore = defineStore('auth', () => {
             }
         } catch (error) {
             console.error('Token刷新失败:', error)
-            clearAuth()
         }
         return null
     }
@@ -89,6 +95,7 @@ export const useAuthStore = defineStore('auth', () => {
         isFactory,
         isDataMode,
         factory,
+        initAuth,
         setAuth,
         clearAuth,
         checkTokenValid,

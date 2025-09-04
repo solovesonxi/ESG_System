@@ -7,7 +7,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from core.dependencies import engine
 from core.models import Base
-from routers import register, login
+from routers import register, login, verification, update
 from routers.analytical import env_quantitative, env_qualitative, social_qualitative_other, social_quantitative_labor, \
     social_qualitative_labor, social_quantitative_other, governance
 from routers.quantitative import material, energy, water, emission, waste, investment, employment, training, ohs, \
@@ -29,6 +29,8 @@ async def health_check():
 
 app.include_router(login.router)
 app.include_router(register.router)
+app.include_router(verification.router)
+app.include_router(update.router)
 
 app.include_router(material.router)
 app.include_router(energy.router)

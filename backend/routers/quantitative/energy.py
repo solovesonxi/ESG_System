@@ -3,14 +3,16 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import EnergyData
+from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import EnergySubmission
 
 router = APIRouter(prefix="/quantitative/energy", tags=["定量数据-能源"])
 
 
 @router.get("")
-async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
+async def fetch_data(factory: str, year: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
+        require_access(factory, current_user)
         data = db.query(EnergyData).filter(EnergyData.factory == factory, EnergyData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
@@ -25,8 +27,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
 
 
 @router.post("")
-async def submit_data(data: EnergySubmission, db: Session = Depends(get_db)):
+async def submit_data(data: EnergySubmission, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
+        require_factory(data.factory, current_user)
         db_record = EnergyData(factory=data.factory, year=data.year, purchased_power=data.purchasedPower,
                                renewable_power=data.renewableEnergyPower, gasoline=data.gasoline, diesel=data.diesel,
                                natural_gas=data.naturalGas, other_energy=data.otherEnergy,

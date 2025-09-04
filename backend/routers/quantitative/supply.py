@@ -3,14 +3,16 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import SupplyData
+from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import SupplySubmission
 
 router = APIRouter(prefix="/quantitative/satisfaction", tags=["定量数据-供应链"])
 
 
 @router.get("")
-async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
+async def fetch_data(factory: str, year: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
+        require_access(factory, current_user)
         data = db.query(SupplyData).filter(SupplyData.factory == factory, SupplyData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
@@ -22,8 +24,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
 
 
 @router.post("")
-async def submit_data(data: SupplySubmission, db: Session = Depends(get_db)):
+async def submit_data(data: SupplySubmission, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
+        require_factory(data.factory, current_user)
         db_record = SupplyData(factory=data.factory, year=data.year, east=data.east, south=data.south, other=data.other,
                             total_suppliers=data.totalSuppliers, env_screened=data.envScreened,
                             soc_screened=data.socScreened, local_amount=data.localAmount, total_amount=data.totalAmount,

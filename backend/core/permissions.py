@@ -1,19 +1,13 @@
 from datetime import timedelta, datetime, timezone
-from typing import Optional
 
 import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
 
-from core.dependencies import get_db
+from core.dependencies import get_db, SECRET_KEY, ALGORITHM, oauth2_scheme
 from core.models import User
 
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login/")
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="无法认证访问令牌",
@@ -26,9 +20,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
             expire_time = datetime.fromtimestamp(expire_timestamp, timezone.utc)
             if expire_time - datetime.now(timezone.utc) < timedelta(minutes=0):
                 raise expired_exception
-        username: str = payload.get("sub")
-        account_type: str = payload.get("account_type")
-        factory: Optional[str] = payload.get("factory")
+        username: str = payload.get("username")
         if username is None:
             raise credentials_exception
     except jwt.ExpiredSignatureError:
@@ -38,22 +30,17 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     user = db.query(User).filter(User.username == username).first()
     if user is None:
         raise credentials_exception
-    return {"user": user, "account_type": account_type, "factory": factory}
+    return {"user": user, "account_type": payload.get("account_type"), "factory": payload.get("factory")}
 
 
-def require_headquarters(current_user: dict = Depends(get_current_user)):
-    if current_user["account_type"] != "headquarters":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="需要总部账号权限")
-    return current_user
+def require_access(factory: str, current_user: dict = Depends(get_current_user)):
+    if current_user["account_type"] == "headquarters" or current_user["user"].factory == factory:
+        return
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权访问其他工厂数据")
 
 
-def require_factory_access(factory: str, current_user: dict = Depends(get_current_user)):
+def require_factory(factory: str, current_user: dict = Depends(get_current_user)):
     if current_user["account_type"] == "headquarters":
-        return current_user
-    if current_user["account_type"] == "factory":
-        user_factory = current_user["user"].factory
-        if user_factory != factory and factory != "headquarters":
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权访问其他工厂数据")
-        return current_user
-
-    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无效的账号类型")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="总部账号无权提交数据")
+    elif current_user["factory"] != factory:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权提交其他工厂数据")

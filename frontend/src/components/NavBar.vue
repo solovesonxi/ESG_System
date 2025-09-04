@@ -1,8 +1,6 @@
 <template>
   <div class="navbar-wrapper">
-    <nav class="navbar" :style="navbarStyle" @mouseenter="handleNavbarEnter" @mouseleave="handleNavbarLeave">
-      <div class="nav-glow"></div>
-
+    <nav class="navbar" @mouseenter="handleNavbarEnter" @mouseleave="handleNavbarLeave">
       <ul class="nav-list">
         <li v-for="route in menuItems" :key="route.name">
           <router-link
@@ -14,23 +12,24 @@
           </router-link>
         </li>
       </ul>
-
-      <div class="nav-particles" id="navParticles"></div>
     </nav>
 
     <transition name="dropdown">
-      <div class="logout-dropdown" v-if="showLogout" @mouseenter="handleDropdownEnter" @mouseleave="handleDropdownLeave">
+      <div class="logout-dropdown" v-if="showLogout" @mouseenter="handleDropdownEnter"
+           @mouseleave="handleDropdownLeave">
         <div class="user-avatar">
           <svg viewBox="0 0 100 100">
-            <circle cx="50" cy="40" r="25" fill="#fff" />
-            <circle cx="50" cy="100" r="40" fill="#fff" />
+            <circle cx="50" cy="40" r="25" fill="#fff"/>
+            <circle cx="50" cy="100" r="40" fill="#fff"/>
           </svg>
         </div>
         <span class="welcome-text">你好, {{ authStore.user?.username }}</span>
         <button class="logout-btn" @click="handleLogout">
           <span>登出</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M17 7L21 12M21 12L17 17M21 12H9M13 16V17C13 18.6569 11.6569 20 10 20H7C5.34315 20 4 18.6569 4 17V7C4 5.34315 5.34315 4 7 4H10C11.6569 4 13 5.34315 13 7V8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path
+                d="M17 7L21 12M21 12L17 17M21 12H9M13 16V17C13 18.6569 11.6569 20 10 20H7C5.34315 20 4 18.6569 4 17V7C4 5.34315 5.34315 4 7 4H10C11.6569 4 13 5.34315 13 7V8"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
       </div>
@@ -40,7 +39,7 @@
 
 <script setup>
 import {useRoute} from 'vue-router'
-import {computed, onMounted, ref, watch, nextTick} from 'vue';
+import {computed, ref, watch} from 'vue';
 import {useAuthStore} from '@/stores/authStore';
 
 const authStore = useAuthStore();
@@ -50,7 +49,6 @@ let hideTimeout = null;
 const handleNavbarEnter = () => {
   clearTimeout(hideTimeout);
   showLogout.value = true;
-  startParticles();
 };
 
 const handleNavbarLeave = () => {
@@ -59,7 +57,6 @@ const handleNavbarLeave = () => {
       showLogout.value = false;
     }
   }, 300);
-  stopParticles();
 };
 
 const handleDropdownEnter = () => {
@@ -112,67 +109,12 @@ const analyzeModeItems = [
   {name: 'profile', path: '/profile', label: '个人中心'}
 ]
 
-const navbarStyle = computed(() => {
-  return {
-    '--primary-gradient': authStore.isDataMode
-        ? 'linear-gradient(135deg, #4776E6, #8E54E9, #4776E6)'
-        : 'linear-gradient(135deg, #2c3e50, #90ee90, #2c3e50)',
-    '--glow-color': authStore.isDataMode ? 'rgba(71, 118, 230, 0.5)' : 'rgba(144, 238, 144, 0.5)'
-  }
-})
-
 // 监听路由变化并更新 localStorage
 watch(() => route.path, (newPath) => {
-  if (authStore.checkTokenValid() === 'valid') {
-    const currentMode = authStore.isDataMode ? 'data' : 'analyze';
-    localStorage.setItem(`lastPath_${currentMode}`, newPath);
-    console.log("路由变化，更新lastPath_" + currentMode + "由" + route.path + "变为" + newPath)
-  }
-});
-
-// 粒子动画效果
-let particlesInterval = null;
-
-const startParticles = () => {
-  const particlesContainer = document.getElementById('navParticles');
-  if (!particlesContainer || particlesInterval) return;
-
-  particlesInterval = setInterval(() => {
-    const particle = document.createElement('div');
-    particle.className = 'nav-particle';
-
-    // 随机位置和大小
-    const size = Math.random() * 4 + 1;
-    const posX = Math.random() * 100;
-
-    particle.style.width = `${size}px`;
-    particle.style.height = `${size}px`;
-    particle.style.left = `${posX}%`;
-    particle.style.background = authStore.isDataMode ? '#4776E6' : '#90ee90';
-    particle.style.opacity = Math.random() * 0.6 + 0.2;
-
-    particlesContainer.appendChild(particle);
-
-    // 动画结束后移除元素
-    setTimeout(() => {
-      if (particle.parentNode) {
-        particle.parentNode.removeChild(particle);
-      }
-    }, 2000);
-  }, 100);
-};
-
-const stopParticles = () => {
-  if (particlesInterval) {
-    clearInterval(particlesInterval);
-    particlesInterval = null;
-  }
-};
-
-onMounted(() => {
-  nextTick(() => {
-    // 初始化代码
-  });
+  authStore.checkTokenValid()
+  const currentMode = authStore.isDataMode ? 'data' : 'analyze';
+  localStorage.setItem(`lastPath_${currentMode}`, newPath);
+  console.log("路由变化，更新lastPath_" + currentMode + "由" + route.path + "变为" + newPath)
 });
 </script>
 
@@ -198,25 +140,17 @@ onMounted(() => {
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+
 @keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.nav-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  filter: blur(10px);
-  animation: pulseGlow 2s ease-in-out infinite alternate;
-}
-
-@keyframes pulseGlow {
-  from { opacity: 0.4; }
-  to { opacity: 1; }
+  0% {
+    background-position: 0 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
 }
 
 .nav-list {
@@ -264,8 +198,27 @@ onMounted(() => {
 }
 
 .link-text {
-  position: relative;
-  z-index: 2;
+  color: white;
+  text-shadow: -1px -1px 2px #e512e5,
+  1px -1px 4px #a61a58,
+  -1px 1px 6px #591bb7,
+  1px 1px 8px #04108f;
+  transition: all 0.3s ease;
+}
+
+.nav-list a.router-link-active .link-text {
+  color: #8a2be2;
+  text-shadow: 0 0 10px #8a2be2, 0 0 20px #8a2be2, 0 0 30px #8a2be2;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    text-shadow: 0 0 10px #8a2be2, 0 0 20px #8a2be2, 0 0 30px #8a2be2;
+  }
+  50% {
+    text-shadow: 0 0 15px #8a2be2, 0 0 30px #8a2be2, 0 0 45px #8a2be2;
+  }
 }
 
 .link-hover-effect {
@@ -286,11 +239,20 @@ onMounted(() => {
   color: #fff;
   background: rgba(255, 255, 255, 0.15);
   border-bottom: 2px solid #fff;
-  box-shadow:
-      0 0 15px rgba(255, 255, 255, 0.5),
-      inset 0 0 10px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5),
+  inset 0 0 10px rgba(255, 255, 255, 0.2);
   font-weight: 600;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  animation: backgroundBreathe 2s infinite;
+}
+
+@keyframes backgroundBreathe {
+  0%, 100% {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  50% {
+    background: rgba(255, 255, 255, 0.25);
+  }
 }
 
 .nav-list a.router-link-active::before {
@@ -308,8 +270,14 @@ onMounted(() => {
 }
 
 @keyframes activePulse {
-  0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
-  50% { opacity: 1; transform: translateX(-50%) scale(1.5); }
+  0%, 100% {
+    opacity: 0.5;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.5);
+  }
 }
 
 .nav-list a.router-link-active::after {
@@ -324,38 +292,14 @@ onMounted(() => {
 }
 
 @keyframes shimmer {
-  0% { background-position: -100% 0; }
-  100% { background-position: 200% 0; }
-}
-
-/* 粒子效果 */
-.nav-particles {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.nav-particle {
-  position: absolute;
-  bottom: 0;
-  border-radius: 50%;
-  animation: riseUp 2s ease-in forwards;
-}
-
-@keyframes riseUp {
   0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 1;
+    background-position: -100% 0;
   }
   100% {
-    transform: translateY(-70px) rotate(360deg);
-    opacity: 0;
+    background-position: 200% 0;
   }
 }
+
 
 /* 登出下拉菜单 */
 .logout-dropdown {
@@ -367,9 +311,8 @@ onMounted(() => {
   -webkit-backdrop-filter: blur(10px);
   padding: 1rem 1.2rem;
   border-radius: 12px;
-  box-shadow:
-      0 10px 30px rgba(0, 0, 0, 0.2),
-      0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2),
+  0 0 0 1px rgba(255, 255, 255, 0.1);
   z-index: 1001;
   display: flex;
   flex-direction: column;

@@ -3,17 +3,17 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import MaterialData
-from core.permissions import get_current_user
+from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import MaterialSubmission
 
 router = APIRouter(prefix="/quantitative/material", tags=["定量数据-物料"])
 
 
 @router.get("")
-async def fetch_material_data(factory: str, year: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def fetch_material_data(factory: str, year: int, db: Session = Depends(get_db),
+                              current_user: dict = Depends(get_current_user)):
     try:
-        if current_user["account_type"] == "factory" and current_user["factory"] != factory:
-            raise HTTPException(status_code=403, detail="无权访问其他工厂数据")
+        require_access(factory, current_user)
         data = db.query(MaterialData).filter(MaterialData.factory == factory, MaterialData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
@@ -33,23 +33,23 @@ async def fetch_material_data(factory: str, year: int, db: Session = Depends(get
 
 
 @router.post("")
-async def submit_material_data(data: MaterialSubmission, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def submit_material_data(data: MaterialSubmission, db: Session = Depends(get_db),
+                               current_user: dict = Depends(get_current_user)):
     try:
-        if current_user["account_type"] == "headquarters":
-            raise HTTPException(status_code=403, detail="总部账号无权提交数据")
-        if current_user["account_type"] == "factory" and current_user["factory"] != data.factory:
-            raise HTTPException(status_code=403, detail="无权提交其他工厂数据")
+        require_factory(data.factory, current_user)
         db_record = MaterialData(factory=data.factory, year=data.year, renewable_input=data.renewableInput,
-            non_renewable_input=data.nonRenewableInput, renewable_output=data.renewableOutput,
-            non_renewable_output=data.nonRenewableOutput, material_consumption=data.materialConsumption,
-            wood_fiber=data.woodFiber, aluminum=data.aluminum, total_revenue=data.total_revenue,
-            packaging_material=data.packagingMaterial, paper_consumption=data.paper,
-            packaging_intensity=data.packagingIntensity, paper_intensity=data.paperIntensity,
-            total_input=data.totalInput, total_output=data.totalOutput,
-            renewable_input_ratio=data.renewableInputRatio, renewable_output_ratio=data.renewableOutputRatio)
+                                 non_renewable_input=data.nonRenewableInput, renewable_output=data.renewableOutput,
+                                 non_renewable_output=data.nonRenewableOutput,
+                                 material_consumption=data.materialConsumption, wood_fiber=data.woodFiber,
+                                 aluminum=data.aluminum, total_revenue=data.total_revenue,
+                                 packaging_material=data.packagingMaterial, paper_consumption=data.paper,
+                                 packaging_intensity=data.packagingIntensity, paper_intensity=data.paperIntensity,
+                                 total_input=data.totalInput, total_output=data.totalOutput,
+                                 renewable_input_ratio=data.renewableInputRatio,
+                                 renewable_output_ratio=data.renewableOutputRatio)
         merged_record = db.merge(db_record)
         db.commit()
-        return {"status": "success",  "factory": merged_record.factory, "year": merged_record.year}
+        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))

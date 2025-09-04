@@ -192,8 +192,6 @@ const paperIntensity = computed(() => {
 watch([factory, year], () => {fetchData()})
 
 onMounted(() => {
-  selectionStore.initFactories();
-  selectionStore.initYears();
   document.addEventListener("click", selectionStore.handleClickOutside);
 });
 

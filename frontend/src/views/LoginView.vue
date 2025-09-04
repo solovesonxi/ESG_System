@@ -256,8 +256,8 @@ export default {
       }
       try {
         const response = await apiClient.post('/login', payload);
-        const {token, token_type, user} = response.data;
-        useAuthStore().setAuth(token, user);
+        const {token, user} = response.data;
+        useAuthStore().initAuth(token, user);
         await router.push('/material');
       } catch (error) {
         this.loginError = '用户名或密码错误';
@@ -348,7 +348,7 @@ export default {
 
       try {
         // 调用后端接口发送验证码
-        const response = await apiClient.post('/register/send-verification-code', {
+        const response = await apiClient.post('/verification', {
           phone: this.registerForm.phone,
           email: this.registerForm.email
         });

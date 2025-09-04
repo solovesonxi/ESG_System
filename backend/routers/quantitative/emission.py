@@ -3,30 +3,35 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import EmissionData
+from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import EmissionSubmission
 
 router = APIRouter(prefix="/quantitative/emission", tags=["定量数据-排放"])
 
 
 @router.get("")
-async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
+async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
+                     current_user: dict = Depends(get_current_user)):
     try:
+        require_access(factory, current_user)
         data = db.query(EmissionData).filter(EmissionData.factory == factory, EmissionData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
         data_dict = {"category_one": data.category_one, "category_two": data.category_two,
-            "category_three": data.category_three, "category_four": data.category_four,
-            "category_five": data.category_five, "category_six": data.category_six, "total_revenue": data.total_revenue,
-            "voc": data.voc, "nmhc": data.nmhc, "benzene": data.benzene, "particulate": data.particulate,
-            "nox_sox_other": data.nox_sox_other, }
+                     "category_three": data.category_three, "category_four": data.category_four,
+                     "category_five": data.category_five, "category_six": data.category_six,
+                     "total_revenue": data.total_revenue, "voc": data.voc, "nmhc": data.nmhc, "benzene": data.benzene,
+                     "particulate": data.particulate, "nox_sox_other": data.nox_sox_other, }
         return {"status": "success", "data": data_dict}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("")
-async def submit_data(data: EmissionSubmission, db: Session = Depends(get_db)):
+async def submit_data(data: EmissionSubmission, db: Session = Depends(get_db),
+                      current_user: dict = Depends(get_current_user)):
     try:
+        require_factory(data.factory, current_user)
         db_record = EmissionData(factory=data.factory, year=data.year, category_one=data.categoryOne,
                                  category_two=data.categoryTwo, category_three=data.categoryThree,
                                  category_four=data.categoryFour, category_five=data.categoryFive,

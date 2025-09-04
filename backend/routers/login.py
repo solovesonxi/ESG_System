@@ -3,23 +3,12 @@ from typing import Optional
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Body
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from core.dependencies import get_db
+from core.dependencies import get_db, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, pwd_context
 from core.models import User
 
 router = APIRouter(prefix="", tags=["登录"])
-
-# 密码哈希上下文
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-
-def verify_password(plain_password: str, hashed_password: str):
-    return pwd_context.verify(plain_password, hashed_password)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -27,7 +16,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=1)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -37,20 +26,30 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 def login(username: str = Body(..., description="用户名"), password: str = Body(..., description="密码"),
           db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
-    if not user or not verify_password(password, str(user.hashed_password)):
+    if not user or not pwd_context.verify(password, str(user.hashed_password)):
         raise HTTPException(status_code=400, detail="用户名或密码错误")
     # 在token中包含权限信息
-    token_data = {"sub": user.username, "account_type": user.account_type, "factory": user.factory}
+    token_data = {"username": user.username, "account_type": user.account_type, "factory": user.factory}
     access_token = create_access_token(data=token_data, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    return {"token": access_token, "token_type": "bearer",
+    return {"token": access_token,
             "user": {"username": user.username, "factory": user.factory, "account_type": user.account_type,
                      "phone": user.phone, "email": user.email}}
 
 
 @router.post("/refresh")
-async def refresh_token(input_data: dict = Body(...)):
+async def refresh_token(input_data: dict = Body(...), db: Session = Depends(get_db)):
     try:
-        payload = jwt.decode(input_data.get("access_token", ""), SECRET_KEY, algorithms=[ALGORITHM])
-        return {"new_token": create_access_token(data=payload)}
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Refresh token 已过期")
+        payload = jwt.decode(input_data.get("access_token", ""), SECRET_KEY, algorithms=[ALGORITHM],
+            options={"verify_exp": False})
+        username = payload.get("username")
+        user = db.query(User).filter(User.username == username).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="用户无效或已被禁用")
+        token_exp = datetime.fromtimestamp(payload["exp"], timezone.utc)
+        if datetime.now(timezone.utc) - token_exp > timedelta(minutes=5):
+            raise HTTPException(status_code=401, detail="Token 过期时间过长，请重新登录")
+        new_payload = {"username": user.username, "account_type": user.account_type}
+        new_token = create_access_token(new_payload)
+        return {"new_token": new_token}
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="刷新令牌无效")

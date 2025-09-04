@@ -3,14 +3,17 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import TrainingData
+from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import TrainingSubmission
 
 router = APIRouter(prefix="/quantitative/training", tags=["定量数据-教育与培训"])
 
 
 @router.get("")
-async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
+async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
+                     current_user: dict = Depends(get_current_user)):
     try:
+        require_access(factory, current_user)
         data = db.query(TrainingData).filter(TrainingData.factory == factory, TrainingData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
@@ -22,15 +25,17 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db)):
 
 
 @router.post("")
-async def submit_data(data: TrainingSubmission, db: Session = Depends(get_db)):
+async def submit_data(data: TrainingSubmission, db: Session = Depends(get_db),
+                      current_user: dict = Depends(get_current_user)):
     try:
+        require_factory(data.factory, current_user)
         db_record = TrainingData(factory=data.factory, year=data.year, total=data.total, trained=data.trained,
-                              male=data.male, female=data.female, mgmt=data.mgmt, middle=data.middle,
-                              general=data.general, hours_total=data.hoursTotal, hours_male=data.hoursMale,
-                              hours_female=data.hoursFemale, hours_mgmt=data.hoursMgmt, hours_middle=data.hoursMiddle,
-                              hours_general=data.hoursGeneral, coverage_rate=data.coverageRate, male_rate=data.maleRate,
-                              female_rate=data.femaleRate, mgmt_rate=data.mgmtRate, middle_rate=data.middleRate,
-                              general_rate=data.generalRate)
+                                 male=data.male, female=data.female, mgmt=data.mgmt, middle=data.middle,
+                                 general=data.general, hours_total=data.hoursTotal, hours_male=data.hoursMale,
+                                 hours_female=data.hoursFemale, hours_mgmt=data.hoursMgmt,
+                                 hours_middle=data.hoursMiddle, hours_general=data.hoursGeneral,
+                                 coverage_rate=data.coverageRate, male_rate=data.maleRate, female_rate=data.femaleRate,
+                                 mgmt_rate=data.mgmtRate, middle_rate=data.middleRate, general_rate=data.generalRate)
         merged_record = db.merge(db_record)
         db.commit()
         return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}

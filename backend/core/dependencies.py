@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from urllib.parse import quote_plus
 from pathlib import Path
 
-# PostgreSQL 配置
+# PostgresSQL 配置
 DB_USER = "postgres"
 DB_PASSWORD = "000000"
 DB_HOST = "localhost"
@@ -57,7 +57,16 @@ def get_redis():
     finally:
         redis_client.close()
 
+# JWT 和密码哈希配置
+SECRET_KEY = "your-secret-key"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 1
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login/")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# 配置日志
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", )
+logger = logging.getLogger(__name__)
 
 config_path = Path(__file__).parent.parent / "static" / "indicators.json"
 with open(config_path, "r", encoding="utf-8") as f:
