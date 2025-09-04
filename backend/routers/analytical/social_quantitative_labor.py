@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from core.dependencies import get_db
 from core.models import EmploymentData, TrainingData, OHSData, SatisfactionData, LaborReason
 from core.permissions import require_access, get_current_user, require_factory
-from utils import _calc_comparison
+from core.utils import _calc_comparison
 
 router = APIRouter(prefix="/analytical/social_quantitative_labor", tags=["分析数据-社会定量-劳工"])
 

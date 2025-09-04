@@ -4,6 +4,15 @@ from fastapi import HTTPException
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
+def _calc_comparison(current_value, last_value):
+    try:
+        if last_value is None or last_value == 0 or current_value is None:
+            return None
+        value = ((current_value - last_value) / last_value) * 100
+        return round(value, 2)
+    except Exception:
+        return None
+
 
 async def fetch_data(db: Session, model: Type[Any], factory: str, year: int, current_user: dict, field_mapping: dict):
     try:
@@ -35,3 +44,4 @@ async def submit_data(db: Session, model: Type[Any], data: Any, current_user: di
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
