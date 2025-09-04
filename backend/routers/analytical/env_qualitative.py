@@ -4,13 +4,16 @@ from sqlalchemy.orm import Session
 from core.dependencies import get_db
 from core.dependencies import indicators
 from core.models import EnvQualData
+from core.permissions import require_access, require_factory, get_current_user
 from core.schemas import EnvQualDataRequest
 
-router = APIRouter(prefix="/analytical/env_qualitative", tags=["分析模式-环境定性"])
+router = APIRouter(prefix="/analytical/env_qualitative", tags=["分析数据-环境定性"])
 
 
 @router.get("")
-async def get_data(factory: str, year: int, db: Session = Depends(get_db)):
+async def get_data(factory: str, year: int, db: Session = Depends(get_db),
+                   current_user: dict = Depends(get_current_user)):
+    require_access(factory, current_user)
     current_data = db.query(EnvQualData).filter_by(factory=factory, year=year).first()
     last_year_data = db.query(EnvQualData).filter_by(factory=factory, year=year - 1).first()
     response_data = {}
@@ -25,8 +28,10 @@ async def get_data(factory: str, year: int, db: Session = Depends(get_db)):
 
 
 @router.post("")
-async def save_data(request: EnvQualDataRequest = Body(...), db: Session = Depends(get_db)):
+async def save_data(request: EnvQualDataRequest = Body(...), db: Session = Depends(get_db),
+                    current_user: dict = Depends(get_current_user)):
     try:
+        require_factory(request.factory, current_user)
         existing_data = db.query(EnvQualData).filter_by(factory=request.factory, year=request.year).first()
         comparisons = {}
         reasons = {}

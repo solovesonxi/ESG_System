@@ -18,7 +18,11 @@ sys.path.append(str(Path(__file__).parent.parent))
 # 创建数据库表
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(
+    title="ESG System API",
+    description="企业 ESG 数据管理系统接口文档",
+    version="1.0.0",
+)
 # 添加CORS中间件
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"],
                    allow_headers=["*"], )

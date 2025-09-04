@@ -5,14 +5,17 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import EmploymentData, TrainingData, OHSData, SatisfactionData, LaborReason
+from core.permissions import require_access, get_current_user, require_factory
 from utils import _calc_comparison
 
-router = APIRouter(prefix="/analytical/social_quantitative_labor", tags=["分析模式-社会定量-劳工"])
+router = APIRouter(prefix="/analytical/social_quantitative_labor", tags=["分析数据-社会定量-劳工"])
 
 
 @router.get("")
-async def get_data(factory: str = Query(...), year: int = Query(...), db: Session = Depends(get_db)):
+async def get_data(factory: str = Query(...), year: int = Query(...), db: Session = Depends(get_db),
+                   current_user: dict = Depends(get_current_user)):
     try:
+        require_access(factory, current_user)
         # 当前年与去年数据
         emp_cur = db.query(EmploymentData).filter(EmploymentData.factory == factory,
                                                   EmploymentData.year == year).first()
@@ -242,8 +245,9 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
 
 @router.post("")
 async def save_reasons(factory: str = Body(...), year: int = Body(...), reasons: Dict[str, str] = Body(...),
-                             db: Session = Depends(get_db)):
+                       db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
+        require_factory(factory, current_user)
         for indicator, reason in reasons.items():
             existing = db.query(LaborReason).filter(LaborReason.factory == factory, LaborReason.year == year,
                                                     LaborReason.indicator == indicator).first()

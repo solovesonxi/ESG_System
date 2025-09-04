@@ -5,14 +5,17 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import OtherReason, SupplyData, ProductResponsibilityData, IPRData, CommunityData, VolunteerData
+from core.permissions import require_access, get_current_user, require_factory
 from utils import _calc_comparison
 
-router = APIRouter(prefix="/analytical/social_quantitative_other", tags=["分析模式-社会定量-其他"])
+router = APIRouter(prefix="/analytical/social_quantitative_other", tags=["分析数据-社会定量-其他"])
 
 
 @router.get("")
-async def get_data(factory: str = Query(...), year: int = Query(...), db: Session = Depends(get_db)):
+async def get_data(factory: str = Query(...), year: int = Query(...), db: Session = Depends(get_db),
+                   current_user: dict = Depends(get_current_user)):
     try:
+        require_access(factory, current_user)
         supply_cur = db.query(SupplyData).filter(SupplyData.factory == factory, SupplyData.year == year).first()
         supply_prev = db.query(SupplyData).filter(SupplyData.factory == factory, SupplyData.year == year - 1).first()
 
@@ -87,8 +90,9 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
 
 @router.post("")
 async def save_reasons(factory: str = Body(...), year: int = Body(...), reasons: Dict[str, str] = Body(...),
-                             db: Session = Depends(get_db)):
+                       db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
+        require_factory(factory, current_user)
         for indicator, reason in reasons.items():
             existing = db.query(OtherReason).filter(OtherReason.factory == factory, OtherReason.year == year,
                                                     OtherReason.indicator == indicator).first()

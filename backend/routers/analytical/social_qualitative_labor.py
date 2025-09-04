@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import LaborQualitative
+from core.permissions import require_access, get_current_user, require_factory
 
-router = APIRouter(prefix="/analytical/social_qualitative_labor", tags=["分析模式-社会定性-劳工"])
+router = APIRouter(prefix="/analytical/social_qualitative_labor", tags=["分析数据-社会定性-劳工"])
 
 # 定性：劳动
 QUAL_INDICATORS = {"雇佣": ["员工聘用及解雇", "行业员工流失率", "光大同创的员工流失率与行业流失率的对比表", "薪酬管理"],
@@ -24,8 +25,10 @@ QUAL_INDICATORS = {"雇佣": ["员工聘用及解雇", "行业员工流失率", 
 
 
 @router.get("")
-async def get_labor_qualitative(factory: str = Query(...), year: int = Query(...), db: Session = Depends(get_db)):
+async def get_labor_qualitative(factory: str = Query(...), year: int = Query(...), db: Session = Depends(get_db),
+                                current_user: dict = Depends(get_current_user)):
     try:
+        require_access(factory, current_user)
         rows = db.query(LaborQualitative).filter(LaborQualitative.factory == factory,
                                                  LaborQualitative.year == year).all()
         existing = {r.indicator: r for r in rows}
@@ -46,8 +49,10 @@ async def get_labor_qualitative(factory: str = Query(...), year: int = Query(...
 
 @router.post("")
 async def save_labor_qualitative(factory: str = Body(...), year: int = Body(...),
-                                 data: Dict[str, Dict[str, Dict[str, str]]] = Body(...), db: Session = Depends(get_db)):
+                                 data: Dict[str, Dict[str, Dict[str, str]]] = Body(...), db: Session = Depends(get_db),
+                                 current_user: dict = Depends(get_current_user)):
     try:
+        require_factory(factory, current_user)
         # data: {类别: { 指标: {currentText, lastText, comparisonText, reason} }}
         for category, indicators in data.items():
             for indicator, payload in indicators.items():

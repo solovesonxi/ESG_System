@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db, indicators
 from core.models import MaterialData, EnergyData, WaterData, EmissionData, WasteData, InvestmentData, EnvQuantData
+from core.permissions import get_current_user, require_access, require_factory
 
-router = APIRouter(prefix="/analytical/env_quantitative", tags=["分析模式-环境定量"])
+router = APIRouter(prefix="/analytical/env_quantitative", tags=["分析数据-环境定量"])
 
 
 def fetch_and_process_data(db, model, factory, year, fields):
@@ -29,21 +30,19 @@ def fetch_and_process_data(db, model, factory, year, fields):
 
 @router.get("")
 async def get_data(factory: str = Query(..., description="工厂名称"), year: int = Query(..., description="统计年份"),
-                   db: Session = Depends(get_db)) -> Dict[str, Any]:
+                   db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)) -> Dict[str, Any]:
     try:
+        require_access(factory, current_user)
         result = {}
         envquant_indicators = indicators["env_quant"]
-        result["material"] = fetch_and_process_data(db, MaterialData, factory, year,
-                                                          envquant_indicators["material"])
+        result["material"] = fetch_and_process_data(db, MaterialData, factory, year, envquant_indicators["material"])
         result["energy"] = fetch_and_process_data(db, EnergyData, factory, year, envquant_indicators["energy"])
         result["water"] = fetch_and_process_data(db, WaterData, factory, year, envquant_indicators["water"])
-        result["emission"] = fetch_and_process_data(db, EmissionData, factory, year,
-                                                          envquant_indicators["emission"])
+        result["emission"] = fetch_and_process_data(db, EmissionData, factory, year, envquant_indicators["emission"])
         result["waste"] = fetch_and_process_data(db, WasteData, factory, year, envquant_indicators["waste"])
         result["investment"] = fetch_and_process_data(db, InvestmentData, factory, year,
-                                                            envquant_indicators["investment"])
-        result["envQuant"] = fetch_and_process_data(db, EnvQuantData, factory, year,
-                                                          envquant_indicators["envQuant"])
+                                                      envquant_indicators["investment"])
+        result["envQuant"] = fetch_and_process_data(db, EnvQuantData, factory, year, envquant_indicators["envQuant"])
         if not any(result.values()):
             raise HTTPException(status_code=404, detail="未找到环境定量数据")
         return result
@@ -52,13 +51,14 @@ async def get_data(factory: str = Query(..., description="工厂名称"), year: 
 
 
 @router.post("")
-async def save_reasons(factory: str = Body(..., description="工厂名称"),
-                                year: int = Body(..., description="统计年份"), materialReasons: List[str] = Body(...),
-                                energyReasons: List[str] = Body(...), waterReasons: List[str] = Body(...),
-                                emissionReasons: List[str] = Body(...), wasteReasons: List[str] = Body(...),
-                                investmentReasons: List[str] = Body(...), envQuantReasons: List[str] = Body(...),
-                                db: Session = Depends(get_db)):
+async def save_reasons(factory: str = Body(..., description="工厂名称"), year: int = Body(..., description="统计年份"),
+                       materialReasons: List[str] = Body(...), energyReasons: List[str] = Body(...),
+                       waterReasons: List[str] = Body(...), emissionReasons: List[str] = Body(...),
+                       wasteReasons: List[str] = Body(...), investmentReasons: List[str] = Body(...),
+                       envQuantReasons: List[str] = Body(...), db: Session = Depends(get_db),
+                       current_user: dict = Depends(get_current_user)):
     try:
+        require_factory(factory, current_user)
         reason_mapping = {"materialReasons": (MaterialData, materialReasons),
                           "energyReasons": (EnergyData, energyReasons), "waterReasons": (WaterData, waterReasons),
                           "emissionReasons": (EmissionData, emissionReasons), "wasteReasons": (WasteData, wasteReasons),

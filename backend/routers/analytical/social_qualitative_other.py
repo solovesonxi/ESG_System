@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import OtherQualitative
+from core.permissions import require_access, get_current_user, require_factory
 
-router = APIRouter(prefix="/analytical/social_qualitative_other", tags=["分析模式-社会定性-其他"])
+router = APIRouter(prefix="/analytical/social_qualitative_other", tags=["分析数据-社会定性-其他"])
 
 # 定性：其他
 OTHER_QUAL_INDICATORS = {
@@ -21,8 +22,10 @@ OTHER_QUAL_INDICATORS = {
 
 
 @router.get("")
-async def get_other_qualitative(factory: str = Query(...), year: int = Query(...), db: Session = Depends(get_db)):
+async def get_other_qualitative(factory: str = Query(...), year: int = Query(...), db: Session = Depends(get_db),
+                                current_user: dict = Depends(get_current_user)):
     try:
+        require_access(factory, current_user)
         rows = db.query(OtherQualitative).filter(OtherQualitative.factory == factory,
                                                  OtherQualitative.year == year).all()
         existing = {r.indicator: r for r in rows}
@@ -41,8 +44,10 @@ async def get_other_qualitative(factory: str = Query(...), year: int = Query(...
 
 @router.post("")
 async def save_other_qualitative(factory: str = Body(...), year: int = Body(...),
-                                 data: Dict[str, Dict[str, Dict[str, str]]] = Body(...), db: Session = Depends(get_db)):
+                                 data: Dict[str, Dict[str, Dict[str, str]]] = Body(...), db: Session = Depends(get_db),
+                                 current_user: dict = Depends(get_current_user)):
     try:
+        require_factory(factory, current_user)
         for category, indicators in data.items():
             for indicator, payload in indicators.items():
                 r = db.query(OtherQualitative).filter(OtherQualitative.factory == factory,
