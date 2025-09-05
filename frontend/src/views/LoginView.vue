@@ -189,7 +189,9 @@
         <a href="#" @click="showRegister = !showRegister">
           {{ showRegister ? '已有账号？立即登录' : '没有账号？立即注册' }}
         </a>
-        <a href="#" @click="showRegister ? (showRegister=false) : forgetPassword()">{{ showRegister ? "了解更多关于 ESG" : "忘记密码" }}</a>
+        <a href="#" @click="showRegister ? (showRegister=false) : forgetPassword()">{{
+            showRegister ? "了解更多关于 ESG" : "忘记密码"
+          }}</a>
       </div>
     </div>
 
@@ -258,7 +260,7 @@ export default {
         const response = await apiClient.post('/login', payload);
         const {token, user} = response.data;
         useAuthStore().initAuth(token, user);
-        await router.push('/material');
+        await router.push(user["account_type"] === 'factory' ? '/material' : '/env-quantitative');
       } catch (error) {
         this.loginError = '用户名或密码错误';
         console.error('登录失败:', error);

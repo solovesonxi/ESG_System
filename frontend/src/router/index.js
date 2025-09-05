@@ -64,9 +64,9 @@ router.beforeEach((to, from, next) => {
         return next('/env-quantitative');
     }
     if (authStore.isFactory) {
-        const lastPath = localStorage.getItem(`lastPath_${authStore.isDataMode ? 'data' : 'default'}`);
-        if (!lastPath && to.path === '/') {
-            return next('/material');
+        const lastPath = localStorage.getItem(`lastPath_${authStore.isDataMode ? 'data' : 'analyze'}`);
+        if (!lastPath && to.path !== '/material' && to.path !== '/env-quantitative') {
+            return next(authStore.isDataMode ? '/material' : '/env-quantitative');
         }
     }
     next();
