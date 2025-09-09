@@ -1,7 +1,8 @@
+```vue
 <template>
   <div class="shared-form">
-    <form @submit.prevent="submitSatisfaction">
-      <!-- 基础信息保持不变 -->
+    <form>
+      <!-- 基础信息，与能源统计保持一致 -->
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -12,12 +13,14 @@
                 {{ factory }}
                 <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
               </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown"
-                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div v-for="f in factories" :key="f"
-                     class="option"
-                     :class="{ 'selected-option': f === factory }"
-                     @click="selectionStore.selectFactory(f)">
+              <div class="options" v-show="selectionStore.showFactoryDropdown" :style="{ maxHeight: '200px', overflowY: 'auto' }">
+                <div
+                  v-for="f in factories"
+                  :key="f"
+                  class="option"
+                  :class="{ 'selected-option': f === factory }"
+                  @click="selectionStore.selectFactory(f)"
+                >
                   {{ f }}
                 </div>
               </div>
@@ -32,10 +35,13 @@
                 <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
               </div>
               <div class="options" v-show="selectionStore.showYearDropdown">
-                <div v-for="y in years" :key="y"
-                     class="option"
-                     :class="{ 'selected-option': y === year }"
-                     @click="selectionStore.selectYear(y)">
+                <div
+                  v-for="y in years"
+                  :key="y"
+                  class="option"
+                  :class="{ 'selected-option': y === year }"
+                  @click="selectionStore.selectYear(y)"
+                >
                   {{ y }}年
                 </div>
               </div>
@@ -44,72 +50,134 @@
         </div>
       </fieldset>
 
-      <!-- 满意度表格 - 已去除工厂和单位列 -->
-      <fieldset>
-        <legend>{{ year }}年员工满意度统计 (%)</legend>
-        <div class="table-wrapper">
-          <table class="satisfaction-table">
-            <thead>
-            <tr>
-              <th v-for="(m, idx) in monthNames" :key="`sat-h-${idx}`">{{ m }}</th>
-              <th>年度平均</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td v-for="c in 12" :key="`sat-c-${c-1}`">
-                <input type="number" min="0" max="100" step="0.1"
-                       v-model.number="formData.satisfaction[c-1]">
-              </td>
-              <td class="total-cell">{{ annualAverage }}%</td>
-            </tr>
-            </tbody>
-          </table>
+      <!-- 满意度数据部分（样式与能源统计保持一致） -->
+      <fieldset class="summary-fieldset">
+        <legend>员工满意度数据统计</legend>
+
+        <div class="loading" v-if="isLoading">数据加载中...</div>
+
+        <div v-else>
+          <!-- 满意度统计 -->
+          <fieldset>
+            <legend>{{ year }}年员工满意度统计 (%)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.satisfaction" :key="'sat-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.satisfaction[index]"
+                  :placeholder="`${getMonthName(index)}满意度`"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+            </div>
+          </fieldset>
         </div>
       </fieldset>
-
-      <button type="submit" :disabled="isSubmitting">
-        {{ isSubmitting ? '提交中...' : '提交满意度数据' }}
-      </button>
     </form>
   </div>
 </template>
 
 <script setup>
-import {computed, reactive, ref} from 'vue'
-import {useSelectionStore} from '@/stores/selectionStore'
-import apiClient from "@/utils/axios.js";
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { useSelectionStore } from '@/stores/selectionStore'
+import apiClient from '@/utils/axios'
 
+// —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
 const factories = computed(() => selectionStore.factories)
 const year = computed(() => selectionStore.selectedYear)
 const years = computed(() => selectionStore.years)
-const isSubmitting = ref(false)
 
-const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月',
-  '7月', '8月', '9月', '10月', '11月', '12月']
+const isEditing = ref(false)
+const isLoading = ref(false)
 
-// 表单数据模型
+// 月份名称映射 & 工具函数（与能源一致）
+const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+const getMonthName = (index) => monthNames[index]
+
+// —— 满意度数据 —— //
 const formData = reactive({
-  satisfaction: Array(12).fill(0) // 12个月份的满意度数据
+  satisfaction: Array(12).fill(0)
 })
 
-// 计算年度平均值
+// —— 计算属性（保持原逻辑与命名，默认保留一位小数行为） —— //
+const toNum = (v, d = 0) => {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : d
+}
+
 const annualAverage = computed(() => {
-  const sum = formData.satisfaction.reduce((total, value) =>
-      total + (Number(value) || 0), 0)
+  const sum = formData.satisfaction.reduce((total, value) => total + toNum(value), 0)
   return (sum / 12).toFixed(1)
 })
 
-// 提交数据
-const submitSatisfaction = async () => {
+// —— 与能源统计保持一致：监听工厂/年份变化并拉取数据 —— //
+watch([factory, year], () => {
+  fetchData()
+})
+
+onMounted(() => {
+  document.addEventListener('click', selectionStore.handleClickOutside)
+  // 首次进入拉取一次
+  fetchData()
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', selectionStore.handleClickOutside)
+})
+
+// —— 获取数据（与能源统计风格相同） —— //
+const fetchData = async () => {
+  if (!factory.value || !year.value) {
+    resetFormData()
+    return
+  }
+  isLoading.value = true
+  try {
+    const resp = await apiClient.get('/quantitative/satisfaction', {
+      params: { factory: factory.value, year: year.value }
+    })
+    const data = resp?.data?.data
+    if (data) {
+      // 兼容后端下划线/驼峰
+      setArray(formData.satisfaction, data.satisfaction || data.satisfaction_score || Array(12).fill(0))
+    } else {
+      resetFormData()
+    }
+  } catch (err) {
+    if (err.response?.status === 404) {
+      resetFormData()
+    } else {
+      console.error('获取满意度数据失败:', err)
+      resetFormData()
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const setArray = (reactiveArr, sourceArr) => {
+  for (let i = 0; i < 12; i++) reactiveArr[i] = toNum(sourceArr?.[i] ?? 0)
+}
+
+// —— 重置（与能源一致的重置思路） —— //
+const resetFormData = () => {
+  setArray(formData.satisfaction, Array(12).fill(0))
+}
+
+// —— 提交编辑（保持原字段，不改动内容，只改样式） —— //
+const submitEdit = async () => {
   if (!factory.value) {
     alert('请选择工厂名称')
     return
   }
-
-  isSubmitting.value = true
   try {
     const payload = {
       factory: factory.value,
@@ -118,75 +186,29 @@ const submitSatisfaction = async () => {
       annualAverage: annualAverage.value
     }
 
-    const response = await apiClient.post('/quantitative/satisfaction', payload)
-
-    if (response.data.status === 'success') {
+    const resp = await apiClient.post('/quantitative/satisfaction', payload)
+    if (resp.data?.status === 'success') {
       alert('满意度数据提交成功!')
-      // 重置表单
-      formData.satisfaction = Array(12).fill(0)
     }
-  } catch (error) {
-    console.error('提交失败:', error)
-    alert(`提交失败: ${error.response?.data?.detail || error.message}`)
+  } catch (err) {
+    console.error('提交失败:', err)
+    alert(`提交失败: ${err.response?.data?.detail || err.message}`)
   } finally {
-    isSubmitting.value = false
+    // 与能源一致：提交后退出编辑并刷新
+    isEditing.value = false
+    await fetchData()
   }
 }
+
+// —— 暴露方法，与能源统计完全一致 —— //
+defineExpose({
+  startEditing: () => (isEditing.value = true),
+  cancelEditing: () => {
+    isEditing.value = false
+    fetchData()
+  },
+  submitEdit,
+  fetchData
+})
 </script>
-
-<style scoped>
-/* 保持原有样式不变 */
-.table-wrapper {
-  overflow: auto;
-}
-
-.satisfaction-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.satisfaction-table th,
-.satisfaction-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-}
-
-.satisfaction-table thead th {
-  position: sticky;
-  top: 0;
-  background: #f7f7f7;
-  z-index: 1;
-}
-
-.total-cell {
-  font-weight: 600;
-  background-color: #f5f5f5;
-}
-
-.satisfaction-table input {
-  width: 80px;
-  padding: 6px;
-  text-align: center;
-}
-
-@media (max-width: 768px) {
-  .table-wrapper {
-    overflow-x: auto;
-  }
-
-  .satisfaction-table {
-    font-size: 14px;
-  }
-
-  .satisfaction-table th,
-  .satisfaction-table td {
-    padding: 6px;
-  }
-
-  .satisfaction-table input {
-    width: 60px;
-    padding: 4px;
-  }
-}
-</style>
+```

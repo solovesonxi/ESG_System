@@ -1,6 +1,8 @@
+```vue
 <template>
   <div class="shared-form">
-    <form @submit.prevent="submitIP">
+    <form>
+      <!-- 基础信息，与能源统计保持一致 -->
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -11,11 +13,7 @@
                 {{ factory }}
                 <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
               </div>
-              <div
-                class="options"
-                v-show="selectionStore.showFactoryDropdown"
-                :style="{ maxHeight: '200px', overflowY: 'auto' }"
-              >
+              <div class="options" v-show="selectionStore.showFactoryDropdown" :style="{ maxHeight: '200px', overflowY: 'auto' }">
                 <div
                   v-for="f in factories"
                   :key="f"
@@ -28,6 +26,7 @@
               </div>
             </div>
           </div>
+
           <div class="form-group">
             <label>统计年份</label>
             <div class="custom-select">
@@ -51,347 +50,467 @@
         </div>
       </fieldset>
 
-      <!-- ===== 七类表格块，已去掉工厂列 ===== -->
+      <!-- 知识产权数据部分（样式与能源统计保持一致） -->
+      <fieldset class="summary-fieldset">
+        <legend>知识产权数据统计</legend>
 
-      <!-- 发明专利 -->
-      <fieldset>
-        <legend>{{ year }}年知识产权统计 - 发明专利 (件)</legend>
-        <div class="table-wrapper">
-          <table class="ip-table">
-            <thead>
-              <tr>
-                <th>单位</th>
-                <th v-for="(m, idx) in monthNames" :key="`inv-h-${idx}`">{{ m }}</th>
-                <th>合计</th>
-                <th>之前累计数</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td>件</td>
-                <td v-for="c in 12" :key="`inv-c-${c-1}`">
-                  <input type="number" min="0" step="1" v-model.number="invPatents[currentFactoryIndex][c-1]" />
-                </td>
-                <td class="total-cell">{{ rowSum(invPatents[currentFactoryIndex]) }}</td>
-                <td>
-                  <input type="number" min="0" step="1" v-model.number="prevInvPatents[currentFactoryIndex]" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="loading" v-if="isLoading">数据加载中...</div>
+
+        <div v-else>
+          <!-- 发明专利 -->
+          <fieldset>
+            <legend>{{ year }}年知识产权统计 - 发明专利 (件)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.invPatents" :key="'inv-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.invPatents[index]"
+                  :placeholder="`${getMonthName(index)}发明专利`"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>之前累计数</label>
+                <input
+                  type="number"
+                  v-model.number="formData.prevInvPatents"
+                  placeholder="之前累计数"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>合计</label>
+                <input type="number" :value="invPatentsTotal" disabled class="calculated-field">
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 发明专利申请数量 -->
+          <fieldset>
+            <legend>{{ year }}年知识产权统计 - 发明专利申请数量 (件)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.invApplications" :key="'app-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.invApplications[index]"
+                  :placeholder="`${getMonthName(index)}发明专利申请`"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>之前累计数</label>
+                <input
+                  type="number"
+                  v-model.number="formData.prevInvApplications"
+                  placeholder="之前累计数"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>合计</label>
+                <input type="number" :value="invApplicationsTotal" disabled class="calculated-field">
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 实用新型专利 -->
+          <fieldset>
+            <legend>{{ year }}年知识产权统计 - 实用新型专利 (件)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.utilityPatents" :key="'util-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.utilityPatents[index]"
+                  :placeholder="`${getMonthName(index)}实用新型专利`"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>之前累计数</label>
+                <input
+                  type="number"
+                  v-model.number="formData.prevUtilityPatents"
+                  placeholder="之前累计数"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>合计</label>
+                <input type="number" :value="utilityPatentsTotal" disabled class="calculated-field">
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 外观设计专利 -->
+          <fieldset>
+            <legend>{{ year }}年知识产权统计 - 外观设计专利 (件)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.designPatents" :key="'des-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.designPatents[index]"
+                  :placeholder="`${getMonthName(index)}外观设计专利`"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>之前累计数</label>
+                <input
+                  type="number"
+                  v-model.number="formData.prevDesignPatents"
+                  placeholder="之前累计数"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>合计</label>
+                <input type="number" :value="designPatentsTotal" disabled class="calculated-field">
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 被授权专利 -->
+          <fieldset>
+            <legend>{{ year }}年知识产权统计 - 被授权专利 (件)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.grantedPatents" :key="'grant-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.grantedPatents[index]"
+                  :placeholder="`${getMonthName(index)}被授权专利`"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>之前累计数</label>
+                <input
+                  type="number"
+                  v-model.number="formData.prevGrantedPatents"
+                  placeholder="之前累计数"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>合计</label>
+                <input type="number" :value="grantedPatentsTotal" disabled class="calculated-field">
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 软件著作权 -->
+          <fieldset>
+            <legend>{{ year }}年知识产权统计 - 软件著作权 (件)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.softwareCopyrights" :key="'soft-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.softwareCopyrights[index]"
+                  :placeholder="`${getMonthName(index)}软件著作权`"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>之前累计数</label>
+                <input
+                  type="number"
+                  v-model.number="formData.prevSoftwareCopyrights"
+                  placeholder="之前累计数"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>合计</label>
+                <input type="number" :value="softwareCopyrightsTotal" disabled class="calculated-field">
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 商标注册 -->
+          <fieldset>
+            <legend>{{ year }}年知识产权统计 - 商标注册 (件)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.trademarks" :key="'tm-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.trademarks[index]"
+                  :placeholder="`${getMonthName(index)}商标注册`"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>之前累计数</label>
+                <input
+                  type="number"
+                  v-model.number="formData.prevTrademarks"
+                  placeholder="之前累计数"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+              <div class="month-input">
+                <label>合计</label>
+                <input type="number" :value="trademarksTotal" disabled class="calculated-field">
+              </div>
+            </div>
+          </fieldset>
         </div>
       </fieldset>
-
-      <!-- 发明专利申请数量 -->
-      <fieldset>
-        <legend>{{ year }}年知识产权统计 - 发明专利申请数量 (件)</legend>
-        <div class="table-wrapper">
-          <table class="ip-table">
-            <thead>
-              <tr>
-                <th>单位</th>
-                <th v-for="(m, idx) in monthNames" :key="`app-h-${idx}`">{{ m }}</th>
-                <th>合计</th>
-                <th>之前累计数</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td>件</td>
-                <td v-for="c in 12" :key="`app-c-${c-1}`">
-                  <input type="number" min="0" step="1" v-model.number="invApplications[currentFactoryIndex][c-1]" />
-                </td>
-                <td class="total-cell">{{ rowSum(invApplications[currentFactoryIndex]) }}</td>
-                <td>
-                  <input type="number" min="0" step="1" v-model.number="prevInvApplications[currentFactoryIndex]" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 实用新型专利 -->
-      <fieldset>
-        <legend>{{ year }}年知识产权统计 - 实用新型专利 (件)</legend>
-        <div class="table-wrapper">
-          <table class="ip-table">
-            <thead>
-              <tr>
-                <th>单位</th>
-                <th v-for="(m, idx) in monthNames" :key="`util-h-${idx}`">{{ m }}</th>
-                <th>合计</th>
-                <th>之前累计数</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td>件</td>
-                <td v-for="c in 12" :key="`util-c-${c-1}`">
-                  <input type="number" min="0" step="1" v-model.number="utilityPatents[currentFactoryIndex][c-1]" />
-                </td>
-                <td class="total-cell">{{ rowSum(utilityPatents[currentFactoryIndex]) }}</td>
-                <td>
-                  <input type="number" min="0" step="1" v-model.number="prevUtilityPatents[currentFactoryIndex]" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 外观设计专利 -->
-      <fieldset>
-        <legend>{{ year }}年知识产权统计 - 外观设计专利 (件)</legend>
-        <div class="table-wrapper">
-          <table class="ip-table">
-            <thead>
-              <tr>
-                <th>单位</th>
-                <th v-for="(m, idx) in monthNames" :key="`des-h-${idx}`">{{ m }}</th>
-                <th>合计</th>
-                <th>之前累计数</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td>件</td>
-                <td v-for="c in 12" :key="`des-c-${c-1}`">
-                  <input type="number" min="0" step="1" v-model.number="designPatents[currentFactoryIndex][c-1]" />
-                </td>
-                <td class="total-cell">{{ rowSum(designPatents[currentFactoryIndex]) }}</td>
-                <td>
-                  <input type="number" min="0" step="1" v-model.number="prevDesignPatents[currentFactoryIndex]" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 被授权专利 -->
-      <fieldset>
-        <legend>{{ year }}年知识产权统计 - 被授权专利 (件)</legend>
-        <div class="table-wrapper">
-          <table class="ip-table">
-            <thead>
-              <tr>
-                <th>单位</th>
-                <th v-for="(m, idx) in monthNames" :key="`grant-h-${idx}`">{{ m }}</th>
-                <th>合计</th>
-                <th>之前累计数</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td>件</td>
-                <td v-for="c in 12" :key="`grant-c-${c-1}`">
-                  <input type="number" min="0" step="1" v-model.number="grantedPatents[currentFactoryIndex][c-1]" />
-                </td>
-                <td class="total-cell">{{ rowSum(grantedPatents[currentFactoryIndex]) }}</td>
-                <td>
-                  <input type="number" min="0" step="1" v-model.number="prevGrantedPatents[currentFactoryIndex]" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 软件著作权 -->
-      <fieldset>
-        <legend>{{ year }}年知识产权统计 - 软件著作权 (件)</legend>
-        <div class="table-wrapper">
-          <table class="ip-table">
-            <thead>
-              <tr>
-                <th>单位</th>
-                <th v-for="(m, idx) in monthNames" :key="`soft-h-${idx}`">{{ m }}</th>
-                <th>合计</th>
-                <th>之前累计数</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td>件</td>
-                <td v-for="c in 12" :key="`soft-c-${c-1}`">
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    v-model.number="softwareCopyrights[currentFactoryIndex][c-1]"
-                  />
-                </td>
-                <td class="total-cell">{{ rowSum(softwareCopyrights[currentFactoryIndex]) }}</td>
-                <td>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    v-model.number="prevSoftwareCopyrights[currentFactoryIndex]"
-                  />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 商标注册 -->
-      <fieldset>
-        <legend>{{ year }}年知识产权统计 - 商标注册 (件)</legend>
-        <div class="table-wrapper">
-          <table class="ip-table">
-            <thead>
-              <tr>
-                <th>单位</th>
-                <th v-for="(m, idx) in monthNames" :key="`tm-h-${idx}`">{{ m }}</th>
-                <th>合计</th>
-                <th>之前累计数</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="currentFactoryIndex !== -1">
-                <td>件</td>
-                <td v-for="c in 12" :key="`tm-c-${c-1}`">
-                  <input type="number" min="0" step="1" v-model.number="trademarks[currentFactoryIndex][c-1]" />
-                </td>
-                <td class="total-cell">{{ rowSum(trademarks[currentFactoryIndex]) }}</td>
-                <td>
-                  <input type="number" min="0" step="1" v-model.number="prevTrademarks[currentFactoryIndex]" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <button type="submit" :disabled="isSubmitting">
-        {{ isSubmitting ? "提交中..." : "提交知识产权数据" }}
-      </button>
     </form>
   </div>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
-import apiClient from '@/utils/axios';
-import { useSelectionStore } from "@/stores/selectionStore";
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { useSelectionStore } from '@/stores/selectionStore'
+import apiClient from '@/utils/axios'
 
-const selectionStore = useSelectionStore();
-const factory = computed(() => selectionStore.selectedFactory);
-const factories = computed(() => selectionStore.factories);
-const year = computed(() => selectionStore.selectedYear);
-const years = computed(() => selectionStore.years);
-const isSubmitting = ref(false);
+// —— 与能源统计保持一致的状态 —— //
+const selectionStore = useSelectionStore()
+const factory = computed(() => selectionStore.selectedFactory)
+const factories = computed(() => selectionStore.factories)
+const year = computed(() => selectionStore.selectedYear)
+const years = computed(() => selectionStore.years)
+
+const isEditing = ref(false)
+const isLoading = ref(false)
+
+// 月份名称映射 & 工具函数（与能源一致）
+const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+const getMonthName = (index) => monthNames[index]
+
+// —— 知识产权数据 —— //
+const formData = reactive({
+  invPatents: Array(12).fill(0),
+  invApplications: Array(12).fill(0),
+  utilityPatents: Array(12).fill(0),
+  designPatents: Array(12).fill(0),
+  grantedPatents: Array(12).fill(0),
+  softwareCopyrights: Array(12).fill(0),
+  trademarks: Array(12).fill(0),
+  prevInvPatents: 0,
+  prevInvApplications: 0,
+  prevUtilityPatents: 0,
+  prevDesignPatents: 0,
+  prevGrantedPatents: 0,
+  prevSoftwareCopyrights: 0,
+  prevTrademarks: 0
+})
+
+// —— 汇总与计算（保持原逻辑与命名） —— //
+const toNum = (v, d = 0) => {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : d
+}
+
+const rowSum = (arr) => arr.reduce((s, v) => s + toNum(v), 0)
+
+const invPatentsTotal = computed(() => rowSum(formData.invPatents))
+const invApplicationsTotal = computed(() => rowSum(formData.invApplications))
+const utilityPatentsTotal = computed(() => rowSum(formData.utilityPatents))
+const designPatentsTotal = computed(() => rowSum(formData.designPatents))
+const grantedPatentsTotal = computed(() => rowSum(formData.grantedPatents))
+const softwareCopyrightsTotal = computed(() => rowSum(formData.softwareCopyrights))
+const trademarksTotal = computed(() => rowSum(formData.trademarks))
+
+// —— 与能源统计保持一致：监听工厂/年份变化并拉取数据 —— //
+watch([factory, year], () => {
+  fetchData()
+})
 
 onMounted(() => {
-  document.addEventListener("click", selectionStore.handleClickOutside);
-});
+  document.addEventListener('click', selectionStore.handleClickOutside)
+  // 首次进入拉取一次
+  fetchData()
+})
+
 onBeforeUnmount(() => {
-  document.removeEventListener("click", selectionStore.handleClickOutside);
-});
+  document.removeEventListener('click', selectionStore.handleClickOutside)
+})
 
-const monthNames = [
-  "1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月",
-];
-function buildMatrix(rows) {
-  return Array.from({ length: rows }, () => Array(12).fill(0));
-}
-
-// 七类矩阵
-const invPatents = reactive(buildMatrix(factories.value.length));
-const invApplications = reactive(buildMatrix(factories.value.length));
-const utilityPatents = reactive(buildMatrix(factories.value.length));
-const designPatents = reactive(buildMatrix(factories.value.length));
-const grantedPatents = reactive(buildMatrix(factories.value.length));
-const softwareCopyrights = reactive(buildMatrix(factories.value.length));
-const trademarks = reactive(buildMatrix(factories.value.length));
-
-// 之前累计数
-const prevInvPatents = reactive(Array(factories.value.length).fill(0));
-const prevInvApplications = reactive(Array(factories.value.length).fill(0));
-const prevUtilityPatents = reactive(Array(factories.value.length).fill(0));
-const prevDesignPatents = reactive(Array(factories.value.length).fill(0));
-const prevGrantedPatents = reactive(Array(factories.value.length).fill(0));
-const prevSoftwareCopyrights = reactive(Array(factories.value.length).fill(0));
-const prevTrademarks = reactive(Array(factories.value.length).fill(0));
-
-const rowSum = (row) => row.reduce((s, v) => s + (Number(v) || 0), 0);
-const currentFactoryIndex = computed(() => factories.value.indexOf(factory.value));
-
-async function submitIP() {
-  isSubmitting.value = true;
+// —— 获取数据（与能源统计风格相同） —— //
+const fetchData = async () => {
+  if (!factory.value || !year.value) {
+    resetFormData()
+    return
+  }
+  isLoading.value = true
   try {
-    const payload = {
-      year: Number(year.value),
-      factories: factories.value,
-      invPatents,
-      invApplications,
-      utilityPatents,
-      designPatents,
-      grantedPatents,
-      softwareCopyrights,
-      trademarks,
-      prevInvPatents: [...prevInvPatents],
-      prevInvApplications: [...prevInvApplications],
-      prevUtilityPatents: [...prevUtilityPatents],
-      prevDesignPatents: [...prevDesignPatents],
-      prevGrantedPatents: [...prevGrantedPatents],
-      prevSoftwareCopyrights: [...prevSoftwareCopyrights],
-      prevTrademarks: [...prevTrademarks],
-    };
-    await apiClient.post("/api/ipData", payload);
-    alert("提交成功!");
-  } catch (e) {
-    console.error("提交失败:", e);
-    alert("提交失败，请检查控制台日志");
+    const resp = await apiClient.get('/quantitative/ip', {
+      params: { factory: factory.value, year: year.value }
+    })
+    const data = resp?.data?.data
+    if (data) {
+      // 兼容后端下划线/驼峰
+      setArray(formData.invPatents, data.invPatents || data.inv_patents || Array(12).fill(0))
+      setArray(formData.invApplications, data.invApplications || data.inv_applications || Array(12).fill(0))
+      setArray(formData.utilityPatents, data.utilityPatents || data.utility_patents || Array(12).fill(0))
+      setArray(formData.designPatents, data.designPatents || data.design_patents || Array(12).fill(0))
+      setArray(formData.grantedPatents, data.grantedPatents || data.granted_patents || Array(12).fill(0))
+      setArray(formData.softwareCopyrights, data.softwareCopyrights || data.software_copyrights || Array(12).fill(0))
+      setArray(formData.trademarks, data.trademarks || data.trademarks || Array(12).fill(0))
+
+      formData.prevInvPatents = toNum(data.prevInvPatents || data.prev_inv_patents)
+      formData.prevInvApplications = toNum(data.prevInvApplications || data.prev_inv_applications)
+      formData.prevUtilityPatents = toNum(data.prevUtilityPatents || data.prev_utility_patents)
+      formData.prevDesignPatents = toNum(data.prevDesignPatents || data.prev_design_patents)
+      formData.prevGrantedPatents = toNum(data.prevGrantedPatents || data.prev_granted_patents)
+      formData.prevSoftwareCopyrights = toNum(data.prevSoftwareCopyrights || data.prev_software_copyrights)
+      formData.prevTrademarks = toNum(data.prevTrademarks || data.prev_trademarks)
+    } else {
+      resetFormData()
+    }
+  } catch (err) {
+    if (err.response?.status === 404) {
+      resetFormData()
+    } else {
+      console.error('获取知识产权数据失败:', err)
+      resetFormData()
+    }
   } finally {
-    isSubmitting.value = false;
+    isLoading.value = false
   }
 }
+
+const setArray = (reactiveArr, sourceArr) => {
+  for (let i = 0; i < 12; i++) reactiveArr[i] = toNum(sourceArr?.[i] ?? 0)
+}
+
+// —— 重置（与能源一致的重置思路） —— //
+const resetFormData = () => {
+  setArray(formData.invPatents, Array(12).fill(0))
+  setArray(formData.invApplications, Array(12).fill(0))
+  setArray(formData.utilityPatents, Array(12).fill(0))
+  setArray(formData.designPatents, Array(12).fill(0))
+  setArray(formData.grantedPatents, Array(12).fill(0))
+  setArray(formData.softwareCopyrights, Array(12).fill(0))
+  setArray(formData.trademarks, Array(12).fill(0))
+  formData.prevInvPatents = 0
+  formData.prevInvApplications = 0
+  formData.prevUtilityPatents = 0
+  formData.prevDesignPatents = 0
+  formData.prevGrantedPatents = 0
+  formData.prevSoftwareCopyrights = 0
+  formData.prevTrademarks = 0
+}
+
+// —— 提交编辑（保持原字段，不改动内容，只改样式） —— //
+const submitEdit = async () => {
+  if (!factory.value) {
+    alert('请选择工厂名称')
+    return
+  }
+  try {
+    const payload = {
+      factory: factory.value,
+      year: Number(year.value),
+      invPatents: [...formData.invPatents],
+      invApplications: [...formData.invApplications],
+      utilityPatents: [...formData.utilityPatents],
+      designPatents: [...formData.designPatents],
+      grantedPatents: [...formData.grantedPatents],
+      softwareCopyrights: [...formData.softwareCopyrights],
+      trademarks: [...formData.trademarks],
+      prevInvPatents: formData.prevInvPatents,
+      prevInvApplications: formData.prevInvApplications,
+      prevUtilityPatents: formData.prevUtilityPatents,
+      prevDesignPatents: formData.prevDesignPatents,
+      prevGrantedPatents: formData.prevGrantedPatents,
+      prevSoftwareCopyrights: formData.prevSoftwareCopyrights,
+      prevTrademarks: formData.prevTrademarks,
+      invPatentsTotal: invPatentsTotal.value,
+      invApplicationsTotal: invApplicationsTotal.value,
+      utilityPatentsTotal: utilityPatentsTotal.value,
+      designPatentsTotal: designPatentsTotal.value,
+      grantedPatentsTotal: grantedPatentsTotal.value,
+      softwareCopyrightsTotal: softwareCopyrightsTotal.value,
+      trademarksTotal: trademarksTotal.value
+    }
+
+    const resp = await apiClient.post('/quantitative/ip', payload)
+    if (resp.data?.status === 'success') {
+      alert('知识产权数据提交成功!')
+    }
+  } catch (err) {
+    console.error('提交失败:', err)
+    alert(`提交失败: ${err.response?.data?.detail || err.message}`)
+  } finally {
+    // 与能源一致：提交后退出编辑并刷新
+    isEditing.value = false
+    await fetchData()
+  }
+}
+
+// —— 暴露方法，与能源统计完全一致 —— //
+defineExpose({
+  startEditing: () => (isEditing.value = true),
+  cancelEditing: () => {
+    isEditing.value = false
+    fetchData()
+  },
+  submitEdit,
+  fetchData
+})
 </script>
-
-<style scoped>
-.shared-form {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
-  background-color: #fff;
-  box-shadow: 0 0 10px rgba(0,0,0,0.05);
-  border-radius: 8px;
-  box-sizing: border-box;
-}
-
-fieldset { border: 1px solid #ddd; padding: 1rem; margin-bottom: 1.5rem; border-radius: 6px; }
-legend { font-weight: 600; padding: 0 0.5rem; }
-
-.custom-select { position: relative; width: 200px; }
-.custom-select .selected {
-  padding: 6px 12px; border: 1px solid #ccc; cursor: pointer;
-  display: flex; justify-content: space-between; align-items: center; border-radius: 4px;
-}
-.custom-select .options {
-  position: absolute; top: 100%; left: 0; right: 0;
-  background: #fff; border: 1px solid #ccc; z-index: 10; max-height: 200px; overflow-y: auto;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-.custom-select .option { padding: 6px 12px; cursor: pointer; }
-.custom-select .option.selected-option { background-color: #f0f0f0; }
-.arrow { border: solid black; border-width: 0 1px 1px 0; display: inline-block; padding: 4px; transform: rotate(45deg); transition: transform 0.2s; }
-.arrow.up { transform: rotate(-135deg); }
-
-.table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 1rem; }
-.ip-table { width: 100%; min-width: 900px; border-collapse: collapse; table-layout: fixed; }
-.ip-table th, .ip-table td { border: 1px solid #ddd; padding: 6px; text-align: center; white-space: nowrap; }
-.total-cell { font-weight: 600; }
-
-button[type="submit"] {
-  padding: 8px 16px; font-size: 1rem; border: none; border-radius: 4px;
-  background-color: #007bff; color: white; cursor: pointer; transition: background-color 0.2s;
-}
-button[type="submit"]:disabled { background-color: #999; cursor: not-allowed; }
-button[type="submit"]:hover:not(:disabled) { background-color: #0056b3; }
-
-@media (max-width: 768px) { .ip-table { min-width: 600px; } }
-</style>
+```

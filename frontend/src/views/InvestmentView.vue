@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
-    <form @submit.prevent="submitForm">
-      <!-- 基础信息 -->
+    <form>
+      <!-- 基础信息，与能源统计保持一致 -->
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -14,11 +14,11 @@
               </div>
               <div class="options" v-show="selectionStore.showFactoryDropdown" :style="{ maxHeight: '200px', overflowY: 'auto' }">
                 <div
-                    v-for="f in factories"
-                    :key="f"
-                    class="option"
-                    :class="{ 'selected-option': f === factory }"
-                    @click="selectionStore.selectFactory(f)"
+                  v-for="f in factories"
+                  :key="f"
+                  class="option"
+                  :class="{ 'selected-option': f === factory }"
+                  @click="selectionStore.selectFactory(f)"
                 >
                   {{ f }}
                 </div>
@@ -35,11 +35,11 @@
               </div>
               <div class="options" v-show="selectionStore.showYearDropdown">
                 <div
-                    v-for="y in years"
-                    :key="y"
-                    class="option"
-                    :class="{ 'selected-option': y === year }"
-                    @click="selectionStore.selectYear(y)"
+                  v-for="y in years"
+                  :key="y"
+                  class="option"
+                  :class="{ 'selected-option': y === year }"
+                  @click="selectionStore.selectYear(y)"
                 >
                   {{ y }}年
                 </div>
@@ -49,205 +49,268 @@
         </div>
       </fieldset>
 
-      <!-- 环保投入表格 -->
-      <fieldset>
-        <legend>{{ year }}年环保投入 （万元）</legend>
-        <div class="table-wrapper">
-          <table class="waste-table">
-            <thead>
-            <tr>
-              <th v-for="(m, idx) in monthNames" :key="`env-h-${idx}`">{{ m }}</th>
-              <th>合计</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td v-for="c in 12" :key="`env-c-${c-1}`">
-                <input type="number" min="0" step="0.01" v-model.number="envInvest[c-1]">
-              </td>
-              <td class="total-cell">{{ envInvestTotal }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 清洁技术投入表格 -->
-      <fieldset>
-        <legend>{{ year }}年清洁技术投入 （万元）</legend>
-        <div class="table-wrapper">
-          <table class="waste-table">
-            <thead>
-            <tr>
-              <th v-for="(m, idx) in monthNames" :key="`clean-h-${idx}`">{{ m }}</th>
-              <th>合计</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td v-for="c in 12" :key="`clean-c-${c-1}`">
-                <input type="number" min="0" step="0.01" v-model.number="cleanTechInvest[c-1]">
-              </td>
-              <td class="total-cell">{{ cleanTechInvestTotal }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 气候投入表格 -->
-      <fieldset>
-        <legend>{{ year }}年气候投入 （万元）</legend>
-        <div class="table-wrapper">
-          <table class="waste-table">
-            <thead>
-            <tr>
-              <th v-for="(m, idx) in monthNames" :key="`climate-h-${idx}`">{{ m }}</th>
-              <th>合计</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td v-for="c in 12" :key="`climate-c-${c-1}`">
-                <input type="number" min="0" step="0.01" v-model.number="climateInvest[c-1]">
-              </td>
-              <td class="total-cell">{{ climateInvestTotal }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 绿色收入表格 -->
-      <fieldset>
-        <legend>{{ year }}年绿色收入 （万元）</legend>
-        <div class="table-wrapper">
-          <table class="waste-table">
-            <thead>
-            <tr>
-              <th v-for="(m, idx) in monthNames" :key="`green-h-${idx}`">{{ m }}</th>
-              <th>合计</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td v-for="c in 12" :key="`green-c-${c-1}`">
-                <input type="number" min="0" step="0.01" v-model.number="greenIncome[c-1]">
-              </td>
-              <td class="total-cell">{{ greenIncomeTotal }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 汇总 -->
+      <!-- 资金投入数据部分（样式与能源统计保持一致） -->
       <fieldset class="summary-fieldset">
-        <legend>{{ year }}年资金投入统计 - 汇总 （万元）</legend>
-        <div class="table-wrapper">
-          <table class="waste-table">
-            <thead>
-            <tr>
-              <th>环保投入</th>
-              <th>清洁技术投入</th>
-              <th>气候投入</th>
-              <th>绿色收入</th>
-              <th>总投入</th>
-              <th>总营收</th>
-              <th>环保投入强度 （%）</th>
-              <th>绿色收入占比 （%）</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td>{{ envInvestTotal }}</td>
-              <td>{{ cleanTechInvestTotal }}</td>
-              <td>{{ climateInvestTotal }}</td>
-              <td>{{ greenIncomeTotal }}</td>
-              <td>{{ totalInvestment }}</td>
-              <td>
-                <input type="number" min="0" step="0.01" v-model.number="totalRevenue">
-              </td>
-              <td>{{ envInvestIntensity}}</td>
-              <td>{{ greenIncomeRatio }}</td>
-            </tr>
-            </tbody>
-          </table>
+        <legend>资金投入数据统计</legend>
+
+        <div class="loading" v-if="isLoading">数据加载中...</div>
+
+        <div v-else>
+          <!-- 环保投入 -->
+          <fieldset>
+            <legend>{{ year }}年环保投入（万元）</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in envInvest" :key="'env-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="envInvest[index]"
+                  :placeholder="`${getMonthName(index)}环保投入`"
+                  min="0"
+                  step="0.01"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 清洁技术投入 -->
+          <fieldset>
+            <legend>{{ year }}年清洁技术投入（万元）</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in cleanTechInvest" :key="'ct-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="cleanTechInvest[index]"
+                  :placeholder="`${getMonthName(index)}清洁技术投入`"
+                  min="0"
+                  step="0.01"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 气候投入 -->
+          <fieldset>
+            <legend>{{ year }}年气候投入（万元）</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in climateInvest" :key="'cli-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="climateInvest[index]"
+                  :placeholder="`${getMonthName(index)}气候投入`"
+                  min="0"
+                  step="0.01"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 绿色收入 -->
+          <fieldset>
+            <legend>{{ year }}年绿色收入（万元）</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in greenIncome" :key="'gi-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="greenIncome[index]"
+                  :placeholder="`${getMonthName(index)}绿色收入`"
+                  min="0"
+                  step="0.01"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 汇总（与能源统计合计区块相同结构：form-row + form-group + disabled 计算值） -->
+          <fieldset class="summary-fieldset">
+            <legend>{{ year }}年资金投入统计 - 汇总</legend>
+            <div class="form-row">
+              <div class="form-group">
+                <label>环保投入 (万元)</label>
+                <input type="number" :value="envInvestTotal" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>清洁技术投入 (万元)</label>
+                <input type="number" :value="cleanTechInvestTotal" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>气候投入 (万元)</label>
+                <input type="number" :value="climateInvestTotal" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>总投入 (万元)</label>
+                <input type="number" :value="totalInvestment" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>绿色收入 (万元)</label>
+                <input type="number" :value="greenIncomeTotal" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>营业收入 (万元)</label>
+                <input type="number" v-model.number="total_revenue" step="0.01"
+                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+              </div>
+              <div class="form-group">
+                <label>环保投入强度 (%)</label>
+                <input type="number" :value="envInvestIntensity" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>绿色收入占比 (%)</label>
+                <input type="number" :value="greenIncomeRatio" disabled class="calculated-field">
+              </div>
+            </div>
+          </fieldset>
         </div>
       </fieldset>
-
-      <button type="submit" :disabled="isSubmitting">
-        {{ isSubmitting ? '提交中...' : '提交数据' }}
-      </button>
     </form>
   </div>
 </template>
 
 <script setup>
-import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
-import {useSelectionStore} from '@/stores/selectionStore'
-import apiClient from "@/utils/axios.js";
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { useSelectionStore } from '@/stores/selectionStore'
+import apiClient from '@/utils/axios'
 
+// —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
 const factories = computed(() => selectionStore.factories)
 const year = computed(() => selectionStore.selectedYear)
 const years = computed(() => selectionStore.years)
-const isSubmitting = ref(false)
+
+const isEditing = ref(false)
+const isLoading = ref(false)
+
+// 月份名称映射 & 工具函数（与能源一致）
+const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月']
+const getMonthName = (index) => monthNames[index]
+
+// —— 资金投入月度数据（保持字段与原来一致） —— //
+const envInvest = reactive(Array(12).fill(0))
+const cleanTechInvest = reactive(Array(12).fill(0))
+const climateInvest = reactive(Array(12).fill(0))
+const greenIncome = reactive(Array(12).fill(0))
+
+// 汇总输入项（保持字段）
+const total_revenue = ref(0)
+
+// 汇总与强度计算（保持原逻辑与命名，默认保留两位小数行为）
+const rowSum = (arr) => arr.reduce((s, v) => s + (Number(v) || 0), 0).toFixed(2)
+
+const envInvestTotal = computed(() => rowSum(envInvest))
+const cleanTechInvestTotal = computed(() => rowSum(cleanTechInvest))
+const climateInvestTotal = computed(() => rowSum(climateInvest))
+const greenIncomeTotal = computed(() => rowSum(greenIncome))
+
+const totalInvestment = computed(() => (
+  (parseFloat(envInvestTotal.value) +
+   parseFloat(cleanTechInvestTotal.value) +
+   parseFloat(climateInvestTotal.value)).toFixed(2)
+))
+
+const envInvestIntensity = computed(() => {
+  const env = parseFloat(envInvestTotal.value)
+  return (total_revenue.value > 0 && env > 0)
+    ? ((env / total_revenue.value) * 100).toFixed(2)
+    : 0
+})
+
+const greenIncomeRatio = computed(() => {
+  const gi = parseFloat(greenIncomeTotal.value)
+  return (total_revenue.value > 0 && gi > 0)
+    ? ((gi / total_revenue.value) * 100).toFixed(2)
+    : 0
+})
+
+// —— 与能源统计保持一致：监听工厂/年份变化并拉取数据 —— //
+watch([factory, year], () => {
+  fetchData()
+})
 
 onMounted(() => {
   document.addEventListener('click', selectionStore.handleClickOutside)
+  // 首次进入拉取一次
+  fetchData()
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', selectionStore.handleClickOutside)
 })
 
-const monthNames = [
-  '1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'
-]
-
-// 初始化数据 - 只存储当前工厂的数据
-const envInvest = reactive(Array(12).fill(0))        // 环保投入
-const cleanTechInvest = reactive(Array(12).fill(0))  // 清洁技术投入
-const climateInvest = reactive(Array(12).fill(0))    // 气候投入
-const greenIncome = reactive(Array(12).fill(0))      // 绿色收入
-
-// 工具函数 - 计算行合计
-const rowSum = (arr) => arr.reduce((s, v) => s + (Number(v) || 0), 0).toFixed(2)
-
-// 计算各类资金合计
-const envInvestTotal = computed(() => rowSum(envInvest))
-const cleanTechInvestTotal = computed(() => rowSum(cleanTechInvest))
-const climateInvestTotal = computed(() => rowSum(climateInvest))
-const greenIncomeTotal = computed(() => rowSum(greenIncome))
-
-// 计算汇总指标
-const totalInvestment = computed(() => {
-  return (parseFloat(envInvestTotal.value) +
-      parseFloat(cleanTechInvestTotal.value) +
-      parseFloat(climateInvestTotal.value)).toFixed(2)
-})
-
-const totalRevenue = ref(0);
-const envInvestIntensity = computed(() => {
-  if (totalRevenue.value === 0) return 0;
-  return ((parseFloat(envInvestTotal.value) / parseFloat(totalRevenue.value)) * 100).toFixed(2);
-});
-
-const greenIncomeRatio = computed(() => {
-  if (parseFloat(totalInvestment.value) > 0) {
-    return ((parseFloat(greenIncomeTotal.value) / parseFloat(totalInvestment.value)) * 100).toFixed(2)
+// —— 获取数据（与能源统计风格相同） —— //
+const fetchData = async () => {
+  if (!factory.value || !year.value) {
+    resetFormData()
+    return
   }
-  return 0
-})
+  isLoading.value = true
+  try {
+    const resp = await apiClient.get('/quantitative/investment', {
+      params: { factory: factory.value, year: year.value }
+    })
+    const data = resp?.data?.data
+    if (data) {
+      // 兼容后端下划线/驼峰
+      setArray(envInvest, data.envInvest || data.env_invest || Array(12).fill(0))
+      setArray(cleanTechInvest, data.cleanTechInvest || data.clean_tech_invest || Array(12).fill(0))
+      setArray(climateInvest, data.climateInvest || data.climate_invest || Array(12).fill(0))
+      setArray(greenIncome, data.greenIncome || data.green_income || Array(12).fill(0))
 
-async function submitForm(){
-  isSubmitting.value = true
-  try{
+      total_revenue.value = toNum(data.totalRevenue || data.total_revenue)
+    } else {
+      resetFormData()
+    }
+  } catch (err) {
+    if (err.response?.status === 404) {
+      resetFormData()
+    } else {
+      console.error('获取资金投入数据失败:', err)
+      resetFormData()
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const toNum = (v, d = 0) => {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : d
+}
+
+const setArray = (reactiveArr, sourceArr) => {
+  for (let i = 0; i < 12; i++) reactiveArr[i] = toNum(sourceArr?.[i] ?? 0)
+}
+
+// —— 重置（与能源一致的重置思路） —— //
+const resetFormData = () => {
+  setArray(envInvest, Array(12).fill(0))
+  setArray(cleanTechInvest, Array(12).fill(0))
+  setArray(climateInvest, Array(12).fill(0))
+  setArray(greenIncome, Array(12).fill(0))
+  total_revenue.value = 0
+}
+
+// —— 提交编辑（保持原字段，不改动内容，只改样式） —— //
+const submitEdit = async () => {
+  try {
     const payload = {
-      year: Number(year.value),
       factory: factory.value,
+      year: Number(year.value),
       envInvest: [...envInvest],
       cleanTechInvest: [...cleanTechInvest],
       climateInvest: [...climateInvest],
@@ -257,78 +320,33 @@ async function submitForm(){
       climateInvestTotal: climateInvestTotal.value,
       greenIncomeTotal: greenIncomeTotal.value,
       totalInvestment: totalInvestment.value,
-      greenIncomeRatio: greenIncomeRatio.value,
-      totalRevenue: totalRevenue.value,
-      envInvestIntensity: envInvestIntensity.value
+      total_revenue: total_revenue.value,
+      envInvestIntensity: envInvestIntensity.value,
+      greenIncomeRatio: greenIncomeRatio.value
     }
 
     const resp = await apiClient.post('/quantitative/investment', payload)
-    if(resp.data.status === 'success'){
+    if (resp.data?.status === 'success') {
       alert('资金投入数据提交成功!')
     }
-  }catch(err){
+  } catch (err) {
     console.error('提交失败:', err)
     alert(`提交失败: ${err.response?.data?.detail || err.message}`)
-  }finally{
-    isSubmitting.value = false
+  } finally {
+    // 与能源一致：提交后退出编辑并刷新
+    isEditing.value = false
+    await fetchData()
   }
 }
+
+// —— 暴露方法，与能源统计完全一致 —— //
+defineExpose({
+  startEditing: () => (isEditing.value = true),
+  cancelEditing: () => {
+    isEditing.value = false
+    fetchData()
+  },
+  submitEdit,
+  fetchData
+})
 </script>
-
-<style scoped>
-.table-wrapper {
-  overflow: auto;
-}
-
-.waste-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.waste-table th, .waste-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-}
-
-.waste-table thead th {
-  position: sticky;
-  top: 0;
-  background: #f7f7f7;
-  z-index: 1;
-}
-
-.total-cell {
-  font-weight: 600;
-  background-color: #f5f5f5;
-}
-
-.summary-fieldset .waste-table td {
-  min-width: 100px;
-}
-
-.waste-table input {
-  width: 80px;
-  padding: 4px;
-  text-align: center;
-}
-
-@media (max-width: 768px) {
-  .table-wrapper {
-    overflow-x: auto;
-  }
-
-  .waste-table {
-    font-size: 12px;
-  }
-
-  .waste-table th, .waste-table td {
-    padding: 6px;
-  }
-
-  .waste-table input {
-    width: 60px;
-    padding: 2px;
-  }
-}
-</style>

@@ -1,7 +1,8 @@
+```vue
 <template>
   <div class="shared-form">
-    <form @submit.prevent="submitOHS">
-      <!-- 基础信息部分保持不变 -->
+    <form>
+      <!-- 基础信息，与能源统计保持一致 -->
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -12,12 +13,14 @@
                 {{ factory }}
                 <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
               </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown"
-                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div v-for="f in factories" :key="f"
-                     class="option"
-                     :class="{ 'selected-option': f === factory }"
-                     @click="selectionStore.selectFactory(f)">
+              <div class="options" v-show="selectionStore.showFactoryDropdown" :style="{ maxHeight: '200px', overflowY: 'auto' }">
+                <div
+                  v-for="f in factories"
+                  :key="f"
+                  class="option"
+                  :class="{ 'selected-option': f === factory }"
+                  @click="selectionStore.selectFactory(f)"
+                >
                   {{ f }}
                 </div>
               </div>
@@ -32,10 +35,13 @@
                 <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
               </div>
               <div class="options" v-show="selectionStore.showYearDropdown">
-                <div v-for="y in years" :key="y"
-                     class="option"
-                     :class="{ 'selected-option': y === year }"
-                     @click="selectionStore.selectYear(y)">
+                <div
+                  v-for="y in years"
+                  :key="y"
+                  class="option"
+                  :class="{ 'selected-option': y === year }"
+                  @click="selectionStore.selectYear(y)"
+                >
                   {{ y }}年
                 </div>
               </div>
@@ -44,344 +50,440 @@
         </div>
       </fieldset>
 
-      <!-- 培训次数（次） -->
-      <fieldset>
-        <legend>{{ year }}年职业健康安全统计 - 培训次数 (次)</legend>
-        <div class="table-wrapper">
-          <table class="ohs-table">
-            <thead>
-            <tr>
-              <th v-for="(m, idx) in monthNames" :key="`tc-h-${idx}`">{{ m }}</th>
-              <th>合计</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td v-for="c in 12" :key="`tc-c-${c-1}`">
-                <input type="number" min="0" step="1" v-model.number="formData.trainingCount[c-1]">
-              </td>
-              <td class="total-cell">{{ rowSum(formData.trainingCount) }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 培训参与人次（人次） -->
-      <fieldset>
-        <legend>{{ year }}年职业健康安全统计 - 培训参与人次 (人次)</legend>
-        <div class="table-wrapper">
-          <table class="ohs-table">
-            <thead>
-            <tr>
-              <th v-for="(m, idx) in monthNames" :key="`tp-h-${idx}`">{{ m }}</th>
-              <th>合计</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td v-for="c in 12" :key="`tp-c-${c-1}`">
-                <input type="number" min="0" step="1" v-model.number="formData.trainingParticipants[c-1]">
-              </td>
-              <td class="total-cell">{{ rowSum(formData.trainingParticipants) }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 培训学时（小时） -->
-      <fieldset>
-        <legend>{{ year }}年职业健康安全统计 - 培训学时 (小时)</legend>
-        <div class="table-wrapper">
-          <table class="ohs-table">
-            <thead>
-            <tr>
-              <th v-for="(m, idx) in monthNames" :key="`th-h-${idx}`">{{ m }}</th>
-              <th>合计</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td v-for="c in 12" :key="`th-c-${c-1}`">
-                <input type="number" min="0" step="0.1" v-model.number="formData.trainingHours[c-1]">
-              </td>
-              <td class="total-cell">{{ rowSum(formData.trainingHours) }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 工伤数量（次） -->
-      <fieldset>
-        <legend>{{ year }}年职业健康安全统计 - 工伤数量 (次)</legend>
-        <div class="table-wrapper">
-          <table class="ohs-table">
-            <thead>
-            <tr>
-              <th v-for="(m, idx) in monthNames" :key="`inj-h-${idx}`">{{ m }}</th>
-              <th>合计</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td v-for="c in 12" :key="`inj-c-${c-1}`">
-                <input type="number" min="0" step="1" v-model.number="formData.injuryCount[c-1]">
-              </td>
-              <td class="total-cell">{{ rowSum(formData.injuryCount) }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 安全事故数量（次） -->
-      <fieldset>
-        <legend>{{ year }}年职业健康安全统计 - 安全事故数量 (次)</legend>
-        <div class="table-wrapper">
-          <table class="ohs-table">
-            <thead>
-            <tr>
-              <th v-for="(m, idx) in monthNames" :key="`acc-h-${idx}`">{{ m }}</th>
-              <th>合计</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td v-for="c in 12" :key="`acc-c-${c-1}`">
-                <input type="number" min="0" step="1" v-model.number="formData.incidentCount[c-1]">
-              </td>
-              <td class="total-cell">{{ rowSum(formData.incidentCount) }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 工亡人数（人） -->
-      <fieldset>
-        <legend>{{ year }}年职业健康安全统计 - 工亡人数 (人)</legend>
-        <div class="table-wrapper">
-          <table class="ohs-table">
-            <thead>
-            <tr>
-              <th v-for="(m, idx) in monthNames" :key="`fat-h-${idx}`">{{ m }}</th>
-              <th>合计</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td v-for="c in 12" :key="`fat-c-${c-1}`">
-                <input type="number" min="0" step="1" v-model.number="formData.fatalityCount[c-1]">
-              </td>
-              <td class="total-cell">{{ rowSum(formData.fatalityCount) }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 工伤损失工作日数（天） -->
-      <fieldset>
-        <legend>{{ year }}年职业健康安全统计 - 工伤损失工作日数 (天)</legend>
-        <div class="table-wrapper">
-          <table class="ohs-table">
-            <thead>
-            <tr>
-              <th v-for="(m, idx) in monthNames" :key="`lost-h-${idx}`">{{ m }}</th>
-              <th>合计</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td v-for="c in 12" :key="`lost-c-${c-1}`">
-                <input type="number" min="0" step="1" v-model.number="formData.lostWorkdays[c-1]">
-              </td>
-              <td class="total-cell">{{ rowSum(formData.lostWorkdays) }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
-
-      <!-- 安全生产投入（万元） -->
-      <fieldset>
-        <legend>{{ year }}年职业健康安全统计 - 安全生产投入 (万元)</legend>
-        <div class="table-wrapper">
-          <table class="ohs-table">
-            <thead>
-            <tr>
-              <th v-for="(m, idx) in monthNames" :key="`safeinv-h-${idx}`">{{ m }}</th>
-              <th>合计</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td v-for="c in 12" :key="`safeinv-c-${c-1}`">
-                <input type="number" min="0" step="0.01" v-model.number="formData.safetyInvestment[c-1]">
-              </td>
-              <td class="total-cell">{{ rowSum(formData.safetyInvestment) }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-        <small
-            style="opacity:.7">安全费用包含安全标准化、应急预案、职业健康评测、体检等系统费用，安全设备/装置维护，消防培训与演练等相关费用。</small>
-      </fieldset>
-
-      <!-- 职业健康安全统计 - 汇总（总部统计） -->
+      <!-- 职业健康安全数据部分（样式与能源统计保持一致） -->
       <fieldset class="summary-fieldset">
-        <legend>{{ year }}年职业健康安全统计 - 汇总</legend>
-        <div class="table-wrapper">
-          <table class="ohs-table">
-            <thead>
-            <tr>
-              <th>专职安全管理人员(人)</th>
-              <th>员工体检人数(人)</th>
-              <th>员工体检覆盖率(%)</th>
-              <th>安全应急演练次数(次)</th>
-              <th>安全检查排查隐患数(个)</th>
-              <th>职业病体检人数(人)</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td><input type="number" min="0" step="1" v-model.number="formData.safetyManagers"></td>
-              <td><input type="number" min="0" step="1" v-model.number="formData.medicalChecks"></td>
-              <td><input type="number" min="0" step="0.01" v-model.number="formData.coverageRate"></td>
-              <td><input type="number" min="0" step="1" v-model.number="formData.emergencyDrills"></td>
-              <td><input type="number" min="0" step="1" v-model.number="formData.hazardsFound"></td>
-              <td><input type="number" min="0" step="1" v-model.number="formData.occupationalChecks"></td>
-            </tr>
-            </tbody>
-          </table>
+        <legend>职业健康安全数据统计</legend>
+
+        <div class="loading" v-if="isLoading">数据加载中...</div>
+
+        <div v-else>
+          <!-- 培训次数 -->
+          <fieldset>
+            <legend>{{ year }}年职业健康安全统计 - 培训次数 (次)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.trainingCount" :key="'tc-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.trainingCount[index]"
+                  :placeholder="`${getMonthName(index)}培训次数`"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 培训参与人次 -->
+          <fieldset>
+            <legend>{{ year }}年职业健康安全统计 - 培训参与人次 (人次)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.trainingParticipants" :key="'tp-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.trainingParticipants[index]"
+                  :placeholder="`${getMonthName(index)}培训参与人次`"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 培训学时 -->
+          <fieldset>
+            <legend>{{ year }}年职业健康安全统计 - 培训学时 (小时)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.trainingHours" :key="'th-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.trainingHours[index]"
+                  :placeholder="`${getMonthName(index)}培训学时`"
+                  min="0"
+                  step="0.1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 工伤数量 -->
+          <fieldset>
+            <legend>{{ year }}年职业健康安全统计 - 工伤数量 (次)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.injuryCount" :key="'inj-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.injuryCount[index]"
+                  :placeholder="`${getMonthName(index)}工伤数量`"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 安全事故数量 -->
+          <fieldset>
+            <legend>{{ year }}年职业健康安全统计 - 安全事故数量 (次)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.incidentCount" :key="'acc-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.incidentCount[index]"
+                  :placeholder="`${getMonthName(index)}安全事故数量`"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 工亡人数 -->
+          <fieldset>
+            <legend>{{ year }}年职业健康安全统计 - 工亡人数 (人)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.fatalityCount" :key="'fat-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.fatalityCount[index]"
+                  :placeholder="`${getMonthName(index)}工亡人数`"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 工伤损失工作日数 -->
+          <fieldset>
+            <legend>{{ year }}年职业健康安全统计 - 工伤损失工作日数 (天)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.lostWorkdays" :key="'lost-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.lostWorkdays[index]"
+                  :placeholder="`${getMonthName(index)}工伤损失工作日数`"
+                  min="0"
+                  step="1"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 安全生产投入 -->
+          <fieldset>
+            <legend>{{ year }}年职业健康安全统计 - 安全生产投入 (万元)</legend>
+            <div class="monthly-grid">
+              <div v-for="(_, index) in formData.safetyInvestment" :key="'safeinv-'+index" class="month-input">
+                <label>{{ getMonthName(index) }}</label>
+                <input
+                  type="number"
+                  v-model.number="formData.safetyInvestment[index]"
+                  :placeholder="`${getMonthName(index)}安全生产投入`"
+                  min="0"
+                  step="0.01"
+                  :readonly="!isEditing"
+                  :class="{ 'editable-field': isEditing }"
+                  required
+                >
+              </div>
+            </div>
+
+          </fieldset>
+
+          <!-- 汇总（与能源统计合计区块相同结构：form-row + form-group + disabled 计算值） -->
+          <fieldset class="summary-fieldset">
+            <legend>{{ year }}年职业健康安全统计 - 汇总</legend>
+            <div class="form-row">
+              <div class="form-group">
+                <label>培训次数合计 (次)</label>
+                <input type="number" :value="trainingCountTotal" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>培训参与人次合计 (人次)</label>
+                <input type="number" :value="trainingParticipantsTotal" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>培训学时合计 (小时)</label>
+                <input type="number" :value="trainingHoursTotal" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>工伤数量合计 (次)</label>
+                <input type="number" :value="injuryCountTotal" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>安全事故数量合计 (次)</label>
+                <input type="number" :value="incidentCountTotal" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>工亡人数合计 (人)</label>
+                <input type="number" :value="fatalityCountTotal" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>工伤损失工作日数合计 (天)</label>
+                <input type="number" :value="lostWorkdaysTotal" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>安全生产投入合计 (万元)</label>
+                <input type="number" :value="safetyInvestmentTotal" disabled class="calculated-field">
+              </div>
+              <div class="form-group">
+                <label>专职安全管理人员 (人)</label>
+                <input type="number" v-model.number="formData.safetyManagers" min="0" step="1"
+                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+              </div>
+              <div class="form-group">
+                <label>员工体检人数 (人)</label>
+                <input type="number" v-model.number="formData.medicalChecks" min="0" step="1"
+                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+              </div>
+              <div class="form-group">
+                <label>员工体检覆盖率 (%)</label>
+                <input type="number" v-model.number="formData.coverageRate" min="0" step="0.01"
+                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+              </div>
+              <div class="form-group">
+                <label>安全应急演练次数 (次)</label>
+                <input type="number" v-model.number="formData.emergencyDrills" min="0" step="1"
+                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+              </div>
+              <div class="form-group">
+                <label>安全检查排查隐患数 (个)</label>
+                <input type="number" v-model.number="formData.hazardsFound" min="0" step="1"
+                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+              </div>
+              <div class="form-group">
+                <label>职业病体检人数 (人)</label>
+                <input type="number" v-model.number="formData.occupationalChecks" min="0" step="1"
+                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+              </div>
+            </div>
+          </fieldset>
         </div>
       </fieldset>
-
-      <button type="submit" :disabled="isSubmitting">
-        {{ isSubmitting ? '提交中...' : '提交职业健康与安全数据' }}
-      </button>
     </form>
   </div>
 </template>
 
 <script setup>
-import {computed, reactive, ref} from 'vue'
-import {useSelectionStore} from '@/stores/selectionStore'
-import apiClient from "@/utils/axios.js";
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { useSelectionStore } from '@/stores/selectionStore'
+import apiClient from '@/utils/axios'
 
+// —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
 const factories = computed(() => selectionStore.factories)
 const year = computed(() => selectionStore.selectedYear)
 const years = computed(() => selectionStore.years)
-const isSubmitting = ref(false)
 
+const isEditing = ref(false)
+const isLoading = ref(false)
+
+// 月份名称映射 & 工具函数（与能源一致）
 const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+const getMonthName = (index) => monthNames[index]
 
-// 表单数据模型
+// —— 职业健康安全数据 —— //
 const formData = reactive({
-  // 月度数据 (JSON格式存储)
-  trainingCount: Array(12).fill(0),          // 培训次数（次）
-  trainingParticipants: Array(12).fill(0),  // 培训参与人次（人次）
-  trainingHours: Array(12).fill(0),          // 培训学时（小时）
-  injuryCount: Array(12).fill(0),            // 工伤数量（次）
-  incidentCount: Array(12).fill(0),          // 安全事故数量（次）
-  fatalityCount: Array(12).fill(0),          // 工亡人数（人）
-  lostWorkdays: Array(12).fill(0),           // 工伤损失工作日数（天）
-  safetyInvestment: Array(12).fill(0),       // 安全生产投入（万元）
-
-  // 汇总数据 (单个变量存储)
-  safetyManagers: 0,         // 专职安全管理人员(人)
-  medicalChecks: 0,          // 员工体检人数(人)
-  coverageRate: 0,           // 员工体检覆盖率(%)
-  emergencyDrills: 0,        // 安全应急演练次数(次)
-  hazardsFound: 0,           // 安全检查排查隐患数(个)
-  occupationalChecks: 0       // 职业病体检人数(人)
+  trainingCount: Array(12).fill(0),
+  trainingParticipants: Array(12).fill(0),
+  trainingHours: Array(12).fill(0),
+  injuryCount: Array(12).fill(0),
+  incidentCount: Array(12).fill(0),
+  fatalityCount: Array(12).fill(0),
+  lostWorkdays: Array(12).fill(0),
+  safetyInvestment: Array(12).fill(0),
+  safetyManagers: 0,
+  medicalChecks: 0,
+  coverageRate: 0,
+  emergencyDrills: 0,
+  hazardsFound: 0,
+  occupationalChecks: 0
 })
 
-// 计算行合计
-const rowSum = (arr) => arr.reduce((sum, val) => sum + (Number(val) || 0), 0)
+// —— 汇总与计算（保持原逻辑与命名，默认保留两位小数行为） —— //
+const toNum = (v, d = 0) => {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : d
+}
 
-// 提交数据
-const submitOHS = async () => {
+const rowSum = (arr) => arr.reduce((s, v) => s + (Number(v) || 0), 0).toFixed(2)
+
+const trainingCountTotal = computed(() => rowSum(formData.trainingCount))
+const trainingParticipantsTotal = computed(() => rowSum(formData.trainingParticipants))
+const trainingHoursTotal = computed(() => rowSum(formData.trainingHours))
+const injuryCountTotal = computed(() => rowSum(formData.injuryCount))
+const incidentCountTotal = computed(() => rowSum(formData.incidentCount))
+const fatalityCountTotal = computed(() => rowSum(formData.fatalityCount))
+const lostWorkdaysTotal = computed(() => rowSum(formData.lostWorkdays))
+const safetyInvestmentTotal = computed(() => rowSum(formData.safetyInvestment))
+
+// —— 与能源统计保持一致：监听工厂/年份变化并拉取数据 —— //
+watch([factory, year], () => {
+  fetchData()
+})
+
+onMounted(() => {
+  document.addEventListener('click', selectionStore.handleClickOutside)
+  // 首次进入拉取一次
+  fetchData()
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', selectionStore.handleClickOutside)
+})
+
+// —— 获取数据（与能源统计风格相同） —— //
+const fetchData = async () => {
+  if (!factory.value || !year.value) {
+    resetFormData()
+    return
+  }
+  isLoading.value = true
+  try {
+    const resp = await apiClient.get('/quantitative/ohs', {
+      params: { factory: factory.value, year: year.value }
+    })
+    const data = resp?.data?.data
+    if (data) {
+      // 兼容后端下划线/驼峰
+      setArray(formData.trainingCount, data.trainingCount || data.training_count || Array(12).fill(0))
+      setArray(formData.trainingParticipants, data.trainingParticipants || data.training_participants || Array(12).fill(0))
+      setArray(formData.trainingHours, data.trainingHours || data.training_hours || Array(12).fill(0))
+      setArray(formData.injuryCount, data.injuryCount || data.injury_count || Array(12).fill(0))
+      setArray(formData.incidentCount, data.incidentCount || data.incident_count || Array(12).fill(0))
+      setArray(formData.fatalityCount, data.fatalityCount || data.fatality_count || Array(12).fill(0))
+      setArray(formData.lostWorkdays, data.lostWorkdays || data.lost_workdays || Array(12).fill(0))
+      setArray(formData.safetyInvestment, data.safetyInvestment || data.safety_investment || Array(12).fill(0))
+
+      formData.safetyManagers = toNum(data.safetyManagers || data.safety_managers)
+      formData.medicalChecks = toNum(data.medicalChecks || data.medical_checks)
+      formData.coverageRate = toNum(data.coverageRate || data.coverage_rate)
+      formData.emergencyDrills = toNum(data.emergencyDrills || data.emergency_drills)
+      formData.hazardsFound = toNum(data.hazardsFound || data.hazards_found)
+      formData.occupationalChecks = toNum(data.occupationalChecks || data.occupational_checks)
+    } else {
+      resetFormData()
+    }
+  } catch (err) {
+    if (err.response?.status === 404) {
+      resetFormData()
+    } else {
+      console.error('获取职业健康安全数据失败:', err)
+      resetFormData()
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const setArray = (reactiveArr, sourceArr) => {
+  for (let i = 0; i < 12; i++) reactiveArr[i] = toNum(sourceArr?.[i] ?? 0)
+}
+
+// —— 重置（与能源一致的重置思路） —— //
+const resetFormData = () => {
+  setArray(formData.trainingCount, Array(12).fill(0))
+  setArray(formData.trainingParticipants, Array(12).fill(0))
+  setArray(formData.trainingHours, Array(12).fill(0))
+  setArray(formData.injuryCount, Array(12).fill(0))
+  setArray(formData.incidentCount, Array(12).fill(0))
+  setArray(formData.fatalityCount, Array(12).fill(0))
+  setArray(formData.lostWorkdays, Array(12).fill(0))
+  setArray(formData.safetyInvestment, Array(12).fill(0))
+  formData.safetyManagers = 0
+  formData.medicalChecks = 0
+  formData.coverageRate = 0
+  formData.emergencyDrills = 0
+  formData.hazardsFound = 0
+  formData.occupationalChecks = 0
+}
+
+// —— 提交编辑（保持原字段，不改动内容，只改样式） —— //
+const submitEdit = async () => {
   if (!factory.value) {
     alert('请选择工厂名称')
     return
   }
-
-  isSubmitting.value = true
   try {
     const payload = {
       factory: factory.value,
       year: Number(year.value),
-      ...formData,
-      // 添加计算字段
-      trainingCountTotal: rowSum(formData.trainingCount),
-      trainingParticipantsTotal: rowSum(formData.trainingParticipants),
-      trainingHoursTotal: rowSum(formData.trainingHours),
-      injuryCountTotal: rowSum(formData.injuryCount),
-      incidentCountTotal: rowSum(formData.incidentCount),
-      fatalityCountTotal: rowSum(formData.fatalityCount),
-      lostWorkdaysTotal: rowSum(formData.lostWorkdays),
-      safetyInvestmentTotal: rowSum(formData.safetyInvestment)
+      trainingCount: [...formData.trainingCount],
+      trainingParticipants: [...formData.trainingParticipants],
+      trainingHours: [...formData.trainingHours],
+      injuryCount: [...formData.injuryCount],
+      incidentCount: [...formData.incidentCount],
+      fatalityCount: [...formData.fatalityCount],
+      lostWorkdays: [...formData.lostWorkdays],
+      safetyInvestment: [...formData.safetyInvestment],
+      safetyManagers: formData.safetyManagers,
+      medicalChecks: formData.medicalChecks,
+      coverageRate: formData.coverageRate,
+      emergencyDrills: formData.emergencyDrills,
+      hazardsFound: formData.hazardsFound,
+      occupationalChecks: formData.occupationalChecks,
+      trainingCountTotal: trainingCountTotal.value,
+      trainingParticipantsTotal: trainingParticipantsTotal.value,
+      trainingHoursTotal: trainingHoursTotal.value,
+      injuryCountTotal: injuryCountTotal.value,
+      incidentCountTotal: incidentCountTotal.value,
+      fatalityCountTotal: fatalityCountTotal.value,
+      lostWorkdaysTotal: lostWorkdaysTotal.value,
+      safetyInvestmentTotal: safetyInvestmentTotal.value
     }
 
-    const response = await apiClient.post('/quantitative/ohs', payload)
-
-    if (response.data.status === 'success') {
+    const resp = await apiClient.post('/quantitative/ohs', payload)
+    if (resp.data?.status === 'success') {
       alert('职业健康与安全数据提交成功!')
     }
-  } catch (error) {
-    console.error('提交失败:', error)
-    alert(`提交失败: ${error.response?.data?.detail || error.message}`)
+  } catch (err) {
+    console.error('提交失败:', err)
+    alert(`提交失败: ${err.response?.data?.detail || err.message}`)
   } finally {
-    isSubmitting.value = false
+    // 与能源一致：提交后退出编辑并刷新
+    isEditing.value = false
+    await fetchData()
   }
 }
+
+// —— 暴露方法，与能源统计完全一致 —— //
+defineExpose({
+  startEditing: () => (isEditing.value = true),
+  cancelEditing: () => {
+    isEditing.value = false
+    fetchData()
+  },
+  submitEdit,
+  fetchData
+})
 </script>
-
-<style scoped>
-/* 样式保持不变 */
-.table-wrapper {
-  overflow: auto
-}
-
-.ohs-table {
-  width: 100%;
-  border-collapse: collapse
-}
-
-.ohs-table th, .ohs-table td {
-  border: 1px solid #ddd;
-  padding: 6px;
-  text-align: center
-}
-
-.ohs-table thead th {
-  position: sticky;
-  top: 0;
-  background: #f7f7f7;
-  z-index: 1
-}
-
-.total-cell {
-  font-weight: 600
-}
-
-.grand-total td {
-  font-weight: 700;
-  background: #fafafa
-}
-
-.ohs-table input {
-  width: 100px
-}
-
-@media (max-width: 768px) {
-  .ohs-table input {
-    width: 80px
-  }
-}
-</style>
+```
