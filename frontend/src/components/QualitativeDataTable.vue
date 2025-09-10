@@ -1,6 +1,6 @@
 <!-- QualitativeDataTable.vue -->
 <template>
-  <fieldset class="qualitative-fieldset">
+  <fieldset class="summary-fieldset">
     <legend>{{ title }}</legend>
     <div class="form-row">
       <table class="data-table">

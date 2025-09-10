@@ -8,7 +8,7 @@ from core.models import GovernanceQualitative
 from core.permissions import require_access, get_current_user, require_factory
 from core.schemas import GovernanceQualitativeSubmission
 
-router = APIRouter(prefix="/analytical/env_quantitative", tags=["分析数据-管治定性"])
+router = APIRouter(prefix="/analytical/governance", tags=["分析数据-管治定性"])
 
 
 @router.get("")

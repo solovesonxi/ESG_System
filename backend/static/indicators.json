@@ -18,13 +18,13 @@
       "renewable_output_ratio"
     ],
     "energy": [
-      "total_purchased_power",
-      "total_renewable_power",
-      "coal_consumption",
-      "total_gasoline",
-      "total_diesel",
-      "total_natural_gas",
-      "total_other_energy",
+      "purchased_power",
+      "renewable_power",
+      "coal",
+      "gasoline",
+      "diesel",
+      "natural_gas",
+      "other_energy",
       "total_energy_consumption",
       "energy_consumption_intensity"
     ],
@@ -53,34 +53,34 @@
       "nox_sox_other"
     ],
     "waste": [
-      "hazardous_total",
-      "hazardous_intensity",
-      "epe_total",
-      "plastic_paper_total",
-      "domestic_industrial_total",
-      "recyclable_total",
+      "epe",
+      "plastic_paper",
+      "domestic_industrial",
+      "hazardous",
+      "wastewater",
       "non_hazardous_total",
+      "recyclable_total",
       "total_waste",
+      "disposal_required_total",
       "recycle_rate",
       "protective_reuse_rate",
-      "disposal_required_total",
-      "wastewater_total",
-      "wastewater_intensity",
-      "exceed_events"
+      "exceed_events",
+      "hazardous_intensity",
+      "wastewater_intensity"
     ],
     "investment": [
-      "env_invest_total",
+      "env_invest",
       "env_invest_intensity",
       "green_income_ratio",
-      "climate_invest_total",
-      "clean_tech_invest_total"
+      "climate_invest",
+      "clean_tech_invest"
     ],
-    "envQuant": [
+    "management": [
       "national_green_factory",
       "provincial_green_factory",
-      "env_penalty_intensity",
-      "env_penalty_amount",
-      "env_violations"
+      "environmental_penalty_intensity",
+      "environmental_penalty_amount",
+      "environmental_violation"
     ]
   },
   "env_qual": [

@@ -14,7 +14,7 @@
               <div class="options" v-show="selectionStore.showFactoryDropdown"
                    :style="{ maxHeight: '200px', overflowY: 'auto' }">
                 <div
-                    v-for="f in factories"
+                    v-for="f in selectionStore.factories"
                     :key="f"
                     class="option"
                     :class="{ 'selected-option': f === factory }"
@@ -34,7 +34,7 @@
               </div>
               <div class="options" v-show="selectionStore.showYearDropdown">
                 <div
-                    v-for="y in years"
+                    v-for="y in selectionStore.years"
                     :key="y"
                     class="option"
                     :class="{ 'selected-option': y === year }"
@@ -45,12 +45,32 @@
               </div>
             </div>
           </div>
+          <div class="form-group">
+            <label>统计月份</label>
+            <div class="custom-select">
+              <div class="selected" @click="selectionStore.toggleMonthDropdown">
+                {{ month }}月
+                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
+              </div>
+              <div class="options" v-show="selectionStore.showMonthDropdown">
+                <div
+                    v-for="m in selectionStore.months"
+                    :key="m"
+                    class="option"
+                    :class="{ 'selected-option': m === month }"
+                    @click="selectionStore.selectMonth(m)"
+                >
+                  {{ m }}月
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </fieldset>
 
       <!-- 温室气体盘查统计 -->
-      <fieldset>
-        <legend>{{ year }}年温室气体盘查统计 (吨CO2e)</legend>
+      <fieldset class="summary-fieldset">
+        <legend>{{ year }}年{{ month }}月温室气体盘查统计 (吨CO2e)</legend>
         <div class="form-row">
           <div class="form-group">
             <label>范畴一 (类别一)</label>
@@ -96,8 +116,8 @@
       </fieldset>
 
       <!-- 废气排放统计 -->
-      <fieldset>
-        <legend>{{ year }}年废气排放统计 - 有组织排放 (T)</legend>
+      <fieldset class="summary-fieldset">
+        <legend>{{ year }}年{{ month }}月废气排放统计 - 有组织排放 (T)</legend>
         <div class="form-row">
           <div class="form-group">
             <label>挥发性有机物 (VOC)</label>
@@ -137,9 +157,8 @@ import apiClient from "@/utils/axios.js";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
-const factories = computed(() => selectionStore.factories)
 const year = computed(() => selectionStore.selectedYear)
-const years = computed(() => selectionStore.years)
+const month = computed(() => selectionStore.selectedMonth)
 const isEditing = ref(false)
 
 

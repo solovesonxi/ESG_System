@@ -2,7 +2,6 @@
 <template>
   <div class="shared-form">
     <form>
-      <!-- 基础信息，与能源统计保持一致 -->
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -13,20 +12,20 @@
                 {{ factory }}
                 <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
               </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown" :style="{ maxHeight: '200px', overflowY: 'auto' }">
+              <div class="options" v-show="selectionStore.showFactoryDropdown"
+                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
                 <div
-                  v-for="f in factories"
-                  :key="f"
-                  class="option"
-                  :class="{ 'selected-option': f === factory }"
-                  @click="selectionStore.selectFactory(f)"
+                    v-for="f in selectionStore.factories"
+                    :key="f"
+                    class="option"
+                    :class="{ 'selected-option': f === factory }"
+                    @click="selectionStore.selectFactory(f)"
                 >
                   {{ f }}
                 </div>
               </div>
             </div>
           </div>
-
           <div class="form-group">
             <label>统计年份</label>
             <div class="custom-select">
@@ -36,13 +35,33 @@
               </div>
               <div class="options" v-show="selectionStore.showYearDropdown">
                 <div
-                  v-for="y in years"
-                  :key="y"
-                  class="option"
-                  :class="{ 'selected-option': y === year }"
-                  @click="selectionStore.selectYear(y)"
+                    v-for="y in selectionStore.years"
+                    :key="y"
+                    class="option"
+                    :class="{ 'selected-option': y === year }"
+                    @click="selectionStore.selectYear(y)"
                 >
                   {{ y }}年
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>统计月份</label>
+            <div class="custom-select">
+              <div class="selected" @click="selectionStore.toggleMonthDropdown">
+                {{ month }}月
+                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
+              </div>
+              <div class="options" v-show="selectionStore.showMonthDropdown">
+                <div
+                    v-for="m in selectionStore.months"
+                    :key="m"
+                    class="option"
+                    :class="{ 'selected-option': m === month }"
+                    @click="selectionStore.selectMonth(m)"
+                >
+                  {{ m }}月
                 </div>
               </div>
             </div>
@@ -52,31 +71,22 @@
 
       <!-- 满意度数据部分（样式与能源统计保持一致） -->
       <fieldset class="summary-fieldset">
-        <legend>员工满意度数据统计</legend>
-
+        <legend>员工满意度调查统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
-
-        <div v-else>
-          <!-- 满意度统计 -->
-          <fieldset>
-            <legend>{{ year }}年员工满意度统计 (%)</legend>
-            <div class="monthly-grid">
-              <div v-for="(_, index) in formData.satisfaction" :key="'sat-'+index" class="month-input">
-                <label>{{ getMonthName(index) }}</label>
-                <input
-                  type="number"
-                  v-model.number="formData.satisfaction[index]"
-                  :placeholder="`${getMonthName(index)}满意度`"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  :readonly="!isEditing"
-                  :class="{ 'editable-field': isEditing }"
-                  required
-                >
-              </div>
-            </div>
-          </fieldset>
+        <div class="form-row" v-else>
+          <div class="form-group">
+            <label>员工满意度 （%）</label>
+            <input
+                type="number"
+                v-model.number="formData.satisfaction[month-1]"
+                min="0"
+                max="100"
+                step="0.1"
+                :readonly="!isEditing"
+                :class="{ 'editable-field': isEditing }"
+                required
+            >
+          </div>
         </div>
       </fieldset>
     </form>
@@ -84,48 +94,43 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { useSelectionStore } from '@/stores/selectionStore'
+import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue'
+import {useSelectionStore} from '@/stores/selectionStore'
 import apiClient from '@/utils/axios'
 
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
-const factories = computed(() => selectionStore.factories)
-const year = computed(() => selectionStore.selectedYear)
-const years = computed(() => selectionStore.years)
+const year = computed(() => selectionStore.selectedYear);
+const month = computed(() => selectionStore.selectedMonth);
 
 const isEditing = ref(false)
 const isLoading = ref(false)
 
-// 月份名称映射 & 工具函数（与能源一致）
-const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
-const getMonthName = (index) => monthNames[index]
-
 // —— 满意度数据 —— //
 const formData = reactive({
-  satisfaction: Array(12).fill(0)
+  satisfaction: Array(12).fill(null)
 })
 
-// —— 计算属性（保持原逻辑与命名，默认保留一位小数行为） —— //
-const toNum = (v, d = 0) => {
-  const n = Number(v)
-  return Number.isFinite(n) ? n : d
+const toNum = (v, d = null) => {
+  if (v === null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : d;
 }
 
 const annualAverage = computed(() => {
-  const sum = formData.satisfaction.reduce((total, value) => total + toNum(value), 0)
-  return (sum / 12).toFixed(1)
+  const validMonths = formData.satisfaction.filter(v => v > 0);
+  if (validMonths.length === 0) return null;
+  const sum = validMonths.reduce((total, value) => total + toNum(value), 0);
+  return (sum / validMonths.length).toFixed(1);
 })
 
-// —— 与能源统计保持一致：监听工厂/年份变化并拉取数据 —— //
 watch([factory, year], () => {
   fetchData()
 })
 
 onMounted(() => {
   document.addEventListener('click', selectionStore.handleClickOutside)
-  // 首次进入拉取一次
   fetchData()
 })
 
@@ -142,12 +147,12 @@ const fetchData = async () => {
   isLoading.value = true
   try {
     const resp = await apiClient.get('/quantitative/satisfaction', {
-      params: { factory: factory.value, year: year.value }
+      params: {factory: factory.value, year: year.value}
     })
     const data = resp?.data?.data
     if (data) {
       // 兼容后端下划线/驼峰
-      setArray(formData.satisfaction, data.satisfaction || data.satisfaction_score || Array(12).fill(0))
+      setArray(formData.satisfaction, data.satisfaction || Array(12).fill(0))
     } else {
       resetFormData()
     }
@@ -211,4 +216,3 @@ defineExpose({
   fetchData
 })
 </script>
-```

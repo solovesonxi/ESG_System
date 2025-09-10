@@ -56,12 +56,12 @@
                 <tr v-for="(item, key, index) in indicators" :key="key">
                   <td v-if="index === 0" :rowspan="Object.keys(indicators).length">{{ category }}</td>
                   <td>{{ key }}</td>
-                  <td>{{ item.explanation || 'N/A' }}</td>
-                  <td>{{ item.source || 'N/A' }}</td>
-                  <td>{{ item.currentText || 'N/A' }}</td>
-                  <td>{{ item.lastText || 'N/A' }}</td>
-                  <td>{{ item.comparisonText || 'N/A' }}</td>
-                  <td>{{ item.reason || 'N/A' }}</td>
+                  <td>{{ item.explanation || '' }}</td>
+                  <td>{{ item.source || '' }}</td>
+                  <td>{{ item.currentText || '' }}</td>
+                  <td>{{ item.lastText || '' }}</td>
+                  <td>{{ item.comparisonText || '' }}</td>
+                  <td>{{ item.reason || '' }}</td>
                 </tr>
               </template>
             </tbody>
@@ -86,9 +86,9 @@ const years = computed(() => selectionStore.years)
 
 const qualData = ref({})
 
-const fetchQualData = async () => {
+const fetchData = async () => {
   try {
-    const res = await apiClient.get('/analytical/env_quantitative', {
+    const res = await apiClient.get('/analytical/governance', {
       params: { factory: factory.value, year: year.value }
     })
     qualData.value = res.data || {}
@@ -100,11 +100,11 @@ const fetchQualData = async () => {
 
 onMounted(() => {
   document.addEventListener('click', selectionStore.handleClickOutside)
-  fetchQualData()
+  fetchData()
 })
 
 watch([factory, year], () => {
-  fetchQualData()
+  fetchData()
 })
 </script>
 

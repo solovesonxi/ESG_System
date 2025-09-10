@@ -10,34 +10,35 @@ router = APIRouter(prefix="/quantitative/waste", tags=["定量数据-废弃物"]
 
 
 @router.get("")
-async def fetch_data(factory: str, year: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
+                     current_user: dict = Depends(get_current_user)):
     try:
         require_access(factory, current_user)
         data = db.query(WasteData).filter(WasteData.factory == factory, WasteData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
-        data_dict = {}
-
+        data_dict = {"epe": data.epe, "plasticPaper": data.plastic_paper,
+                     "domesticIndustrial": data.domestic_industrial, "hazardous": data.hazardous,
+                     "wastewater": data.wastewater, "totalRevenue": data.total_revenue,
+                     "protectiveReuseRate": data.protective_reuse_rate, "exceedEvents": data.exceed_events}
         return {"status": "success", "data": data_dict}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("")
-async def submit_data(data: WasteSubmission, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def submit_data(data: WasteSubmission, db: Session = Depends(get_db),
+                      current_user: dict = Depends(get_current_user)):
     try:
         require_factory(data.factory, current_user)
         db_record = WasteData(factory=data.factory, year=data.year, epe=data.epe, plastic_paper=data.plasticPaper,
-                           domestic_industrial=data.domesticIndustrial, hazardous=data.hazardous,
-                           wastewater=data.wastewater, epe_total=data.epeTotal,
-                           plastic_paper_total=data.plasticPaperTotal,
-                           domestic_industrial_total=data.domesticIndustrialTotal, hazardous_total=data.hazardousTotal,
-                           wastewater_total=data.wastewaterTotal, non_hazardous_total=data.nonHazardousTotal,
-                           recyclable_total=data.recyclableTotal, total_waste=data.totalWaste,
-                           disposal_required_total=data.disposalRequiredTotal, recycle_rate=data.recycleRate,
-                           total_revenue=data.total_revenue, protective_reuse_rate=data.protectiveReuseRate,
-                           exceed_events=data.exceedEvents, hazardous_intensity=data.hazardousIntensity,
-                           wastewater_intensity=data.wastewaterIntensity)
+                              domestic_industrial=data.domesticIndustrial, hazardous=data.hazardous,
+                              wastewater=data.wastewater, non_hazardous_total=data.nonHazardousTotal,
+                              recyclable_total=data.recyclableTotal, total_waste=data.totalWaste,
+                              disposal_required_total=data.disposalRequiredTotal, recycle_rate=data.recycleRate,
+                              total_revenue=data.totalRevenue, protective_reuse_rate=data.protectiveReuseRate,
+                              exceed_events=data.exceedEvents, hazardous_intensity=data.hazardousIntensity,
+                              wastewater_intensity=data.wastewaterIntensity)
         merged_record = db.merge(db_record)
         db.commit()
         return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}

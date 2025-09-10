@@ -17,8 +17,16 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
         data = db.query(EmploymentData).filter(EmploymentData.factory == factory, EmploymentData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
-        data_dict = {}
-
+        data_dict = {"fullTime": data.full_time, "partTime": data.part_time, "male": data.male, "female": data.female,
+            "management": data.management, "managementFemale": data.management_female, "middle": data.middle,
+            "general": data.general, "mainland": data.mainland, "overseas": data.overseas, "eduPhd": data.edu_phd,
+            "eduMaster": data.edu_master, "eduBachelor": data.edu_bachelor, "eduJunior": data.edu_junior,
+            "avgSocialFund": data.avg_social_fund, "incSocialFund": data.inc_social_fund, "age18_30": data.age18_30,
+            "age31_45": data.age31_45, "age46_60": data.age46_60, "newHires": data.new_hires,
+            "quitMale": data.quit_male, "quitFemale": data.quit_female, "quitMainland": data.quit_mainland,
+            "quitOverseas": data.quit_overseas, "quit18_30": data.quit18_30, "quit31_45": data.quit31_45,
+            "quit46_60": data.quit46_60, "quitManagement": data.quit_management, "quitMiddle": data.quit_middle,
+            "quitGeneral": data.quit_general}
         return {"status": "success", "data": data_dict}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

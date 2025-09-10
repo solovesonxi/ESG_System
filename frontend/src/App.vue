@@ -27,7 +27,6 @@ const route = useRoute()
 const isDataPage = computed(() => route.path !== '/' && route.path !== '/login'  && route.path !== '/profile')
 
 const handleStartEdit = () => {
-  console.log('Start Edit triggered');
   console.log('currentComponent:', currentComponent.value);
   if (currentComponent.value && currentComponent.value.startEditing) {
     console.log('Calling startEditing on currentComponent');
@@ -39,7 +38,6 @@ const handleStartEdit = () => {
 };
 
 const handleCancelEdit = () => {
-  console.log('Cancel Edit triggered');
   if (currentComponent.value && currentComponent.value.cancelEditing) {
     console.log('Calling cancelEditing on currentComponent');
     currentComponent.value.cancelEditing();
@@ -50,7 +48,6 @@ const handleCancelEdit = () => {
 };
 
 const handleSubmitEdit = () => {
-  console.log('Submit Edit triggered');
   if (currentComponent.value && currentComponent.value.submitEdit) {
     console.log('Calling submitEdit on currentComponent');
     currentComponent.value.submitEdit();
@@ -60,11 +57,10 @@ const handleSubmitEdit = () => {
   }
 };
 
-// 监听路由变化，重置编辑状态并触发数据获取
 watch(() => route.path, () => {
   isEditing.value = false;
   setTimeout(() => {
-    if (currentComponent.value && currentComponent.value.fetchData) {
+    if (currentComponent.value) {
       currentComponent.value.fetchData();
     }
   }, 10);

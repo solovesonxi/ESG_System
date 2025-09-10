@@ -2,8 +2,6 @@
   <div class="shared-form">
     <form>
       <BaseInfoSelector/>
-
-      <!-- 动态生成分类表格 -->
       <QualitativeDataTable
           v-for="category in Object.keys(INDICATOR_CATEGORIES)"
           :key="category"
@@ -26,7 +24,7 @@ import {ref} from 'vue';
 import BaseInfoSelector from '@/components/BaseInfoSelector.vue';
 import QualitativeDataTable from '@/components/QualitativeDataTable.vue';
 import {useQualData} from '@/router/useEnvData.js';
-import {ENV_QUAL_INDICATORS, INDICATOR_CATEGORIES} from '@/router/indicators.js';
+import {ENV_QUAL_INDICATORS, INDICATOR_CATEGORIES} from '@/constants/indicators.js';
 import {fetchQualData, postQualData} from '@/router/envData.js';
 
 // 使用组合函数获取数据

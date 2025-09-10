@@ -35,46 +35,41 @@
         </div>
       </fieldset>
 
-      <fieldset class="summary-fieldset">
-        <legend>劳动定性</legend>
+      <fieldset class="summary-fieldset" v-for="(indicators, category) in qualData" :key="category">
+        <legend>{{ category }}</legend>
         <div class="form-row">
           <table class="data-table">
             <thead>
-              <tr>
-                <th>大类</th>
-                <th>指标</th>
-                <th>今年的方针、政策、文件、记录等</th>
-                <th>去年的方针、政策、文件、记录等</th>
-                <th>对比去年</th>
-                <th>原因分析</th>
-              </tr>
+            <tr>
+              <th>指标</th>
+              <th>去年的方针、政策、文件、记录等</th>
+              <th>今年的方针、政策、文件、记录等</th>
+              <th>对比去年</th>
+              <th>原因分析</th>
+            </tr>
             </thead>
             <tbody>
-              <template v-for="(indicators, category) in qualData" :key="category">
-                <tr v-for="(item, key, index) in indicators" :key="key">
-                  <td v-if="index === 0" :rowspan="Object.keys(indicators).length">{{ category }}</td>
-                  <td>{{ key }}</td>
-                  <td>
-                    <div v-if="!isEditing">{{ item.currentText || 'N/A' }}</div>
-                    <textarea v-else v-model="tempEdits[category][key].currentText" class="reason-input" :placeholder="item.currentText || ''"></textarea>
-                  </td>
-                  <td>
-                    <div v-if="!isEditing">{{ item.lastText || 'N/A' }}</div>
-                    <textarea v-else v-model="tempEdits[category][key].lastText" class="reason-input" :placeholder="item.lastText || ''"></textarea>
-                  </td>
-                  <td>
-                    <div v-if="!isEditing">{{ item.comparisonText || 'N/A' }}</div>
-                    <textarea v-else v-model="tempEdits[category][key].comparisonText" class="reason-input" :placeholder="item.comparisonText || ''"></textarea>
-                  </td>
-                  <td>
-                    <div v-if="!isEditing">{{ item.reason || 'N/A' }}</div>
-                    <textarea v-else v-model="tempEdits[category][key].reason" class="reason-input" :placeholder="item.reason || ''"></textarea>
-                  </td>
-                </tr>
-              </template>
+            <tr v-for="(item, key) in indicators" :key="key">
+              <td>{{ key }}</td>
+              <td>
+                <div v-if="!isEditing">{{ item.lastText || '' }}</div>
+                <textarea v-else v-model="tempEdits[category][key].lastText" class="reason-input" :placeholder="item.lastText || ''"></textarea>
+              </td>
+              <td>
+                <div v-if="!isEditing">{{ item.currentText || '' }}</div>
+                <textarea v-else v-model="tempEdits[category][key].currentText" class="reason-input" :placeholder="item.currentText || ''"></textarea>
+              </td>
+              <td>
+                <div v-if="!isEditing">{{ item.comparisonText || '' }}</div>
+                <textarea v-else v-model="tempEdits[category][key].comparisonText" class="reason-input" :placeholder="item.comparisonText || ''"></textarea>
+              </td>
+              <td>
+                <div v-if="!isEditing">{{ item.reason || '' }}</div>
+                <textarea v-else v-model="tempEdits[category][key].reason" class="reason-input" :placeholder="item.reason || ''"></textarea>
+              </td>
+            </tr>
             </tbody>
           </table>
-          
         </div>
       </fieldset>
     </form>
@@ -96,7 +91,7 @@ const qualData = ref({})
 const isEditing = ref(false)
 const tempEdits = ref({})
 
-const fetchQualData = async () => {
+const fetchData = async () => {
   try {
     const res = await apiClient.get('/analytical/social_qualitative_other', {
       params: { factory: factory.value, year: year.value }
@@ -110,11 +105,11 @@ const fetchQualData = async () => {
 
 onMounted(() => {
   document.addEventListener('click', selectionStore.handleClickOutside)
-  fetchQualData()
+  fetchData()
 })
 
 watch([factory, year], () => {
-  fetchQualData()
+  fetchData()
 })
 
 const startEditing = () => {
@@ -147,18 +142,20 @@ const submitEdit = async () => {
       year: parseInt(year.value),
       data: tempEdits.value
     })
-    // 同步回显
-    qualData.value = JSON.parse(JSON.stringify(tempEdits.value))
-    isEditing.value = false
     alert('保存成功！')
   } catch (e) {
     console.error(e)
     alert(`保存失败: ${e.response?.data?.detail || e.message}`)
+  } finally {
+    console.log('提交完成，即将刷新');
+    isEditing.value = false;
+    await fetchData();
   }
 }
 defineExpose({
   startEditing,
   cancelEditing,
   submitEdit,
+  fetchData
 });
 </script>

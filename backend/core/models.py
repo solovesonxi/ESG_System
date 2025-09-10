@@ -18,24 +18,28 @@ class MaterialData(Base):
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
 
-    renewable_input = Column(Float, nullable=False)
-    non_renewable_input = Column(Float, nullable=False)
-    renewable_output = Column(Float, nullable=False)
-    non_renewable_output = Column(Float, nullable=False)
-    material_consumption = Column(Float, nullable=False)
-    wood_fiber = Column(Float, nullable=False)
-    aluminum = Column(Float, nullable=False)
-    total_revenue = Column(Float, nullable=False)
-    packaging_material = Column(Float, nullable=False)
-    paper_consumption = Column(Float, nullable=False)
-    packaging_intensity = Column(Float, nullable=False)
-    paper_intensity = Column(Float, nullable=False)
-    total_input = Column(Float, nullable=False)
-    total_output = Column(Float, nullable=False)
-    renewable_input_ratio = Column(Float, nullable=False)
-    renewable_output_ratio = Column(Float, nullable=False)
+    # 按月存储的字段（12个月数据）
+    renewable_input = Column(JSON, nullable=False)  # 可再生进料量 (T)
+    non_renewable_input = Column(JSON, nullable=False)  # 不可再生进料量 (T)
+    renewable_output = Column(JSON, nullable=False)  # 可再生出料量 (T)
+    non_renewable_output = Column(JSON, nullable=False)  # 不可再生出料量 (T)
+    material_consumption = Column(JSON, nullable=False)  # 物料消耗量 (T)
+    wood_fiber = Column(JSON, nullable=False)  # 木质纤维消耗量 (T)
+    aluminum = Column(JSON, nullable=False)  # 铝消耗量 (T)
+    packaging_material = Column(JSON, nullable=False)  # 包装材料消耗量 (T)
+    paper_consumption = Column(JSON, nullable=False)  # 纸张消耗量 (T)
 
-    reasons = Column(JSON, nullable=True)
+    # 按年计算的字段
+    total_revenue = Column(Float, nullable=False)  # 总营收 (万元)
+    packaging_intensity = Column(Float, nullable=False)  # 包装材料消耗强度 (T/万元)
+    paper_intensity = Column(Float, nullable=False)  # 纸张消耗强度 (T/万元)
+    total_input = Column(Float, nullable=False)  # 进料总量 (T)
+    total_output = Column(Float, nullable=False)  # 出料总量 (T)
+    renewable_input_ratio = Column(Float, nullable=False)  # 可再生进料占比 (%)
+    renewable_output_ratio = Column(Float, nullable=False)  # 可再生出料占比 (%)
+
+    reasons = Column(JSON, nullable=True)  # 原因说明
+
 
 
 class EnergyData(Base):
@@ -48,24 +52,12 @@ class EnergyData(Base):
     renewable_power = Column(JSON, nullable=False)  # 再生能源电量 (kWh)
     gasoline = Column(JSON, nullable=False)  # 汽油用量 (T)
     diesel = Column(JSON, nullable=False)  # 柴油用量 (T)
-    natural_gas = Column(JSON, nullable=False)  # 天然气用量 (m³)
+    natural_gas = Column(JSON, nullable=False)  # 天然气用量 (T)
     other_energy = Column(JSON, nullable=False)  # 其他能源 (Tce)
-
-    # 年度汇总数据
-    total_purchased_power = Column(Float)
-    total_renewable_power = Column(Float)
-    total_gasoline = Column(Float)
-    total_diesel = Column(Float)
-    total_natural_gas = Column(Float)
-    total_other_energy = Column(Float)
+    water  = Column(JSON, nullable=False)  # 水用量 (m³)
+    coal = Column(JSON, nullable=False)  # 煤用量 (Tce)
 
     # 能源消耗计算结果
-    water_consumption = Column(Float)  # Tce
-    coal_consumption = Column(Float)  # Tce
-    power_consumption = Column(Float)  # Tce
-    gasoline_consumption = Column(Float)  # Tce
-    diesel_consumption = Column(Float)  # Tce
-    natural_gas_consumption = Column(Float)  # Tce
     total_energy_consumption = Column(Float)  # Tce
     turnover = Column(Float)  # 万元
     energy_consumption_intensity = Column(Float)
@@ -147,11 +139,6 @@ class WasteData(Base):
     wastewater = Column(JSON, nullable=False)
 
     # 计算指标
-    epe_total = Column(Float, nullable=False)
-    plastic_paper_total = Column(Float, nullable=False)
-    domestic_industrial_total = Column(Float, nullable=False)
-    hazardous_total = Column(Float, nullable=False)
-    wastewater_total = Column(Float, nullable=False)
     non_hazardous_total = Column(Float, nullable=False)
     recyclable_total = Column(Float, nullable=False)
     total_waste = Column(Float, nullable=False)
@@ -181,10 +168,6 @@ class InvestmentData(Base):
     green_income = Column(JSON, nullable=False)
 
     # 计算指标
-    env_invest_total = Column(Float, nullable=False)
-    clean_tech_invest_total = Column(Float, nullable=False)
-    climate_invest_total = Column(Float, nullable=False)
-    green_income_total = Column(Float, nullable=False)
     total_investment = Column(Float, nullable=False)
     green_income_ratio = Column(Float, nullable=False)
     total_revenue = Column(Float, nullable=False)
@@ -192,48 +175,60 @@ class InvestmentData(Base):
     reasons = Column(JSON, nullable=True)
 
 
+class ManagementData(Base):
+    __tablename__ = 'management'
+    factory = Column(String(100), primary_key=True)
+    year = Column(Integer, primary_key=True)
+
+    national_green_factory = Column(JSON, nullable=False)
+    provincial_green_factory = Column(JSON, nullable=False)
+    environmental_penalty_intensity = Column(JSON, nullable=False)
+    environmental_penalty_amount = Column(JSON, nullable=False)
+    environmental_violation = Column(JSON, nullable=False)
+    reasons = Column(JSON, nullable=True)
+
 class EmploymentData(Base):
     __tablename__ = "employment"
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
 
     # 员工构成数据
-    full_time = Column(Integer, default=0)
-    part_time = Column(Integer, default=0)
-    male = Column(Integer, default=0)
-    female = Column(Integer, default=0)
-    management = Column(Integer, default=0)
-    management_female = Column(Integer, default=0)
-    middle = Column(Integer, default=0)
-    general = Column(Integer, default=0)
-    mainland = Column(Integer, default=0)
-    overseas = Column(Integer, default=0)
-    edu_phd = Column(Integer, default=0)
-    edu_master = Column(Integer, default=0)
-    edu_bachelor = Column(Integer, default=0)
-    edu_junior = Column(Integer, default=0)
+    full_time = Column(JSON, default=0)
+    part_time = Column(JSON, default=0)
+    male = Column(JSON, default=0)
+    female = Column(JSON, default=0)
+    management = Column(JSON, default=0)
+    management_female = Column(JSON, default=0)
+    middle = Column(JSON, default=0)
+    general = Column(JSON, default=0)
+    mainland = Column(JSON, default=0)
+    overseas = Column(JSON, default=0)
+    edu_phd = Column(JSON, default=0)
+    edu_master = Column(JSON, default=0)
+    edu_bachelor = Column(JSON, default=0)
+    edu_junior = Column(JSON, default=0)
 
     # 五险一金数据
-    avg_social_fund = Column(Float, default=0.0)
-    inc_social_fund = Column(Float, default=0.0)
+    avg_social_fund = Column(JSON, default=0.0)
+    inc_social_fund = Column(JSON, default=0.0)
 
     # 年龄分布
-    age18_30 = Column(Integer, default=0)
-    age31_45 = Column(Integer, default=0)
-    age46_60 = Column(Integer, default=0)
+    age18_30 = Column(JSON, default=0)
+    age31_45 = Column(JSON, default=0)
+    age46_60 = Column(JSON, default=0)
 
     # 新员工与离职数据
-    new_hires = Column(Integer, default=0)
-    quit_male = Column(Integer, default=0)
-    quit_female = Column(Integer, default=0)
-    quit_mainland = Column(Integer, default=0)
-    quit_overseas = Column(Integer, default=0)
-    quit18_30 = Column(Integer, default=0)
-    quit31_45 = Column(Integer, default=0)
-    quit46_60 = Column(Integer, default=0)
-    quit_management = Column(Integer, default=0)
-    quit_middle = Column(Integer, default=0)
-    quit_general = Column(Integer, default=0)
+    new_hires = Column(JSON, default=0)
+    quit_male = Column(JSON, default=0)
+    quit_female = Column(JSON, default=0)
+    quit_mainland = Column(JSON, default=0)
+    quit_overseas = Column(JSON, default=0)
+    quit18_30 = Column(JSON, default=0)
+    quit31_45 = Column(JSON, default=0)
+    quit46_60 = Column(JSON, default=0)
+    quit_management = Column(JSON, default=0)
+    quit_middle = Column(JSON, default=0)
+    quit_general = Column(JSON, default=0)
 
     # 计算指标
     total_employees = Column(Integer, default=0)
@@ -355,17 +350,6 @@ class SupplyData(Base):
     env_assessment_count = Column(Integer, default=0)  # 开展环境影响评估的供应商数量
     soc_assessment_count = Column(Integer, default=0)
 
-
-class EnvQuantData(Base):
-    __tablename__ = "env_quant"
-    factory = Column(String(100), primary_key=True)
-    year = Column(Integer, primary_key=True)
-    national_green_factory = Column(Integer, default=0)  # 国家级绿色工厂
-    provincial_green_factory = Column(Integer, default=0)  # 省级绿色工厂
-    env_penalty_intensity = Column(Float, default=0.0)  # 环境处罚强度
-    env_penalty_amount = Column(Float, default=0.0)  # 环境处罚金额
-    env_violations = Column(Integer, default=0)  # 环境违规
-    reasons = Column(JSON, nullable=True)
 
 
 class EnvQualData(Base):

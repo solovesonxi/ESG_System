@@ -2,7 +2,6 @@
 <template>
   <div class="shared-form">
     <form>
-      <!-- 基础信息，与能源统计保持一致 -->
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -13,20 +12,20 @@
                 {{ factory }}
                 <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
               </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown" :style="{ maxHeight: '200px', overflowY: 'auto' }">
+              <div class="options" v-show="selectionStore.showFactoryDropdown"
+                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
                 <div
-                  v-for="f in factories"
-                  :key="f"
-                  class="option"
-                  :class="{ 'selected-option': f === factory }"
-                  @click="selectionStore.selectFactory(f)"
+                    v-for="f in selectionStore.factories"
+                    :key="f"
+                    class="option"
+                    :class="{ 'selected-option': f === factory }"
+                    @click="selectionStore.selectFactory(f)"
                 >
                   {{ f }}
                 </div>
               </div>
             </div>
           </div>
-
           <div class="form-group">
             <label>统计年份</label>
             <div class="custom-select">
@@ -36,13 +35,33 @@
               </div>
               <div class="options" v-show="selectionStore.showYearDropdown">
                 <div
-                  v-for="y in years"
-                  :key="y"
-                  class="option"
-                  :class="{ 'selected-option': y === year }"
-                  @click="selectionStore.selectYear(y)"
+                    v-for="y in selectionStore.years"
+                    :key="y"
+                    class="option"
+                    :class="{ 'selected-option': y === year }"
+                    @click="selectionStore.selectYear(y)"
                 >
                   {{ y }}年
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>统计月份</label>
+            <div class="custom-select">
+              <div class="selected" @click="selectionStore.toggleMonthDropdown">
+                {{ month }}月
+                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
+              </div>
+              <div class="options" v-show="selectionStore.showMonthDropdown">
+                <div
+                    v-for="m in selectionStore.months"
+                    :key="m"
+                    class="option"
+                    :class="{ 'selected-option': m === month }"
+                    @click="selectionStore.selectMonth(m)"
+                >
+                  {{ m }}月
                 </div>
               </div>
             </div>
@@ -329,9 +348,8 @@ import apiClient from '@/utils/axios'
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
-const factories = computed(() => selectionStore.factories)
-const year = computed(() => selectionStore.selectedYear)
-const years = computed(() => selectionStore.years)
+const year = computed(() => selectionStore.selectedYear);
+const month = computed(() => selectionStore.selectedMonth);
 
 const isEditing = ref(false)
 const isLoading = ref(false)

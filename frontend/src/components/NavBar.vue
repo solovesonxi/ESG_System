@@ -87,6 +87,7 @@ const dataModeItems = [
   {name: 'emission', path: '/emission', label: '排放'},
   {name: 'waste', path: '/waste', label: '废弃物'},
   {name: 'investment', path: '/investment', label: '资金投入'},
+  {name: 'management', path: '/management', label: '环境管理'},
   {name: 'employment', path: '/employment', label: '雇佣'},
   {name: 'training', path: '/training', label: '教育与培训'},
   {name: 'ohs', path: '/ohs', label: '职健与安全'},

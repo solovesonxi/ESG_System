@@ -1,7 +1,6 @@
 <template>
   <div class="shared-form">
     <form>
-      <!-- 基础信息部分保持不变 -->
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -46,25 +45,93 @@
               </div>
             </div>
           </div>
+          <div class="form-group">
+            <label>统计月份</label>
+            <div class="custom-select">
+              <div class="selected" @click="selectionStore.toggleMonthDropdown">
+                {{ month }}月
+                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
+              </div>
+              <div class="options" v-show="selectionStore.showMonthDropdown">
+                <div
+                    v-for="m in selectionStore.months"
+                    :key="m"
+                    class="option"
+                    :class="{ 'selected-option': m === month }"
+                    @click="selectionStore.selectMonth(m)"
+                >
+                  {{ m }}月
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </fieldset>
 
       <!-- 物料统计部分 -->
       <fieldset class="summary-fieldset">
-        <legend>物料进出统计</legend>
+        <legend>{{ year }}年{{ month }}月物料进出统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
         <div class="form-row" v-else>
           <!-- 进料部分 -->
           <div class="form-group">
             <label>进料-可再生料总量 (T)</label>
-            <input type="number" v-model.number="formData.renewableInput" step="0.1"
+            <input type="number" v-model.number="formData.renewableInput[month - 1]" step="0.1"
                    :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div class="form-group">
             <label>进料-不可再生料总量 (T)</label>
-            <input type="number" v-model.number="formData.nonRenewableInput" step="0.1"
+            <input type="number" v-model.number="formData.nonRenewableInput[month - 1]" step="0.1"
                    :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
+
+          <!-- 出料部分 -->
+          <div class="form-group">
+            <label>出料-可再生料总量 (T)</label>
+            <input type="number" v-model.number="formData.renewableOutput[month - 1]" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+          </div>
+          <div class="form-group">
+            <label>出料-不可再生料总量 (T)</label>
+            <input type="number" v-model.number="formData.nonRenewableOutput[month - 1]" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+          </div>
+
+          <!-- 消耗部分 -->
+          <div class="form-group">
+            <label>物料消耗总量 (T)</label>
+            <input type="number" v-model.number="formData.materialConsumption[month - 1]" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+          </div>
+
+          <div class="form-group">
+            <label>木纤维 (T)</label>
+            <input type="number" v-model.number="formData.woodFiber[month - 1]" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+          </div>
+          <div class="form-group">
+            <label>铝 (T)</label>
+            <input type="number" v-model.number="formData.aluminum[month - 1]" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+          </div>
+          <div class="form-group">
+            <label>包装材料总量 (T)</label>
+            <input type="number" v-model.number="formData.packagingMaterial[month - 1]" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+          </div>
+          <div class="form-group">
+            <label>纸张总量 (T)</label>
+            <input type="number" v-model.number="formData.paper[month - 1]" step="0.1"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="summary-fieldset">
+        <legend>{{ year }}年物料年度统计</legend>
+        <div class="loading" v-if="isLoading">数据加载中...</div>
+        <div class="form-row" v-else>
+          <!-- 进料部分 -->
           <div class="form-group">
             <label>进料总量 (T)</label>
             <input type="number" :value="totalInput" disabled class="calculated-field">
@@ -72,18 +139,6 @@
           <div class="form-group">
             <label>可再生进料占比 (%)</label>
             <input type="number" :value="renewableInputRatio" disabled class="calculated-field">
-          </div>
-
-          <!-- 出料部分 -->
-          <div class="form-group">
-            <label>出料-可再生料总量 (T)</label>
-            <input type="number" v-model.number="formData.renewableOutput" step="0.1"
-                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-          </div>
-          <div class="form-group">
-            <label>出料-不可再生料总量 (T)</label>
-            <input type="number" v-model.number="formData.nonRenewableOutput" step="0.1"
-                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div class="form-group">
             <label>出料总量 (T)</label>
@@ -93,39 +148,9 @@
             <label>可再生出料占比 (%)</label>
             <input type="number" :value="renewableOutputRatio" disabled class="calculated-field">
           </div>
-
-          <!-- 消耗部分 -->
-          <div class="form-group">
-            <label>物料消耗总量 (T)</label>
-            <input type="number" v-model.number="formData.materialConsumption" step="0.1"
-                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-          </div>
-
-          <div class="form-group">
-            <label>木纤维 (T)</label>
-            <input type="number" v-model.number="formData.woodFiber" step="0.1"
-                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-          </div>
-          <div class="form-group">
-            <label>铝 (T)</label>
-            <input type="number" v-model.number="formData.aluminum" step="0.1"
-                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-          </div>
-
           <div class="form-group">
             <label>总营收 (万元)</label>
             <input type="number" v-model.number="formData.total_revenue" step="0.1"
-                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-          </div>
-
-          <div class="form-group">
-            <label>包装材料总量 (T)</label>
-            <input type="number" v-model.number="formData.packagingMaterial" step="0.1"
-                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-          </div>
-          <div class="form-group">
-            <label>纸张总量 (T)</label>
-            <input type="number" v-model.number="formData.paper" step="0.1"
                    :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div class="form-group">
@@ -149,42 +174,58 @@ import {useSelectionStore} from "@/stores/selectionStore.js"
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory);
-const year = computed(() => selectionStore.selectedYear)
+const year = computed(() => selectionStore.selectedYear);
+const month = computed(() => selectionStore.selectedMonth);
 const isEditing = ref(false)
 const isLoading = ref(false)
 
-// 表单数据结构
+// 表单数据结构（按月存储，1~12月）
 const formData = ref({
-  renewableInput: 0,
-  nonRenewableInput: 0,
-  renewableOutput: 0,
-  nonRenewableOutput: 0,
-  materialConsumption: 0,
-  woodFiber: 0,
-  aluminum: 0,
-  total_revenue: 0,
-  packagingMaterial: 0,
-  paper: 0,
+  renewableInput: Array(12).fill(0),
+  nonRenewableInput: Array(12).fill(0),
+  renewableOutput: Array(12).fill(0),
+  nonRenewableOutput: Array(12).fill(0),
+  materialConsumption: Array(12).fill(0),
+  woodFiber: Array(12).fill(0),
+  aluminum: Array(12).fill(0),
+  total_revenue: 0, // 按年存储
+  packagingMaterial: Array(12).fill(0),
+  paper: Array(12).fill(0),
 })
 
-// 计算属性
-const totalInput = computed(() => (formData.value.renewableInput + formData.value.nonRenewableInput).toFixed(2))
-const totalOutput = computed(() => (formData.value.renewableOutput + formData.value.nonRenewableOutput).toFixed(2))
+// 计算属性（按年计算）
+const rowSum = (arr) => arr.reduce((s, v) => s + (Number(v) || 0), 0).toFixed(2)
+
+const totalInput = computed(() => {
+  const renewable = rowSum(formData.value.renewableInput)
+  const nonRenewable = rowSum(formData.value.nonRenewableInput)
+  return (parseFloat(renewable) + parseFloat(nonRenewable)).toFixed(2)
+})
+
+const totalOutput = computed(() => {
+  const renewable = rowSum(formData.value.renewableOutput)
+  const nonRenewable = rowSum(formData.value.nonRenewableOutput)
+  return (parseFloat(renewable) + parseFloat(nonRenewable)).toFixed(2)
+})
+
 const renewableInputRatio = computed(() => {
   const total = parseFloat(totalInput.value)
-  return total > 0 ? ((formData.value.renewableInput / total) * 100).toFixed(2) : 0
+  const renewable = rowSum(formData.value.renewableInput)
+  return total > 0 ? ((parseFloat(renewable) / total) * 100).toFixed(2) : 0
 })
+
 const renewableOutputRatio = computed(() => {
   const total = parseFloat(totalOutput.value)
-  return total > 0 ? ((formData.value.renewableOutput / total) * 100).toFixed(2) : 0
+  const renewable = rowSum(formData.value.renewableOutput)
+  return total > 0 ? ((parseFloat(renewable) / total) * 100).toFixed(2) : 0
 })
 const packagingIntensity = computed(() => {
   return formData.value.total_revenue > 0 ?
-      (formData.value.packagingMaterial / formData.value.total_revenue).toFixed(2) : 0
+      (rowSum(formData.value.packagingMaterial) / formData.value.total_revenue).toFixed(2) : 0
 })
 const paperIntensity = computed(() => {
   return formData.value.total_revenue > 0 ?
-      (formData.value.paper / formData.value.total_revenue).toFixed(2) : 0
+      (rowSum(formData.value.paper) / formData.value.total_revenue).toFixed(2) : 0
 })
 
 
@@ -212,16 +253,16 @@ const fetchData = async () => {
     if (response.data && response.data.data) {
       const data = response.data.data;
       formData.value = {
-        renewableInput: data.renewableInput || 0,
-        nonRenewableInput: data.nonRenewableInput || 0,
-        renewableOutput: data.renewableOutput || 0,
-        nonRenewableOutput: data.nonRenewableOutput || 0,
-        materialConsumption: data.materialConsumption || 0,
-        woodFiber: data.woodFiber || 0,
-        aluminum: data.aluminum || 0,
+        renewableInput: data.renewableInput || Array(12).fill(0),
+        nonRenewableInput: data.nonRenewableInput || Array(12).fill(0),
+        renewableOutput: data.renewableOutput || Array(12).fill(0),
+        nonRenewableOutput: data.nonRenewableOutput || Array(12).fill(0),
+        materialConsumption: data.materialConsumption || Array(12).fill(0),
+        woodFiber: data.woodFiber || Array(12).fill(0),
+        aluminum: data.aluminum || Array(12).fill(0),
         total_revenue: data.total_revenue || 0,
-        packagingMaterial: data.packagingMaterial || 0,
-        paper: data.paper || 0
+        packagingMaterial: data.packagingMaterial || Array(12).fill(0),
+        paper: data.paper || Array(12).fill(0)
       }
     } else {
       resetFormData()
@@ -239,9 +280,18 @@ const fetchData = async () => {
 
 // 重置表单数据
 const resetFormData = () => {
-  Object.keys(formData.value).forEach(key => {
-    formData.value[key] = 0
-  })
+  formData.value = {
+    renewableInput: Array(12).fill(0),
+    nonRenewableInput: Array(12).fill(0),
+    renewableOutput: Array(12).fill(0),
+    nonRenewableOutput: Array(12).fill(0),
+    materialConsumption: Array(12).fill(0),
+    woodFiber: Array(12).fill(0),
+    aluminum: Array(12).fill(0),
+    total_revenue: 0,
+    packagingMaterial: Array(12).fill(0),
+    paper: Array(12).fill(0),
+  }
 }
 
 // 提交编辑方法
@@ -250,10 +300,14 @@ const submitEdit = async () => {
     const payload = {
       factory: factory.value,
       year: year.value,
+      month: month.value, // 添加当前月份
       ...formData.value,
-      packagingIntensity: packagingIntensity.value, paperIntensity: paperIntensity.value,
-      totalInput: totalInput.value, totalOutput: totalOutput.value,
-      renewableInputRatio: renewableInputRatio.value, renewableOutputRatio: renewableOutputRatio.value
+      packagingIntensity: packagingIntensity.value, 
+      paperIntensity: paperIntensity.value,
+      totalInput: totalInput.value, 
+      totalOutput: totalOutput.value,
+      renewableInputRatio: renewableInputRatio.value, 
+      renewableOutputRatio: renewableOutputRatio.value
     }
     const response = await apiClient.post('/quantitative/material', payload);
     if (response.data.status === 'success') {

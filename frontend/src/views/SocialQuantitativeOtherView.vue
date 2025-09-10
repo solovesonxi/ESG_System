@@ -35,34 +35,30 @@
         </div>
       </fieldset>
 
-      <fieldset class="summary-fieldset">
-        <legend>供应链管理 / 产品责任 / 知识产权 / 社区参与 / 志愿活动</legend>
+      <fieldset class="summary-fieldset" v-for="(indicators, category) in otherData" :key="category">
+        <legend>{{ category }}</legend>
         <div class="form-row">
           <table class="data-table">
             <thead>
               <tr>
-                <th>大类</th>
                 <th>指标</th>
-                <th>当前年 ({{ year }})</th>
                 <th>上一年 ({{ year - 1 }})</th>
+                <th>当前年 ({{ year }})</th>
                 <th>对比上期 (%)</th>
                 <th>原因分析</th>
               </tr>
             </thead>
             <tbody>
-              <template v-for="(indicators, category) in otherData" :key="category">
-                <tr v-for="(item, key, index) in indicators" :key="key">
-                  <td v-if="index === 0" :rowspan="Object.keys(indicators).length">{{ category }}</td>
+                <tr v-for="(item, key) in indicators" :key="key">
                   <td>{{ indicatorNames[key] || key }}</td>
-                  <td>{{ formatValue(item.currentYear) }}</td>
-                  <td>{{ formatValue(item.lastYear) }}</td>
-                  <td>{{ formatComparison(item.comparison) }}</td>
+                  <td>{{ formatValue(item.lastYear) || ''}}</td>
+                  <td>{{ formatValue(item.currentYear) || ''}}</td>
+                  <td>{{ formatComparison(item.comparison) || ''}}</td>
                   <td>
-                    <span v-if="!isEditing">{{ item.reason || 'N/A' }}</span>
+                    <span v-if="!isEditing">{{ item.reason || '' }}</span>
                     <textarea v-else v-model="tempReasons[key]" class="reason-input" :placeholder="item.reason || ''"></textarea>
                   </td>
                 </tr>
-              </template>
             </tbody>
           </table>
           
@@ -123,20 +119,21 @@ const indicatorNames = {
   ipr_trademarks_total: '累计商标注册数量',
 
   // 社区参与
-  community_donation_total: '公益慈善捐赠总额/对外捐赠总额',
+  community_charity_donations: '公益慈善捐赠总额/对外捐赠总额',
   community_community_investment: '社区发展投入金额',
 
   // 志愿活动
-  volunteer_participants: '志愿者活动参与人次',
-  volunteer_hours_total: '志愿者服务总时长'
+  volunteer_volunteer_participants: '志愿者活动参与人次',
+  volunteer_volunteer_hours: '志愿者服务总时长'
 }
 
-const fetchOtherData = async () => {
+const fetchData = async () => {
   try {
     const res = await apiClient.get('/analytical/social_quantitative_other', {
       params: { factory: factory.value, year: year.value }
     })
     otherData.value = res.data
+    console.log(otherData.value)
   } catch (e) {
     console.error(e)
     alert(`获取社会定量-其他数据失败: ${e.response?.data?.detail || e.message}`)
@@ -144,22 +141,22 @@ const fetchOtherData = async () => {
 }
 
 const formatComparison = (value) => {
-  if (value === null || value === undefined) return 'N/A'
+  if (value === null || value === undefined) return ''
   return `${value > 0 ? '+' : ''}${value}%`
 }
 
 const formatValue = (v) => {
-  if (v === null || v === undefined) return 'N/A'
+  if (v === null || v === undefined) return ''
   return v
 }
 
 onMounted(() => {
   document.addEventListener('click', selectionStore.handleClickOutside)
-  fetchOtherData()
+  fetchData()
 })
 
 watch([factory, year], () => {
-  fetchOtherData()
+  fetchData()
 })
 
 const startEditing = () => {
@@ -188,21 +185,21 @@ const submitEdit = async () => {
       year: parseInt(year.value),
       reasons: reasonsMap
     })
-    Object.values(otherData.value).forEach(group => {
-      Object.entries(group).forEach(([key, item]) => {
-        if (reasonsMap[key] !== undefined) item.reason = reasonsMap[key]
-      })
-    })
-    isEditing.value = false
     alert('原因提交成功！')
   } catch (e) {
     console.error(e)
     alert(`提交原因失败: ${e.response?.data?.detail || e.message}`)
+  } finally {
+    console.log('提交完成，即将刷新');
+    isEditing.value = false;
+    await fetchData();
   }
 }
 defineExpose({
   startEditing,
   cancelEditing,
   submitEdit,
+  fetchData
 });
+
 </script>

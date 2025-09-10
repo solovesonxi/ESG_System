@@ -14,7 +14,7 @@
               <div class="options" v-show="selectionStore.showFactoryDropdown"
                    :style="{ maxHeight: '200px', overflowY: 'auto' }">
                 <div
-                    v-for="f in factories"
+                    v-for="f in selectionStore.factories"
                     :key="f"
                     class="option"
                     :class="{ 'selected-option': f === factory }"
@@ -34,7 +34,7 @@
               </div>
               <div class="options" v-show="selectionStore.showYearDropdown">
                 <div
-                    v-for="y in years"
+                    v-for="y in selectionStore.years"
                     :key="y"
                     class="option"
                     :class="{ 'selected-option': y === year }"
@@ -45,19 +45,39 @@
               </div>
             </div>
           </div>
+          <div class="form-group">
+            <label>统计月份</label>
+            <div class="custom-select">
+              <div class="selected" @click="selectionStore.toggleMonthDropdown">
+                {{ month }}月
+                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
+              </div>
+              <div class="options" v-show="selectionStore.showMonthDropdown">
+                <div
+                    v-for="m in selectionStore.months"
+                    :key="m"
+                    class="option"
+                    :class="{ 'selected-option': m === month }"
+                    @click="selectionStore.selectMonth(m)"
+                >
+                  {{ m }}月
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </fieldset>
 
-      <!-- 工业用水表格 -->
-      <fieldset>
-        <legend>{{ year }}年用水量统计 - 工业用水 (T)</legend>
-        <div class="monthly-grid">
-          <div v-for="(_, index) in monthlyWater.industrial" :key="`title-${index}`">
-            <label>{{ getMonthName(index) }}</label>
+      <!-- 工业用水数据 -->
+      <fieldset class="summary-fieldset">
+        <legend>{{ year }}年{{ month }}月用水量统计 - 工业用水 (T)</legend>
+        <div class="loading" v-if="isLoading">数据加载中...</div>
+        <div class="form-row" v-else>
+          <div class="form-group">
+            <label>工业用水量 (T)</label>
             <input
                 type="number"
-                v-model.number="monthlyWater.industrial[index]"
-                :placeholder="`${getMonthName(index)}工业用水量`"
+                v-model.number="monthlyWater.industrial[month - 1]"
                 min="0"
                 step="1"
                 :readonly="!isEditing"
@@ -65,38 +85,38 @@
                 required
             >
           </div>
-          <div>
-            <label>排水量</label>
+          <div class="form-group">
+            <label>排水量 (T)</label>
             <input type="number" v-model.number="waterData.industrialDrainage" step="1" min="0"
                 :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
-          <div>
-            <label>耗水量</label>
+          <div class="form-group">
+            <label>耗水量 (T)</label>
             <input type="number" v-model.number="waterData.industrialConsumption" step="1" min="0"
                 :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
-          <div>
-            <label>循环水用量</label>
+          <div class="form-group">
+            <label>循环水用量 (T)</label>
             <input type="number" v-model.number="waterData.industrialRecycled" step="1" min="0"
                 :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
-          <div>
-            <label>合计</label>
+          <div class="form-group">
+            <label>合计 (T)</label>
             <input type="number" :value="industrialTotal" disabled class="calculated-field">
           </div>
         </div>
       </fieldset>
 
-      <!-- 生活用水表格 -->
-      <fieldset>
-        <legend>{{ year }}年用水量统计 - 生活用水 (T)</legend>
-        <div class="monthly-grid">
-          <div v-for="(_, index) in monthlyWater.domestic" :key="`title-${index}`">
-            <label>{{ getMonthName(index) }}</label>
+      <!-- 生活用水数据 -->
+      <fieldset class="summary-fieldset">
+        <legend>{{ year }}年{{ month }}月用水量统计 - 生活用水 (T)</legend>
+        <div class="loading" v-if="isLoading">数据加载中...</div>
+        <div class="form-row" v-else>
+          <div class="form-group">
+            <label>生活用水量 (T)</label>
             <input
                 type="number"
-                v-model.number="monthlyWater.domestic[index]"
-                :placeholder="`${getMonthName(index)}生活用水量`"
+                v-model.number="monthlyWater.domestic[month - 1]"
                 min="0"
                 step="1"
                 :readonly="!isEditing"
@@ -104,38 +124,38 @@
                 required
             >
           </div>
-          <div>
-            <label>排水量</label>
+          <div class="form-group">
+            <label>排水量 (T)</label>
             <input type="number" v-model.number="waterData.domesticDrainage" step="1" min="0"
                 :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
-          <div>
-            <label>耗水量</label>
+          <div class="form-group">
+            <label>耗水量 (T)</label>
             <input type="number" v-model.number="waterData.domesticConsumption" step="1" min="0"
                 :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
-          <div>
-            <label>循环水用量</label>
+          <div class="form-group">
+            <label>循环水用量 (T)</label>
             <input type="number" v-model.number="waterData.domesticRecycled" step="1" min="0"
                 :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
-          <div>
-            <label>合计</label>
+          <div class="form-group">
+            <label>合计 (T)</label>
             <input type="number" :value="domesticTotal" disabled class="calculated-field">
           </div>
         </div>
       </fieldset>
 
-      <!-- 中水总量统计表格 -->
-      <fieldset>
-        <legend>{{ year }}年中水总量统计</legend>
-        <div class="monthly-grid">
-          <div class="month-title" v-for="(_, index) in monthlyWater.reclaimed" :key="`title-${index}`">
-            <label>{{ getMonthName(index) }} (T)</label>
+      <!-- 中水总量统计 -->
+      <fieldset class="summary-fieldset">
+        <legend>{{ year }}年{{ month }}月中水总量统计</legend>
+        <div class="loading" v-if="isLoading">数据加载中...</div>
+        <div class="form-row" v-else>
+          <div class="form-group">
+            <label>再生水用量 (T)</label>
             <input
                 type="number"
-                v-model.number="monthlyWater.reclaimed[index]"
-                :placeholder="`${getMonthName(index)}再生水用量`"
+                v-model.number="monthlyWater.reclaimed[month - 1]"
                 min="0"
                 step="1"
                 :readonly="!isEditing"
@@ -148,35 +168,34 @@
             <input type="number" v-model.number="waterData.totalRevenue" step="1" min="0"
                    :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
-          <div>
+          <div class="form-group">
             <label>总中水用水量 (T)</label>
             <input type="number" :value="reclaimedTotal" disabled class="calculated-field">
           </div>
-
-          <div>
+          <div class="form-group">
             <label>中水用水强度 (T/万元)</label>
             <input type="number" :value="reclaimedIntensity" disabled class="calculated-field">
           </div>
         </div>
       </fieldset>
 
-      <!-- 用水量汇总表格 -->
+      <!-- 用水量汇总 -->
       <fieldset class="summary-fieldset">
-        <legend>{{ year }}年用水量统计 - 汇总</legend>
-        <div class="monthly-grid">
-          <div v-for="(_, index) in monthlyWater.total" :key="`title-${index}`">
-            <label>{{ getMonthName(index) }} (T)</label>
+        <legend>{{ year }}年{{ month }}月用水量统计 - 汇总</legend>
+        <div class="form-row">
+          <div class="form-group">
+            <label>当月总用水量 (T)</label>
             <input
                 type="number"
-                v-model.number="monthlyWater.total[index]"
+                v-model.number="monthlyWater.total[month - 1]"
                 min="0" disabled class="calculated-field"
             >
           </div>
-          <div>
-            <label>合计 (T)</label>
+          <div class="form-group">
+            <label>年度合计 (T)</label>
             <input type="number" :value="totalIntake" disabled class="calculated-field">
           </div>
-          <div>
+          <div class="form-group">
             <label>总排水量 (T)</label>
             <input type="number" :value="totalDrainage" disabled class="calculated-field">
           </div>
@@ -210,9 +229,8 @@ import {useSelectionStore} from '@/stores/selectionStore'
 
 const selectionStore = useSelectionStore();
 const factory = computed(() => selectionStore.selectedFactory);
-const factories = computed(() => selectionStore.factories);
 const year = computed(() => selectionStore.selectedYear);
-const years = computed(() => selectionStore.years);
+const month = computed(() => selectionStore.selectedMonth);
 const isEditing = ref(false);
 // 月份名称
 const monthNames = [

@@ -6,7 +6,7 @@
     @mousedown="startDrag"
     @mouseup="stopDrag"
   >
-    <div class="ball-text">{{ authStore.isDataMode ? '分析':'填报'  }}</div>
+    <div class="ball-text">{{ authStore.isDataMode ? '年度分析':'月度填报'  }}</div>
   </div>
 </template>
 
@@ -106,8 +106,8 @@ onUnmounted(() => {
 <style scoped>
 .floating-ball {
   position: fixed;
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   background-color: rgba(144, 238, 144, 0.7);
   cursor: pointer;

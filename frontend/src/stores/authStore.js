@@ -25,8 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem('user', JSON.stringify(userData))
         localStorage.setItem('lastPath_data', '/material');
         localStorage.removeItem('lastPath_analyze');
-        selectionStore.initFactories();
-        selectionStore.initYears();
+        selectionStore.initSelection();
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
     }
 
@@ -84,7 +83,9 @@ export const useAuthStore = defineStore('auth', () => {
     // 登出
     const logout = async () => {
         clearAuth();
-        router.push('/login').then(r => console.log(r));
+        if (router.currentRoute.value.path !== '/login') {
+            router.push('/login').then(r => console.log(r));
+        }
     }
 
     return {

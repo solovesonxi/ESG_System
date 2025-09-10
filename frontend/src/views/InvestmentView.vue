@@ -1,7 +1,6 @@
 <template>
   <div class="shared-form">
     <form>
-      <!-- 基础信息，与能源统计保持一致 -->
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -12,20 +11,20 @@
                 {{ factory }}
                 <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
               </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown" :style="{ maxHeight: '200px', overflowY: 'auto' }">
+              <div class="options" v-show="selectionStore.showFactoryDropdown"
+                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
                 <div
-                  v-for="f in factories"
-                  :key="f"
-                  class="option"
-                  :class="{ 'selected-option': f === factory }"
-                  @click="selectionStore.selectFactory(f)"
+                    v-for="f in selectionStore.factories"
+                    :key="f"
+                    class="option"
+                    :class="{ 'selected-option': f === factory }"
+                    @click="selectionStore.selectFactory(f)"
                 >
                   {{ f }}
                 </div>
               </div>
             </div>
           </div>
-
           <div class="form-group">
             <label>统计年份</label>
             <div class="custom-select">
@@ -35,13 +34,33 @@
               </div>
               <div class="options" v-show="selectionStore.showYearDropdown">
                 <div
-                  v-for="y in years"
-                  :key="y"
-                  class="option"
-                  :class="{ 'selected-option': y === year }"
-                  @click="selectionStore.selectYear(y)"
+                    v-for="y in selectionStore.years"
+                    :key="y"
+                    class="option"
+                    :class="{ 'selected-option': y === year }"
+                    @click="selectionStore.selectYear(y)"
                 >
                   {{ y }}年
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>统计月份</label>
+            <div class="custom-select">
+              <div class="selected" @click="selectionStore.toggleMonthDropdown">
+                {{ month }}月
+                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
+              </div>
+              <div class="options" v-show="selectionStore.showMonthDropdown">
+                <div
+                    v-for="m in selectionStore.months"
+                    :key="m"
+                    class="option"
+                    :class="{ 'selected-option': m === month }"
+                    @click="selectionStore.selectMonth(m)"
+                >
+                  {{ m }}月
                 </div>
               </div>
             </div>
@@ -51,130 +70,98 @@
 
       <!-- 资金投入数据部分（样式与能源统计保持一致） -->
       <fieldset class="summary-fieldset">
-        <legend>资金投入数据统计</legend>
-
+        <legend>{{ year }}年{{ month }}月资金投入数据统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
+        <div class="form-row" v-else>
+          <div class="form-group">
+            <label>环保投入（万元）</label>
+            <input
+                type="number"
+                v-model.number="envInvest[month - 1]"
+                min="0"
+                step="0.01"
+                :readonly="!isEditing"
+                :class="{ 'editable-field': isEditing }"
+                required
+            >
+          </div>
 
-        <div v-else>
-          <!-- 环保投入 -->
-          <fieldset>
-            <legend>{{ year }}年环保投入（万元）</legend>
-            <div class="monthly-grid">
-              <div v-for="(_, index) in envInvest" :key="'env-'+index" class="month-input">
-                <label>{{ getMonthName(index) }}</label>
-                <input
-                  type="number"
-                  v-model.number="envInvest[index]"
-                  :placeholder="`${getMonthName(index)}环保投入`"
-                  min="0"
-                  step="0.01"
-                  :readonly="!isEditing"
-                  :class="{ 'editable-field': isEditing }"
-                  required
-                >
-              </div>
-            </div>
-          </fieldset>
+          <div class="form-group">
+            <label>清洁技术投入（万元）</label>
+            <input
+                type="number"
+                v-model.number="cleanTechInvest[month - 1]"
+                min="0"
+                step="0.01"
+                :readonly="!isEditing"
+                :class="{ 'editable-field': isEditing }"
+                required
+            >
+          </div>
 
-          <!-- 清洁技术投入 -->
-          <fieldset>
-            <legend>{{ year }}年清洁技术投入（万元）</legend>
-            <div class="monthly-grid">
-              <div v-for="(_, index) in cleanTechInvest" :key="'ct-'+index" class="month-input">
-                <label>{{ getMonthName(index) }}</label>
-                <input
-                  type="number"
-                  v-model.number="cleanTechInvest[index]"
-                  :placeholder="`${getMonthName(index)}清洁技术投入`"
-                  min="0"
-                  step="0.01"
-                  :readonly="!isEditing"
-                  :class="{ 'editable-field': isEditing }"
-                  required
-                >
-              </div>
-            </div>
-          </fieldset>
+          <div class="form-group">
+            <label>气候投入（万元）</label>
+            <input
+                type="number"
+                v-model.number="climateInvest[month - 1]"
+                min="0"
+                step="0.01"
+                :readonly="!isEditing"
+                :class="{ 'editable-field': isEditing }"
+                required
+            >
+          </div>
 
-          <!-- 气候投入 -->
-          <fieldset>
-            <legend>{{ year }}年气候投入（万元）</legend>
-            <div class="monthly-grid">
-              <div v-for="(_, index) in climateInvest" :key="'cli-'+index" class="month-input">
-                <label>{{ getMonthName(index) }}</label>
-                <input
-                  type="number"
-                  v-model.number="climateInvest[index]"
-                  :placeholder="`${getMonthName(index)}气候投入`"
-                  min="0"
-                  step="0.01"
-                  :readonly="!isEditing"
-                  :class="{ 'editable-field': isEditing }"
-                  required
-                >
-              </div>
-            </div>
-          </fieldset>
-
-          <!-- 绿色收入 -->
-          <fieldset>
-            <legend>{{ year }}年绿色收入（万元）</legend>
-            <div class="monthly-grid">
-              <div v-for="(_, index) in greenIncome" :key="'gi-'+index" class="month-input">
-                <label>{{ getMonthName(index) }}</label>
-                <input
-                  type="number"
-                  v-model.number="greenIncome[index]"
-                  :placeholder="`${getMonthName(index)}绿色收入`"
-                  min="0"
-                  step="0.01"
-                  :readonly="!isEditing"
-                  :class="{ 'editable-field': isEditing }"
-                  required
-                >
-              </div>
-            </div>
-          </fieldset>
-
-          <!-- 汇总（与能源统计合计区块相同结构：form-row + form-group + disabled 计算值） -->
-          <fieldset class="summary-fieldset">
-            <legend>{{ year }}年资金投入统计 - 汇总</legend>
-            <div class="form-row">
-              <div class="form-group">
-                <label>环保投入 (万元)</label>
-                <input type="number" :value="envInvestTotal" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>清洁技术投入 (万元)</label>
-                <input type="number" :value="cleanTechInvestTotal" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>气候投入 (万元)</label>
-                <input type="number" :value="climateInvestTotal" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>总投入 (万元)</label>
-                <input type="number" :value="totalInvestment" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>绿色收入 (万元)</label>
-                <input type="number" :value="greenIncomeTotal" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>营业收入 (万元)</label>
-                <input type="number" v-model.number="total_revenue" step="0.01"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>环保投入强度 (%)</label>
-                <input type="number" :value="envInvestIntensity" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>绿色收入占比 (%)</label>
-                <input type="number" :value="greenIncomeRatio" disabled class="calculated-field">
-              </div>
-            </div>
-          </fieldset>
+          <div class="form-group">
+            <label>绿色收入（万元）</label>
+            <input
+                type="number"
+                v-model.number="greenIncome[month - 1]"
+                min="0"
+                step="0.01"
+                :readonly="!isEditing"
+                :class="{ 'editable-field': isEditing }"
+                required
+            >
+          </div>
+        </div>
+      </fieldset>
+      <fieldset class="summary-fieldset">
+        <legend>{{ year }}年资金投入统计 - 汇总</legend>
+        <div class="form-row">
+          <div class="form-group">
+            <label>环保投入 (万元)</label>
+            <input type="number" :value="envInvestTotal" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>清洁技术投入 (万元)</label>
+            <input type="number" :value="cleanTechInvestTotal" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>气候投入 (万元)</label>
+            <input type="number" :value="climateInvestTotal" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>总投入 (万元)</label>
+            <input type="number" :value="totalInvestment" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>绿色收入 (万元)</label>
+            <input type="number" :value="greenIncomeTotal" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>营业收入 (万元)</label>
+            <input type="number" v-model.number="total_revenue" step="0.01"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+          </div>
+          <div class="form-group">
+            <label>环保投入强度 (%)</label>
+            <input type="number" :value="envInvestIntensity" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>绿色收入占比 (%)</label>
+            <input type="number" :value="greenIncomeRatio" disabled class="calculated-field">
+          </div>
         </div>
       </fieldset>
     </form>
@@ -182,22 +169,21 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { useSelectionStore } from '@/stores/selectionStore'
+import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue'
+import {useSelectionStore} from '@/stores/selectionStore'
 import apiClient from '@/utils/axios'
 
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
-const factories = computed(() => selectionStore.factories)
-const year = computed(() => selectionStore.selectedYear)
-const years = computed(() => selectionStore.years)
+const year = computed(() => selectionStore.selectedYear);
+const month = computed(() => selectionStore.selectedMonth);
 
 const isEditing = ref(false)
 const isLoading = ref(false)
 
 // 月份名称映射 & 工具函数（与能源一致）
-const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月']
+const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
 const getMonthName = (index) => monthNames[index]
 
 // —— 资金投入月度数据（保持字段与原来一致） —— //
@@ -218,23 +204,23 @@ const climateInvestTotal = computed(() => rowSum(climateInvest))
 const greenIncomeTotal = computed(() => rowSum(greenIncome))
 
 const totalInvestment = computed(() => (
-  (parseFloat(envInvestTotal.value) +
-   parseFloat(cleanTechInvestTotal.value) +
-   parseFloat(climateInvestTotal.value)).toFixed(2)
+    (parseFloat(envInvestTotal.value) +
+        parseFloat(cleanTechInvestTotal.value) +
+        parseFloat(climateInvestTotal.value)).toFixed(2)
 ))
 
 const envInvestIntensity = computed(() => {
   const env = parseFloat(envInvestTotal.value)
   return (total_revenue.value > 0 && env > 0)
-    ? ((env / total_revenue.value) * 100).toFixed(2)
-    : 0
+      ? ((env / total_revenue.value) * 100).toFixed(2)
+      : 0
 })
 
 const greenIncomeRatio = computed(() => {
   const gi = parseFloat(greenIncomeTotal.value)
   return (total_revenue.value > 0 && gi > 0)
-    ? ((gi / total_revenue.value) * 100).toFixed(2)
-    : 0
+      ? ((gi / total_revenue.value) * 100).toFixed(2)
+      : 0
 })
 
 // —— 与能源统计保持一致：监听工厂/年份变化并拉取数据 —— //
@@ -261,7 +247,7 @@ const fetchData = async () => {
   isLoading.value = true
   try {
     const resp = await apiClient.get('/quantitative/investment', {
-      params: { factory: factory.value, year: year.value }
+      params: {factory: factory.value, year: year.value}
     })
     const data = resp?.data?.data
     if (data) {
@@ -270,7 +256,6 @@ const fetchData = async () => {
       setArray(cleanTechInvest, data.cleanTechInvest || data.clean_tech_invest || Array(12).fill(0))
       setArray(climateInvest, data.climateInvest || data.climate_invest || Array(12).fill(0))
       setArray(greenIncome, data.greenIncome || data.green_income || Array(12).fill(0))
-
       total_revenue.value = toNum(data.totalRevenue || data.total_revenue)
     } else {
       resetFormData()
@@ -315,12 +300,8 @@ const submitEdit = async () => {
       cleanTechInvest: [...cleanTechInvest],
       climateInvest: [...climateInvest],
       greenIncome: [...greenIncome],
-      envInvestTotal: envInvestTotal.value,
-      cleanTechInvestTotal: cleanTechInvestTotal.value,
-      climateInvestTotal: climateInvestTotal.value,
-      greenIncomeTotal: greenIncomeTotal.value,
       totalInvestment: totalInvestment.value,
-      total_revenue: total_revenue.value,
+      totalRevenue: total_revenue.value,
       envInvestIntensity: envInvestIntensity.value,
       greenIncomeRatio: greenIncomeRatio.value
     }

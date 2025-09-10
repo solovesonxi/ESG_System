@@ -2,7 +2,6 @@
 <template>
   <div class="shared-form">
     <form>
-      <!-- 基础信息，与能源统计保持一致 -->
       <fieldset>
         <legend>基础信息</legend>
         <div class="form-row">
@@ -13,20 +12,20 @@
                 {{ factory }}
                 <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
               </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown" :style="{ maxHeight: '200px', overflowY: 'auto' }">
+              <div class="options" v-show="selectionStore.showFactoryDropdown"
+                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
                 <div
-                  v-for="f in factories"
-                  :key="f"
-                  class="option"
-                  :class="{ 'selected-option': f === factory }"
-                  @click="selectionStore.selectFactory(f)"
+                    v-for="f in selectionStore.factories"
+                    :key="f"
+                    class="option"
+                    :class="{ 'selected-option': f === factory }"
+                    @click="selectionStore.selectFactory(f)"
                 >
                   {{ f }}
                 </div>
               </div>
             </div>
           </div>
-
           <div class="form-group">
             <label>统计年份</label>
             <div class="custom-select">
@@ -36,13 +35,33 @@
               </div>
               <div class="options" v-show="selectionStore.showYearDropdown">
                 <div
-                  v-for="y in years"
-                  :key="y"
-                  class="option"
-                  :class="{ 'selected-option': y === year }"
-                  @click="selectionStore.selectYear(y)"
+                    v-for="y in selectionStore.years"
+                    :key="y"
+                    class="option"
+                    :class="{ 'selected-option': y === year }"
+                    @click="selectionStore.selectYear(y)"
                 >
                   {{ y }}年
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>统计月份</label>
+            <div class="custom-select">
+              <div class="selected" @click="selectionStore.toggleMonthDropdown">
+                {{ month }}月
+                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
+              </div>
+              <div class="options" v-show="selectionStore.showMonthDropdown">
+                <div
+                    v-for="m in selectionStore.months"
+                    :key="m"
+                    class="option"
+                    :class="{ 'selected-option': m === month }"
+                    @click="selectionStore.selectMonth(m)"
+                >
+                  {{ m }}月
                 </div>
               </div>
             </div>
@@ -67,102 +86,102 @@
               </div>
               <div class="form-group">
                 <label>全职</label>
-                <input type="number" v-model.number="formData.fullTime" min="0" step="1"
+                <input type="number" v-model.number="formData.fullTime[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>兼职</label>
-                <input type="number" v-model.number="formData.partTime" min="0" step="1"
+                <input type="number" v-model.number="formData.partTime[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>男</label>
-                <input type="number" v-model.number="formData.male" min="0" step="1"
+                <input type="number" v-model.number="formData.male[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>女</label>
-                <input type="number" v-model.number="formData.female" min="0" step="1"
+                <input type="number" v-model.number="formData.female[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>管理层</label>
-                <input type="number" v-model.number="formData.management" min="0" step="1"
+                <input type="number" v-model.number="formData.management[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>管理层女</label>
-                <input type="number" v-model.number="formData.managementFemale" min="0" step="1"
+                <input type="number" v-model.number="formData.managementFemale[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>中层</label>
-                <input type="number" v-model.number="formData.middle" min="0" step="1"
+                <input type="number" v-model.number="formData.middle[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>普通</label>
-                <input type="number" v-model.number="formData.general" min="0" step="1"
+                <input type="number" v-model.number="formData.general[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>大陆</label>
-                <input type="number" v-model.number="formData.mainland" min="0" step="1"
+                <input type="number" v-model.number="formData.mainland[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>海外</label>
-                <input type="number" v-model.number="formData.overseas" min="0" step="1"
+                <input type="number" v-model.number="formData.overseas[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>博士及以上</label>
-                <input type="number" v-model.number="formData.eduPhd" min="0" step="1"
+                <input type="number" v-model.number="formData.eduPhd[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>硕士</label>
-                <input type="number" v-model.number="formData.eduMaster" min="0" step="1"
+                <input type="number" v-model.number="formData.eduMaster[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>本科</label>
-                <input type="number" v-model.number="formData.eduBachelor" min="0" step="1"
+                <input type="number" v-model.number="formData.eduBachelor[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>专科及以下</label>
-                <input type="number" v-model.number="formData.eduJunior" min="0" step="1"
+                <input type="number" v-model.number="formData.eduJunior[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>人均五险一金 (万元)</label>
-                <input type="number" v-model.number="formData.avgSocialFund" min="0" step="0.01"
+                <input type="number" v-model.number="formData.avgSocialFund[month - 1]" min="0" step="0.01"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>人均五险一金增加额 (万元)</label>
-                <input type="number" v-model.number="formData.incSocialFund" min="0" step="0.01"
+                <input type="number" v-model.number="formData.incSocialFund[month - 1]" min="0" step="0.01"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>18-30岁</label>
-                <input type="number" v-model.number="formData.age18_30" min="0" step="1"
+                <input type="number" v-model.number="formData.age18_30[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>31-45岁</label>
-                <input type="number" v-model.number="formData.age31_45" min="0" step="1"
+                <input type="number" v-model.number="formData.age31_45[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>46-60岁</label>
-                <input type="number" v-model.number="formData.age46_60" min="0" step="1"
+                <input type="number" v-model.number="formData.age46_60[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>新进员工</label>
-                <input type="number" v-model.number="formData.newHires" min="0" step="1"
+                <input type="number" v-model.number="formData.newHires[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
@@ -171,52 +190,52 @@
               </div>
               <div class="form-group">
                 <label>男离职</label>
-                <input type="number" v-model.number="formData.quitMale" min="0" step="1"
+                <input type="number" v-model.number="formData.quitMale[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>女离职</label>
-                <input type="number" v-model.number="formData.quitFemale" min="0" step="1"
+                <input type="number" v-model.number="formData.quitFemale[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>大陆离职</label>
-                <input type="number" v-model.number="formData.quitMainland" min="0" step="1"
+                <input type="number" v-model.number="formData.quitMainland[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>海外离职</label>
-                <input type="number" v-model.number="formData.quitOverseas" min="0" step="1"
+                <input type="number" v-model.number="formData.quitOverseas[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>18-30岁离职</label>
-                <input type="number" v-model.number="formData.quit18_30" min="0" step="1"
+                <input type="number" v-model.number="formData.quit18_30[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>31-45岁离职</label>
-                <input type="number" v-model.number="formData.quit31_45" min="0" step="1"
+                <input type="number" v-model.number="formData.quit31_45[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>46-60岁离职</label>
-                <input type="number" v-model.number="formData.quit46_60" min="0" step="1"
+                <input type="number" v-model.number="formData.quit46_60[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>管理层离职</label>
-                <input type="number" v-model.number="formData.quitManagement" min="0" step="1"
+                <input type="number" v-model.number="formData.quitManagement[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>中层离职</label>
-                <input type="number" v-model.number="formData.quitMiddle" min="0" step="1"
+                <input type="number" v-model.number="formData.quitMiddle[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
                 <label>普通离职</label>
-                <input type="number" v-model.number="formData.quitGeneral" min="0" step="1"
+                <input type="number" v-model.number="formData.quitGeneral[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
@@ -279,45 +298,44 @@ import apiClient from '@/utils/axios'
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
-const factories = computed(() => selectionStore.factories)
-const year = computed(() => selectionStore.selectedYear)
-const years = computed(() => selectionStore.years)
+const year = computed(() => selectionStore.selectedYear);
+const month = computed(() => selectionStore.selectedMonth);
 
 const isEditing = ref(false)
 const isLoading = ref(false)
 
 // —— 员工雇佣数据 —— //
 const formData = reactive({
-  fullTime: 0,
-  partTime: 0,
-  male: 0,
-  female: 0,
-  management: 0,
-  managementFemale: 0,
-  middle: 0,
-  general: 0,
-  mainland: 0,
-  overseas: 0,
-  eduPhd: 0,
-  eduMaster: 0,
-  eduBachelor: 0,
-  eduJunior: 0,
-  avgSocialFund: 0,
-  incSocialFund: 0,
-  age18_30: 0,
-  age31_45: 0,
-  age46_60: 0,
-  newHires: 0,
-  quitMale: 0,
-  quitFemale: 0,
-  quitMainland: 0,
-  quitOverseas: 0,
-  quit18_30: 0,
-  quit31_45: 0,
-  quit46_60: 0,
-  quitManagement: 0,
-  quitMiddle: 0,
-  quitGeneral: 0
+  fullTime: Array(12).fill(0),
+  partTime: Array(12).fill(0),
+  male: Array(12).fill(0),
+  female: Array(12).fill(0),
+  management: Array(12).fill(0),
+  managementFemale: Array(12).fill(0),
+  middle: Array(12).fill(0),
+  general: Array(12).fill(0),
+  mainland: Array(12).fill(0),
+  overseas: Array(12).fill(0),
+  eduPhd: Array(12).fill(0),
+  eduMaster: Array(12).fill(0),
+  eduBachelor: Array(12).fill(0),
+  eduJunior: Array(12).fill(0),
+  avgSocialFund: Array(12).fill(0),
+  incSocialFund: Array(12).fill(0),
+  age18_30: Array(12).fill(0),
+  age31_45: Array(12).fill(0),
+  age46_60: Array(12).fill(0),
+  newHires: Array(12).fill(0),
+  quitMale: Array(12).fill(0),
+  quitFemale: Array(12).fill(0),
+  quitMainland: Array(12).fill(0),
+  quitOverseas: Array(12).fill(0),
+  quit18_30: Array(12).fill(0),
+  quit31_45: Array(12).fill(0),
+  quit46_60: Array(12).fill(0),
+  quitManagement: Array(12).fill(0),
+  quitMiddle: Array(12).fill(0),
+  quitGeneral: Array(12).fill(0)
 })
 
 // 汇总与强度计算（保持原逻辑与命名，默认保留两位小数行为）

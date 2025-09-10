@@ -17,7 +17,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
         data = db.query(InvestmentData).filter(InvestmentData.factory == factory, InvestmentData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
-        data_dict = {}
+        data_dict = {"envInvest": data.env_invest, "cleanTechInvest": data.clean_tech_invest,
+                     "climateInvest": data.climate_invest, "greenIncome": data.green_income,
+                     "totalRevenue": data.total_revenue}
 
         return {"status": "success", "data": data_dict}
     except Exception as e:

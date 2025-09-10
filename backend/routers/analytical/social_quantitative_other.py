@@ -44,6 +44,11 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
         def entry(indicator_key, cur, prev):
             return {"currentYear": cur, "lastYear": prev, "comparison": _calc_comparison(cur, prev),
                     "reason": reasons_map.get(indicator_key, "")}
+        def entry_sum(indicator_key, cur, prev):
+            cur_add = sum(cur) if cur else None
+            prev_add = sum(prev) if prev else None
+            return {"currentYear": cur_add, "lastYear": prev_add, "comparison": _calc_comparison(cur_add, prev_add),
+                    "reason": reasons_map.get(indicator_key, "")}
 
         def gv(obj, attr):
             return getattr(obj, attr) if obj is not None else None
@@ -51,38 +56,32 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
         data = {"供应链管理": {}, "产品责任": {}, "知识产权保护": {}, "社区参与": {}, "志愿活动": {}}
 
         # 供应链管理
-        if supply_cur or supply_prev:
-            for key in ['total_suppliers', 'env_screened', 'soc_screened', 'env_assessment_count',
-                        'soc_assessment_count', 'env_penalty_count', 'env_penalty_amount', 'cyber_incidents',
-                        'local_amount', 'total_amount', 'local_purchase_ratio']:
-                data["供应链管理"][f"supply_{key}"] = entry(f"supply_{key}", gv(supply_cur, key), gv(supply_prev, key))
+        for key in ['total_suppliers', 'env_screened', 'soc_screened', 'env_assessment_count',
+                    'soc_assessment_count', 'env_penalty_count', 'env_penalty_amount', 'cyber_incidents',
+                    'local_amount', 'total_amount', 'local_purchase_ratio']:
+            data["供应链管理"][f"supply_{key}"] = entry(f"supply_{key}", gv(supply_cur, key), gv(supply_prev, key))
 
         # 产品责任
-        if product_cur or product_prev:
-            for key in ['complaints_total', 'complaints_handled', 'complaints_handle_rate', 'customer_satisfaction',
-                        'recall_count', 'recall_percent', 'product_quality_issues', 'cyber_incidents']:
-                data["产品责任"][f"product_{key}"] = entry(f"product_{key}", gv(product_cur, key),
-                                                           gv(product_prev, key))
+        for key in ['complaints_total', 'complaints_handled', 'complaints_handle_rate', 'customer_satisfaction',
+                    'recall_count', 'recall_percent', 'product_quality_issues', 'cyber_incidents']:
+            data["产品责任"][f"product_{key}"] = entry(f"product_{key}", gv(product_cur, key),
+                                                       gv(product_prev, key))
 
         # 知识产权
-        if ipr_cur or ipr_prev:
-            for key in ['patents_total', 'invention_total', 'invention_applications', 'utility_model_total',
-                        'design_total', 'authorized_total', 'new_patents_year', 'software_copyright_total',
-                        'trademarks_total']:
-                data["知识产权保护"][f"ipr_{key}"] = entry(f"ipr_{key}", gv(ipr_cur, key), gv(ipr_prev, key))
+        for key in ['patents_total', 'invention_total', 'invention_applications', 'utility_model_total',
+                    'design_total', 'authorized_total', 'new_patents_year', 'software_copyright_total',
+                    'trademarks_total']:
+            data["知识产权保护"][f"ipr_{key}"] = entry(f"ipr_{key}", gv(ipr_cur, key), gv(ipr_prev, key))
 
         # 社区参与
-        if community_cur or community_prev:
-            for key in ['donation_total', 'community_investment']:
-                data["社区参与"][f"community_{key}"] = entry(f"community_{key}", gv(community_cur, key),
-                                                             gv(community_prev, key))
+        for key in ['charity_donations', 'community_investment']:
+            data["社区参与"][f"community_{key}"] = entry_sum(f"community_{key}", gv(community_cur, key),
+                                                         gv(community_prev, key))
 
         # 志愿活动
-        if volunteer_cur or volunteer_prev:
-            for key in ['participants', 'hours_total']:
-                data["志愿活动"][f"volunteer_{key}"] = entry(f"volunteer_{key}", gv(volunteer_cur, key),
-                                                             gv(volunteer_prev, key))
-
+        for key in ['volunteer_participants', 'volunteer_hours']:
+            data["志愿活动"][f"volunteer_{key}"] = entry_sum(f"volunteer_{key}", gv(volunteer_cur, key),
+                                                         gv(volunteer_prev, key))
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取其他定量数据失败: {str(e)}")

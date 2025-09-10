@@ -7,22 +7,27 @@ from pydantic import BaseModel
 class MaterialSubmission(BaseModel):
     factory: str
     year: int
-    renewableInput: float
-    nonRenewableInput: float
-    renewableOutput: float
-    nonRenewableOutput: float
-    materialConsumption: float
-    woodFiber: float
-    aluminum: float
-    total_revenue: float
-    packagingMaterial: float
-    paper: float
-    packagingIntensity: float
-    paperIntensity: float
-    totalInput: float
-    totalOutput: float
-    renewableInputRatio: float
-    renewableOutputRatio: float
+
+    # 按月存储的字段（12个月数据）
+    renewableInput: List[float]  # 可再生进料量 (T)
+    nonRenewableInput: List[float]  # 不可再生进料量 (T)
+    renewableOutput: List[float]  # 可再生出料量 (T)
+    nonRenewableOutput: List[float]  # 不可再生出料量 (T)
+    materialConsumption: List[float]  # 物料消耗量 (T)
+    woodFiber: List[float]  # 木质纤维消耗量 (T)
+    aluminum: List[float]  # 铝消耗量 (T)
+    packagingMaterial: List[float]  # 包装材料消耗量 (T)
+    paper: List[float]  # 纸张消耗量 (T)
+
+    # 按年计算的字段
+    total_revenue: float  # 总营收 (万元)
+    packagingIntensity: float  # 包装材料消耗强度 (T/万元)
+    paperIntensity: float  # 纸张消耗强度 (T/万元)
+    totalInput: float  # 进料总量 (T)
+    totalOutput: float  # 出料总量 (T)
+    renewableInputRatio: float  # 可再生进料占比 (%)
+    renewableOutputRatio: float  # 可再生出料占比 (%)
+
 
 
 class EnergySubmission(BaseModel):
@@ -34,22 +39,9 @@ class EnergySubmission(BaseModel):
     diesel: List[float]  # 12个月柴油用量
     naturalGas: List[float]  # 12个月天然气用量
     otherEnergy: List[float]  # 12个月其他能源
+    water: List[float]  # 12个月水用量
+    coal: List[float]  # 12个月煤炭用量
 
-    # 年度汇总
-    totalPurchasedPower: float
-    totalRenewablePower: float
-    totalGasoline: float
-    totalDiesel: float
-    totalNaturalGas: float
-    totalOtherEnergy: float
-
-    # 能源消耗
-    waterConsumption: float
-    coalConsumption: float
-    powerConsumption: float
-    gasolineConsumption: float
-    dieselConsumption: float
-    naturalGasConsumption: float
     totalEnergyConsumption: float
     turnover: float
     energyConsumptionIntensity: float
@@ -119,34 +111,22 @@ class EmissionSubmission(BaseModel):
 
 
 class WasteSubmission(BaseModel):
-    factory: str  # 当前选中的工厂名称
+    factory: str
     year: int
 
-    # 月度数据（12个月）
     epe: List[float]
     plasticPaper: List[float]
     domesticIndustrial: List[float]
     hazardous: List[float]
     wastewater: List[float]
-
-    # 计算指标
-    epeTotal: float
-    plasticPaperTotal: float
-    domesticIndustrialTotal: float
-    hazardousTotal: float
-    wastewaterTotal: float
     nonHazardousTotal: float
     recyclableTotal: float
     totalWaste: float
     disposalRequiredTotal: float
     recycleRate: float
-
-    # 经营与合规
-    total_revenue: float
+    totalRevenue: float
     protectiveReuseRate: float
     exceedEvents: int
-
-    # 强度指标
     hazardousIntensity: float
     wastewaterIntensity: float
 
@@ -155,21 +135,23 @@ class InvestmentSubmission(BaseModel):
     factory: str
     year: int
 
-    # 月度数据
     envInvest: List[float]
     cleanTechInvest: List[float]
     climateInvest: List[float]
     greenIncome: List[float]
-
-    # 计算指标
-    envInvestTotal: float
-    cleanTechInvestTotal: float
-    climateInvestTotal: float
-    greenIncomeTotal: float
     totalInvestment: float
     greenIncomeRatio: float
     totalRevenue: float
     envInvestIntensity: float
+
+class ManagementSubmission(BaseModel):
+    factory: str
+    year: int
+    national_green_factory: List[float]  # 国家级绿色工厂（个）
+    provincial_green_factory: List[float]  # 省级绿色工厂（个）
+    environmental_penalty_intensity: List[float]  # 环境处罚强度（%）
+    environmental_penalty_amount: List[float]  # 环境处罚额（万元）
+    environmental_violation: List[int]  # 环境违规（次）
 
 
 class EmploymentSubmission(BaseModel):
@@ -177,42 +159,42 @@ class EmploymentSubmission(BaseModel):
     year: int
 
     # 员工构成数据
-    fullTime: int
-    partTime: int
-    male: int
-    female: int
-    management: int
-    managementFemale: int
-    middle: int
-    general: int
-    mainland: int
-    overseas: int
-    eduPhd: int
-    eduMaster: int
-    eduBachelor: int
-    eduJunior: int
+    fullTime: List[int]
+    partTime: List[int]
+    male: List[int]
+    female: List[int]
+    management: List[int]
+    managementFemale: List[int]
+    middle: List[int]
+    general: List[int]
+    mainland: List[int]
+    overseas: List[int]
+    eduPhd: List[int]
+    eduMaster: List[int]
+    eduBachelor: List[int]
+    eduJunior: List[int]
 
     # 五险一金数据
-    avgSocialFund: float
-    incSocialFund: float
+    avgSocialFund: List[float]
+    incSocialFund: List[float]
 
     # 年龄分布
-    age18_30: int
-    age31_45: int
-    age46_60: int
+    age18_30: List[int]
+    age31_45: List[int]
+    age46_60: List[int]
 
     # 新员工与离职数据
-    newHires: int
-    quitMale: int
-    quitFemale: int
-    quitMainland: int
-    quitOverseas: int
-    quit18_30: int
-    quit31_45: int
-    quit46_60: int
-    quitManagement: int
-    quitMiddle: int
-    quitGeneral: int
+    newHires: List[int]
+    quitMale: List[int]
+    quitFemale: List[int]
+    quitMainland: List[int]
+    quitOverseas: List[int]
+    quit18_30: List[int]
+    quit31_45: List[int]
+    quit46_60: List[int]
+    quitManagement: List[int]
+    quitMiddle: List[int]
+    quitGeneral: List[int]
 
     # 计算指标
     totalEmployees: int

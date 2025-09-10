@@ -17,11 +17,12 @@ async def fetch_material_data(factory: str, year: int, db: Session = Depends(get
         data = db.query(MaterialData).filter(MaterialData.factory == factory, MaterialData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
+
         data_dict = {"renewableInput": data.renewable_input, "nonRenewableInput": data.non_renewable_input,
                      "renewableOutput": data.renewable_output, "nonRenewableOutput": data.non_renewable_output,
                      "materialConsumption": data.material_consumption, "woodFiber": data.wood_fiber,
-                     "aluminum": data.aluminum, "total_revenue": data.total_revenue,
-                     "packagingMaterial": data.packaging_material, "paper": data.paper_consumption,
+                     "aluminum": data.aluminum, "packagingMaterial": data.packaging_material,
+                     "paper": data.paper_consumption, "total_revenue": data.total_revenue,
                      "packagingIntensity": data.packaging_intensity, "paperIntensity": data.paper_intensity,
                      "totalInput": data.total_input, "totalOutput": data.total_output,
                      "renewableInputRatio": data.renewable_input_ratio,
@@ -41,12 +42,13 @@ async def submit_material_data(data: MaterialSubmission, db: Session = Depends(g
                                  non_renewable_input=data.nonRenewableInput, renewable_output=data.renewableOutput,
                                  non_renewable_output=data.nonRenewableOutput,
                                  material_consumption=data.materialConsumption, wood_fiber=data.woodFiber,
-                                 aluminum=data.aluminum, total_revenue=data.total_revenue,
-                                 packaging_material=data.packagingMaterial, paper_consumption=data.paper,
+                                 aluminum=data.aluminum, packaging_material=data.packagingMaterial,
+                                 paper_consumption=data.paper, total_revenue=data.total_revenue,
                                  packaging_intensity=data.packagingIntensity, paper_intensity=data.paperIntensity,
                                  total_input=data.totalInput, total_output=data.totalOutput,
                                  renewable_input_ratio=data.renewableInputRatio,
                                  renewable_output_ratio=data.renewableOutputRatio)
+
         merged_record = db.merge(db_record)
         db.commit()
         return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}

@@ -6,6 +6,7 @@ import WaterView from "@/views/WaterView.vue";
 import EmissionView from "@/views/EmissionView.vue";
 import WasteView from "@/views/WasteView.vue";
 import InvestmentView from "@/views/InvestmentView.vue";
+import ManagementView from "@/views/ManagementView.vue";
 import EmploymentView from "@/views/EmploymentView.vue";
 import TrainingView from "@/views/TrainingView.vue";
 import OHSView from "@/views/OHSView.vue";
@@ -30,7 +31,9 @@ const routes = [{path: '/', redirect: '/login'}, {path: '/login', component: Log
     path: '/water', component: WaterView
 }, {path: '/emission', component: EmissionView}, {path: '/waste', component: WasteView}, {
     path: '/investment', component: InvestmentView
-}, {path: '/employment', component: EmploymentView}, {path: '/training', component: TrainingView}, {
+}, {path: '/management', component: ManagementView}, {
+    path: '/employment', component: EmploymentView
+}, {path: '/training', component: TrainingView}, {
     path: '/ohs', component: OHSView
 }, {path: '/satisfaction', component: SatisfactionView}, {path: '/supply', component: SupplyView}, {
     path: '/ip', component: IPView

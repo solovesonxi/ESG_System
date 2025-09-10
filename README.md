@@ -137,7 +137,7 @@ API文档请启动项目后访问：http://localhost:8000/docs。
 
 - **令牌管理**：
   - Access Token：30 分钟有效期。
-  - Refresh Token：15 分钟有效期（高安全场景）。
+  - Refresh Token：1 小时有效期。
 - **输入验证**：防止 SQL 注入和数据篡改。
 
 ## 贡献指南

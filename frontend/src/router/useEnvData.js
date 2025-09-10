@@ -1,7 +1,6 @@
 import {computed, onMounted, ref, watch} from 'vue';
 import {useSelectionStore} from "@/stores/selectionStore.js";
 import {fetchQualData, fetchQuantData} from '@/router/envData.js';
-import {useAuthStore} from "@/stores/authStore.js";
 
 export const useEnvData = (fetchFunction, isQualitative = false) => {
     const selectionStore = useSelectionStore();
@@ -22,11 +21,11 @@ export const useEnvData = (fetchFunction, isQualitative = false) => {
     };
 
     onMounted(() => {
-        fetchData().then(r =>  console.log(r));
+        fetchData().then(r => console.log(r));
     });
 
     watch([factory, year], () => {
-        fetchData().then(r =>  console.log(r));
+        fetchData().then(r => console.log(r));
     });
 
     return {
@@ -39,7 +38,7 @@ export const useEnvData = (fetchFunction, isQualitative = false) => {
     };
 };
 export const formatComparison = (value) => {
-    if (value === null || value === undefined ) return '';
+    if (value === null || value === undefined) return '';
     if (typeof value === 'string') return value;
     return `${value > 0 ? '+' : ''}${value}%`;
 };

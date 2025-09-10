@@ -38,43 +38,36 @@
         </div>
       </fieldset>
 
-      <fieldset class="summary-fieldset">
-        <legend>雇佣/培训/安全/满意度</legend>
+      <fieldset class="summary-fieldset" v-for="(indicators, category) in laborData" :key="category">
+        <legend>{{ category }}</legend>
         <div class="form-row">
           <table class="data-table">
             <thead>
             <tr>
-              <th>大类</th>
               <th>指标</th>
-              <th>当前年 ({{ year }})</th>
               <th>上一年 ({{ year - 1 }})</th>
+              <th>当前年 ({{ year }})</th>
               <th>对比上期 (%)</th>
               <th>原因分析</th>
             </tr>
             </thead>
             <tbody>
-            <template v-for="(indicators, category) in laborData" :key="category">
-              <tr v-for="(item, key, index) in indicators" :key="key">
-                <td v-if="index === 0" :rowspan="Object.keys(indicators).length">{{ category }}</td>
-                <td>{{ indicatorNames[key] || key }}</td>
-                <td>{{ formatValue(item.currentYear) }}</td>
-                <td>{{ formatValue(item.lastYear) }}</td>
-                <td>{{ formatComparison(item.comparison) }}</td>
-                <td>
-                  <span v-if="!isEditing">{{ item.reason || 'N/A' }}</span>
-                  <textarea v-else v-model="tempReasons[key]" class="reason-input"
-                            :placeholder="item.reason || ''"></textarea>
-                </td>
-              </tr>
-            </template>
+            <tr v-for="(item, key) in indicators" :key="key">
+              <td>{{ indicatorNames[key] || key }}</td>
+              <td>{{ formatValue(item.lastYear) || ''}}</td>
+              <td>{{ formatValue(item.currentYear) || ''}}</td>
+              <td>{{ formatComparison(item.comparison) || ''}}</td>
+              <td>
+                <span v-if="!isEditing">{{ item.reason || '' }}</span>
+                <textarea v-else v-model="tempReasons[key]" class="reason-input"></textarea>
+              </td>
+            </tr>
             </tbody>
           </table>
-
         </div>
       </fieldset>
     </form>
   </div>
-
 </template>
 
 <script setup>
@@ -171,10 +164,12 @@ const indicatorNames = {
   satisfaction_annual_average: '员工满意度'
 }
 
-const fetchLaborData = async () => {
+const fetchData = async () => {
   try {
     const res = await apiClient.get('/analytical/social_quantitative_labor', {params: {factory: factory.value, year: year.value}})
-    laborData.value = res.data
+    laborData.value = { ...res.data } // 使用展开运算符确保响应式更新
+    console.log('Fetched data:', laborData.value)
+    console.log('labor data (raw):', JSON.parse(JSON.stringify(laborData.value)));
   } catch (e) {
     console.error(e)
     alert(`获取劳动定量数据失败: ${e.response?.data?.detail || e.message}`)
@@ -182,22 +177,17 @@ const fetchLaborData = async () => {
 }
 
 const formatComparison = (value) => {
-  if (value === null || value === undefined) return 'N/A'
+  if (value === null || value === undefined) return ''
   return `${value > 0 ? '+' : ''}${value}%`
 }
 
 const formatValue = (v) => {
-  if (v === null || v === undefined) return 'N/A'
+  if (v === null || v === undefined) return ''
   return v
 }
 
 onMounted(() => {
   document.addEventListener('click', selectionStore.handleClickOutside)
-  fetchLaborData()
-})
-
-watch([factory, year], () => {
-  fetchLaborData()
 })
 
 const startEditing = () => {
@@ -226,22 +216,20 @@ const submitEdit = async () => {
       year: parseInt(year.value),
       reasons: reasonsMap
     })
-    // 本地同步
-    Object.values(laborData.value).forEach(group => {
-      Object.entries(group).forEach(([key, item]) => {
-        if (reasonsMap[key] !== undefined) item.reason = reasonsMap[key]
-      })
-    })
-    isEditing.value = false
     alert('原因提交成功！')
   } catch (e) {
     console.error(e)
     alert(`提交原因失败: ${e.response?.data?.detail || e.message}`)
+  } finally {
+    console.log('提交完成，即将刷新');
+    isEditing.value = false;
+    await fetchData();
   }
 }
 defineExpose({
   startEditing,
   cancelEditing,
   submitEdit,
+  fetchData
 });
 </script>
