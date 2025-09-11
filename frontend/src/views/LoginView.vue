@@ -291,8 +291,30 @@ export default {
         this.registrationErrors.factory = '请选择工厂';
         isValid = false;
       }
-      if (!this.registerForm.phone && !this.registerForm.email) {
+      if (!this.registerForm.contact) {
         this.registrationErrors.contact = '请输入手机号或邮箱';
+        isValid = false;
+      }else{
+        const input = this.registerForm.contact;
+        const isPhone = /^1[3-9]\d{9}$/.test(input);
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+        if (!isPhone && !isEmail) {
+          this.registrationErrors.contact = '请输入正确的手机号或邮箱';
+          isValid = false;
+        } else {
+          if (isPhone) {
+            this.registerForm.phone = input;
+            this.registerForm.email = '';
+            alert('抱歉，目前暂不支持手机号注册，请使用邮箱注册。');
+            return;
+          } else {
+            this.registerForm.email = input;
+            this.registerForm.phone = '';
+          }
+        }
+      }
+      if (!this.registerForm.verificationCode) {
+        this.registrationErrors.verificationCode = '请输入验证码';
         isValid = false;
       }
       if (!isValid) {
@@ -326,30 +348,23 @@ export default {
         this.registrationErrors.contact = '请输入手机号或邮箱';
         return;
       }
-
-      // 智能识别手机号或邮箱
       const isPhone = /^1[3-9]\d{9}$/.test(input);
       const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
-
       if (!isPhone && !isEmail) {
         this.registrationErrors.contact = '请输入正确的手机号或邮箱';
         return;
       }
-
-      // 清除错误提示
       this.registrationErrors.contact = '';
-
-      // 赋值到 phone 或 email 字段
       if (isPhone) {
         this.registerForm.phone = input;
         this.registerForm.email = '';
+        alert('抱歉，目前暂不支持手机号注册，请使用邮箱注册。');
+        return;
       } else {
         this.registerForm.email = input;
         this.registerForm.phone = '';
       }
-
       try {
-        // 调用后端接口发送验证码
         const response = await apiClient.post('/verification', {
           phone: this.registerForm.phone,
           email: this.registerForm.email
