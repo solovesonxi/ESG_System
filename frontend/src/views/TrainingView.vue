@@ -1,175 +1,111 @@
-```vue
 <template>
   <div class="shared-form">
     <form>
-      <fieldset>
-        <legend>基础信息</legend>
-        <div class="form-row">
-          <div class="form-group">
-            <label>工厂名称</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleFactoryDropdown">
-                {{ factory }}
-                <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown"
-                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div
-                    v-for="f in selectionStore.factories"
-                    :key="f"
-                    class="option"
-                    :class="{ 'selected-option': f === factory }"
-                    @click="selectionStore.selectFactory(f)"
-                >
-                  {{ f }}
-                </div>
-              </div>
+      <BaseInfoSelector @selection-changed="fetchData"/>
+      <fieldset class="summary-fieldset">
+        <legend>{{ year }}年{{ month }}月教育与培训数据统计</legend>
+        <div class="loading" v-if="isLoading">数据加载中...</div>
+        <div v-else>
+          <div class="form-row">
+            <div class="form-group">
+              <label>总人数 (人)</label>
+              <input type="number" v-model.number="formData.total" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
             </div>
-          </div>
-          <div class="form-group">
-            <label>统计年份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleYearDropdown">
-                {{ year }}年
-                <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showYearDropdown">
-                <div
-                    v-for="y in selectionStore.years"
-                    :key="y"
-                    class="option"
-                    :class="{ 'selected-option': y === year }"
-                    @click="selectionStore.selectYear(y)"
-                >
-                  {{ y }}年
-                </div>
-              </div>
+            <div class="form-group">
+              <label>受训人数 (人次)</label>
+              <input type="number" v-model.number="formData.trained" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
             </div>
-          </div>
-          <div class="form-group">
-            <label>统计月份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleMonthDropdown">
-                {{ month }}月
-                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showMonthDropdown">
-                <div
-                    v-for="m in selectionStore.months"
-                    :key="m"
-                    class="option"
-                    :class="{ 'selected-option': m === month }"
-                    @click="selectionStore.selectMonth(m)"
-                >
-                  {{ m }}月
-                </div>
-              </div>
+            <div class="form-group">
+              <label>男性 (人次)</label>
+              <input type="number" v-model.number="formData.male" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>女性 (人次)</label>
+              <input type="number" v-model.number="formData.female" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>管理层受训 (人次)</label>
+              <input type="number" v-model.number="formData.mgmt" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>中层受训 (人次)</label>
+              <input type="number" v-model.number="formData.middle" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>普通受训 (人次)</label>
+              <input type="number" v-model.number="formData.general" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>培训总学时 (小时)</label>
+              <input type="number" v-model.number="formData.hoursTotal" min="0" step="0.1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>男性学时 (小时)</label>
+              <input type="number" v-model.number="formData.hoursMale" min="0" step="0.1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>女性学时 (小时)</label>
+              <input type="number" v-model.number="formData.hoursFemale" min="0" step="0.1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>管理层学时 (小时)</label>
+              <input type="number" v-model.number="formData.hoursMgmt" min="0" step="0.1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>中层学时 (小时)</label>
+              <input type="number" v-model.number="formData.hoursMiddle" min="0" step="0.1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>普通学时 (小时)</label>
+              <input type="number" v-model.number="formData.hoursGeneral" min="0" step="0.1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
             </div>
           </div>
         </div>
       </fieldset>
-      <!-- 教育与培训数据部分（样式与能源统计保持一致） -->
       <fieldset class="summary-fieldset">
-        <legend>教育与培训数据统计</legend>
-
+        <legend>{{ year }}年教育与培训统计 - 汇总</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
-
         <div v-else>
-          <!-- 教育与培训统计 -->
-          <fieldset>
-            <legend>{{ year }}年教育与培训统计</legend>
-            <div class="form-row">
-              <div class="form-group">
-                <label>总人数 (人)</label>
-                <input type="number" v-model.number="formData.total" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>受训人数 (人次)</label>
-                <input type="number" v-model.number="formData.trained" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>培训覆盖率 (%)</label>
-                <input type="number" :value="coverageRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>男性 (人次)</label>
-                <input type="number" v-model.number="formData.male" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>女性 (人次)</label>
-                <input type="number" v-model.number="formData.female" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>男性占比 (%)</label>
-                <input type="number" :value="maleRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>女性占比 (%)</label>
-                <input type="number" :value="femaleRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>管理层受训 (人次)</label>
-                <input type="number" v-model.number="formData.mgmt" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>中层受训 (人次)</label>
-                <input type="number" v-model.number="formData.middle" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>普通受训 (人次)</label>
-                <input type="number" v-model.number="formData.general" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>管理层占比 (%)</label>
-                <input type="number" :value="mgmtRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>中层占比 (%)</label>
-                <input type="number" :value="middleRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>普通占比 (%)</label>
-                <input type="number" :value="generalRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>培训总学时 (小时)</label>
-                <input type="number" v-model.number="formData.hoursTotal" min="0" step="0.1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>男性学时 (小时)</label>
-                <input type="number" v-model.number="formData.hoursMale" min="0" step="0.1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>女性学时 (小时)</label>
-                <input type="number" v-model.number="formData.hoursFemale" min="0" step="0.1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>管理层学时 (小时)</label>
-                <input type="number" v-model.number="formData.hoursMgmt" min="0" step="0.1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>中层学时 (小时)</label>
-                <input type="number" v-model.number="formData.hoursMiddle" min="0" step="0.1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>普通学时 (小时)</label>
-                <input type="number" v-model.number="formData.hoursGeneral" min="0" step="0.1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
+          <div class="form-row">
+
+            <div class="form-group">
+              <label>培训覆盖率 (%)</label>
+              <input type="number" :value="coverageRate" disabled class="calculated-field">
             </div>
-          </fieldset>
+            <div class="form-group">
+              <label>男性占比 (%)</label>
+              <input type="number" :value="maleRate" disabled class="calculated-field">
+            </div>
+            <div class="form-group">
+              <label>女性占比 (%)</label>
+              <input type="number" :value="femaleRate" disabled class="calculated-field">
+            </div>
+            <div class="form-group">
+              <label>管理层占比 (%)</label>
+              <input type="number" :value="mgmtRate" disabled class="calculated-field">
+            </div>
+            <div class="form-group">
+              <label>中层占比 (%)</label>
+              <input type="number" :value="middleRate" disabled class="calculated-field">
+            </div>
+            <div class="form-group">
+              <label>普通占比 (%)</label>
+              <input type="number" :value="generalRate" disabled class="calculated-field">
+            </div>
+          </div>
         </div>
       </fieldset>
     </form>
@@ -177,9 +113,10 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { useSelectionStore } from '@/stores/selectionStore'
+import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
+import {useSelectionStore} from '@/stores/selectionStore'
 import apiClient from '@/utils/axios'
+import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
@@ -227,9 +164,7 @@ const middleRate = computed(() => calculateRate(formData.middle, formData.traine
 const generalRate = computed(() => calculateRate(formData.general, formData.trained))
 
 // —— 与能源统计保持一致：监听工厂/年份变化并拉取数据 —— //
-watch([factory, year], () => {
-  fetchData()
-})
+
 
 onMounted(() => {
   document.addEventListener('click', selectionStore.handleClickOutside)
@@ -250,7 +185,7 @@ const fetchData = async () => {
   isLoading.value = true
   try {
     const resp = await apiClient.get('/quantitative/training', {
-      params: { factory: factory.value, year: year.value }
+      params: {factory: factory.value, year: year.value}
     })
     const data = resp?.data?.data
     if (data) {

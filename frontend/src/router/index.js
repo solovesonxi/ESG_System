@@ -35,9 +35,11 @@ const routes = [{path: '/', redirect: '/login'}, {path: '/login', component: Log
     path: '/employment', component: EmploymentView
 }, {path: '/training', component: TrainingView}, {
     path: '/ohs', component: OHSView
-}, {path: '/satisfaction', component: SatisfactionView}, {path: '/supply', component: SupplyView}, {
-    path: '/ip', component: IPView
+}, {path: '/satisfaction', component: SatisfactionView}, {
+    path: '/supply', component: SupplyView
 }, {path: '/responsibility', component: ResponsibilityView}, {
+    path: '/ip', component: IPView
+}, {
     path: '/community', component: CommunityView
 }, {path: '/env-quantitative', component: EnvQuantitativeView}, {
     path: '/env-qualitative', component: EnvQualitativeView

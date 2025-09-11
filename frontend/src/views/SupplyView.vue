@@ -1,155 +1,84 @@
-```vue
 <template>
   <div class="shared-form">
     <form>
-      <fieldset>
-        <legend>基础信息</legend>
-        <div class="form-row">
-          <div class="form-group">
-            <label>工厂名称</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleFactoryDropdown">
-                {{ factory }}
-                <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown"
-                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div
-                    v-for="f in selectionStore.factories"
-                    :key="f"
-                    class="option"
-                    :class="{ 'selected-option': f === factory }"
-                    @click="selectionStore.selectFactory(f)"
-                >
-                  {{ f }}
-                </div>
-              </div>
+      <BaseInfoSelector @selection-changed="fetchData"/>
+      <fieldset class="summary-fieldset">
+        <legend>{{ year }}年{{ month }}月供应商统计</legend>
+        <div class="loading" v-if="isLoading">数据加载中...</div>
+        <div v-else>
+          <div class="form-row">
+            <div class="form-group">
+              <label>华东地区 (家)</label>
+              <input type="number" v-model.number="formData.east" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
             </div>
-          </div>
-          <div class="form-group">
-            <label>统计年份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleYearDropdown">
-                {{ year }}年
-                <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showYearDropdown">
-                <div
-                    v-for="y in selectionStore.years"
-                    :key="y"
-                    class="option"
-                    :class="{ 'selected-option': y === year }"
-                    @click="selectionStore.selectYear(y)"
-                >
-                  {{ y }}年
-                </div>
-              </div>
+            <div class="form-group">
+              <label>华南地区 (家)</label>
+              <input type="number" v-model.number="formData.south" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
             </div>
-          </div>
-          <div class="form-group">
-            <label>统计月份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleMonthDropdown">
-                {{ month }}月
-                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showMonthDropdown">
-                <div
-                    v-for="m in selectionStore.months"
-                    :key="m"
-                    class="option"
-                    :class="{ 'selected-option': m === month }"
-                    @click="selectionStore.selectMonth(m)"
-                >
-                  {{ m }}月
-                </div>
-              </div>
+            <div class="form-group">
+              <label>其他地区 (家)</label>
+              <input type="number" v-model.number="formData.other" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>环境筛选供应商 (家)</label>
+              <input type="number" v-model.number="formData.envScreened" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>社会标准供应商 (家)</label>
+              <input type="number" v-model.number="formData.socScreened" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>当地采购金额 (万元)</label>
+              <input type="number" v-model.number="formData.localAmount" min="0" step="0.01"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>采购总金额 (万元)</label>
+              <input type="number" v-model.number="formData.totalAmount" min="0" step="0.01"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>环境处罚次数 (次)</label>
+              <input type="number" v-model.number="formData.envPenaltyCount" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>环境处罚金额 (万元)</label>
+              <input type="number" v-model.number="formData.envPenaltyAmount" min="0" step="0.01"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>数据安全事件 (次)</label>
+              <input type="number" v-model.number="formData.cyberIncidents" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
             </div>
           </div>
         </div>
       </fieldset>
-
-      <!-- 供应链数据部分（样式与能源统计保持一致） -->
       <fieldset class="summary-fieldset">
-        <legend>供应链数据统计</legend>
-
-        <div class="loading" v-if="isLoading">数据加载中...</div>
-
-        <div v-else>
-          <!-- 供应商统计 -->
-          <fieldset>
-            <legend>{{ year }}年供应商统计</legend>
-            <div class="form-row">
-              <div class="form-group">
-                <label>华东地区 (家)</label>
-                <input type="number" v-model.number="formData.east" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>华南地区 (家)</label>
-                <input type="number" v-model.number="formData.south" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>其他地区 (家)</label>
-                <input type="number" v-model.number="formData.other" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>合计 (家)</label>
-                <input type="number" :value="totalSuppliers" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>环境筛选供应商 (家)</label>
-                <input type="number" v-model.number="formData.envScreened" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>社会标准供应商 (家)</label>
-                <input type="number" v-model.number="formData.socScreened" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>当地采购金额 (万元)</label>
-                <input type="number" v-model.number="formData.localAmount" min="0" step="0.01"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>采购总金额 (万元)</label>
-                <input type="number" v-model.number="formData.totalAmount" min="0" step="0.01"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>环境维度占比 (%)</label>
-                <input type="number" :value="envRatio" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>社会标准占比 (%)</label>
-                <input type="number" :value="socRatio" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>当地采购比例 (%)</label>
-                <input type="number" :value="localPurchaseRatio" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>环境处罚次数 (次)</label>
-                <input type="number" v-model.number="formData.envPenaltyCount" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>环境处罚金额 (万元)</label>
-                <input type="number" v-model.number="formData.envPenaltyAmount" min="0" step="0.01"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>数据安全事件 (次)</label>
-                <input type="number" v-model.number="formData.cyberIncidents" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-            </div>
-            <div style="opacity: 0.75; font-size: 12px; line-height: 1.4; margin-top: 8px">
-            </div>
-          </fieldset>
+        <legend>{{ year }}年供应链统计 - 汇总</legend>
+        <div class="form-row">
+          <div class="form-group">
+            <label>合计 (家)</label>
+            <input type="number" :value="totalSuppliers" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>环境维度占比 (%)</label>
+            <input type="number" :value="envRatio" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>社会标准占比 (%)</label>
+            <input type="number" :value="socRatio" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>当地采购比例 (%)</label>
+            <input type="number" :value="localPurchaseRatio" disabled class="calculated-field">
+          </div>
         </div>
       </fieldset>
     </form>
@@ -157,9 +86,10 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { useSelectionStore } from '@/stores/selectionStore'
+import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
+import {useSelectionStore} from '@/stores/selectionStore'
 import apiClient from '@/utils/axios'
+import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
@@ -201,11 +131,6 @@ const calculatePercent = (numerator, denominator) => {
   return denom > 0 ? ((num / denom) * 100).toFixed(2) : 0
 }
 
-// —— 与能源统计保持一致：监听工厂/年份变化并拉取数据 —— //
-watch([factory, year], () => {
-  fetchData()
-})
-
 onMounted(() => {
   document.addEventListener('click', selectionStore.handleClickOutside)
   // 首次进入拉取一次
@@ -225,7 +150,7 @@ const fetchData = async () => {
   isLoading.value = true
   try {
     const resp = await apiClient.get('/quantitative/supply', {
-      params: { factory: factory.value, year: year.value }
+      params: {factory: factory.value, year: year.value}
     })
     const data = resp?.data?.data
     if (data) {

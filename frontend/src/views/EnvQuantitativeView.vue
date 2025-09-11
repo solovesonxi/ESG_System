@@ -1,43 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <fieldset>
-        <legend>基础信息</legend>
-        <div class="form-row">
-          <div class="form-group">
-            <label>工厂名称</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleFactoryDropdown">
-                {{ factory }}
-                <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown"
-                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div v-for="f in factories" :key="f" class="option" :class="{ 'selected-option': f === factory }"
-                     @click="selectionStore.selectFactory(f)">
-                  {{ f }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>统计年份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleYearDropdown">
-                {{ year }}年
-                <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showYearDropdown">
-                <div v-for="y in years" :key="y" class="option" :class="{ 'selected-option': y === year }"
-                     @click="selectionStore.selectYear(y)">
-                  {{ y }}年
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-
+      <BaseInfoSelector @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset" v-for="(indicators, category) in data" :key="category">
         <legend>{{ CATEGORY[category] }}</legend>
         <div class="form-row">
@@ -72,16 +36,14 @@
 
 <script setup>
 import {computed, onMounted, ref, watch} from 'vue';
-import {formatComparison} from '@/router/useEnvData.js';
 import {CATEGORY, ENV_QUANT_INDICATORS} from '@/constants/indicators.js';
 import apiClient from "@/utils/axios.js";
 import {useSelectionStore} from "@/stores/selectionStore.js";
+import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
-const factories = computed(() => selectionStore.factories)
 const year = computed(() => selectionStore.selectedYear)
-const years = computed(() => selectionStore.years)
 
 const data = ref({
   material: {}, energy: {}, water: {}, emission: {}, waste: {}, investment: {}, envQuant: {}
@@ -127,18 +89,13 @@ onMounted(() => {
   fetchData()
 })
 
-watch([factory, year], () => {
-  fetchData()
-})
 const submitEdit = async () => {
   try {
     const playLoad = {
       factory: factory.value,
       year: parseInt(year.value),
-      reasonsMap: tempReasons.value
+      data: tempReasons.value
     }
-    console.log("初始数据：", data.value)
-    console.log("提交原因：", tempReasons.value)
     const response = await apiClient.post(`/analytical/env_quantitative`, playLoad);
     if (response.data.status === 'success') {
       alert('排放数据提交成功!')

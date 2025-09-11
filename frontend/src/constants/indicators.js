@@ -1,6 +1,21 @@
 // constants/indicators.js
-
-// 定量指标名称映射
+export const CATEGORY = {
+    "material": "物料",
+    "energy": "能源",
+    "water": "水资源",
+    "emission": "排放",
+    "waste": "废弃物",
+    "investment": "投资",
+    "management": "环境管理",
+    "climate_change": "气候变化",
+    "env_opportunities": "环境机遇",
+    "bio_conservation": "生物多样性保护",
+    "env_inc_management": "环境事故管理",
+    "material_consumption": "物料消耗",
+    "energy_consumption": "能源消耗",
+    "carbon_emission": "碳排放"
+};
+// 环境定量指标名称映射
 export const ENV_QUANT_INDICATORS = {
     "material": {
         "renewable_input": "可再生进料量 （吨）",
@@ -80,121 +95,88 @@ export const ENV_QUANT_INDICATORS = {
     }
 };
 
-
-export const CATEGORY = {
-    "material": "物料",
-    "energy": "能源",
-    "water": "水资源",
-    "emission": "排放",
-    "waste": "废弃物",
-    "investment": "投资",
-    "management": "环境管理"
-};
-
-// 定性指标名称映射
+// 环境定性指标名称映射
 export const ENV_QUAL_INDICATORS = {
-    // 气候变化部分
-    "board_supervision": "董事会监管",
-    "management_responsibility": "管理层职责",
-    "environment_strategy": "环境战略",
-    "risk_opportunity_identification": "风险与机遇识别以及应对措施",
-    "climate_risk_disclosure": "气候风险应对披露",
-    "risk_matrix": "物理风险、转型风险、短期风险、长期风险",
-    "risk_impact": "风险影响",
-    "resilience": "能力韧性",
-    "risk_process": "识别、评估风险流程",
-    "risk_management_process": "管理风险流程",
-    "business_strategy": "纳入业务策略",
-    "ghg_reduction_target": "温室气体排放物减排目标",
-    "ghg_reduction_rate": "温室气体减排目标达成率（%）",
-    "ghg_reduction_action": "温室气体排放物减排行动",
-    "carbon_capture_target": "碳捕捉计划目标",
-    "carbon_capture_rate": "碳捕捉计划目标达成率（%）",
-
-    // 废弃物部分
-    "waste_reduction_target": "废弃物减排目标",
-    "waste_reduction_action": "废弃物减排行动",
-
-    // 水资源部分
-    "annual_water_use_target": "年度用水量目标",
-    "annual_water_use_target_rate": "年度用水量目标达成率（%）",
-    "annual_reclaimed_water_use_target": "年度中水使用量目标",
-    "annual_reclaimed_water_use_target_rate": "年度中水使用量目标达成率（%）",
-    "water_saving_target": "节水目标/水资源减排目标",
-    "water_saving_target_rate": "水资源减排目标达成率（%）",
-    "water_management_policy": "水资源管理政策",
-    "water_risk_management": "水资源风险管理",
-    "water_saving_action": "节水行动",
-
-    // 环境机遇部分
-    "clean_technology_strategy": "清洁技术战略",
-    "clean_technology_practice": "清洁技术实践",
-
-    // 生物多样性保护部分
-    "biodiversity_impact": "生物多样性影响",
-    "ecological_restoration": "生态修复",
-
-    // 环境事故管理部分
-    "environmental_accident": "环境事故",
-    "environmental_penalty": "环境处罚",
-
-    // 环境管理部分
-    "environmental_management_system": "环境管理体系认证与披露",
-    "environmental_resource_policy": "环境/资源使用政策",
-    "environmental_emergency_plan": "环境应急预案办法",
-    "green_office": "绿色办公",
-    "green_factory_policy": "绿色工厂政策以及目标计划",
-    "environmental_committee": "环保委员会或工作组的设置",
-    "key_pollution_unit": "列入重点排污单位",
-    "waste_product_recycling": "废旧产品回收项目",
-    "hazardous_waste_emission_target": "有害废弃物排放总量目标",
-    "hazardous_waste_emission_target_rate": "有害废弃物排放总量目标达成率（%）",
-    "sustainable_product_certification": "可持续产品认证与信披",
-
-    // 物料消耗部分
-    "material_reduction_target": "减少物料消耗目标",
-    "annual_packaging_material_target": "年度包装材料消耗目标",
-    "annual_packaging_material_target_rate": "年度包装材料消耗目标达成率（%）",
-    "packaging_material_reduction_target": "包装材料资源降低目标",
-    "packaging_material_reduction_target_rate": "包装材料资源降低目标达成率（%）",
-    "product_lifecycle_management": "产品生命周期管理",
-    "annual_office_paper_target": "年度办公用纸消耗量目标",
-    "annual_office_paper_target_rate": "年度办公用纸消耗量目标达成率（%）",
-    "chemical_management": "化学品管理",
-    "chemical_inventory": "化学品清单",
-
-    // 能源消耗部分
-    "energy_reduction_target": "减少能源消耗目标",
-    "renewable_energy_target": "可再生能源目标",
-    "renewable_energy_use_development": "可再生能源利用及开发",
-    "energy_saving_action_results": "能源节约行动与成果",
-    "energy_management_system": "能源管理体系认证与信披",
-
-    // 碳排放部分
-    "product_carbon_footprint": "产品碳足迹",
-    "product_carbon_footprint_plan": "产品碳足迹计划及执行情况说明",
-    "carbon_neutrality_target_year": "碳中和目标年份",
-    "carbon_neutrality_plan": "碳中和计划",
-    "carbon_neutrality_target_scheme": "碳中和目标指标方案",
-    "carbon_neutrality_plan_rate": "碳中和计划达成率（%）",
-    "carbon_reduction_target": "碳减排目标",
-    "joined_sbti": "是否加入科学碳目标SBTi",
-    "cdp_disclosure": "CDP收据披露及说明",
-    "carbon_inventory_disclosure": "碳盘查数据披露",
-    "carbon_inventory_report_verification": "碳盘查报告验证",
-    "greenhouse_gas_verification_system": "是否有温室气体核查体系"
+    "climate_change": {
+        "board_supervision": "董事会监管",
+        "management_responsibility": "管理层职责",
+        "environment_strategy": "环境战略",
+        "risk_opportunity_identification": "风险与机遇识别以及应对措施",
+        "climate_risk_disclosure": "气候风险应对披露",
+        "risk_matrix": "物理风险、转型风险、短期风险、长期风险",
+        "risk_impact": "风险影响",
+        "resilience": "能力韧性",
+        "risk_process": "识别、评估风险流程",
+        "risk_management_process": "管理风险流程",
+        "business_strategy": "纳入业务策略",
+        "ghg_reduction_target": "温室气体排放物减排目标",
+        "ghg_reduction_rate": "温室气体减排目标达成率（%）",
+        "ghg_reduction_action": "温室气体排放物减排行动",
+        "carbon_capture_target": "碳捕捉计划目标",
+        "carbon_capture_rate": "碳捕捉计划目标达成率（%）"
+    }, "waste": {
+        "waste_reduction_target": "废弃物减排目标", "waste_reduction_action": "废弃物减排行动"
+    }, "water": {
+        "annual_water_use_target": "年度用水量目标",
+        "annual_water_use_target_rate": "年度用水量目标达成率（%）",
+        "annual_reclaimed_water_use_target": "年度中水使用量目标",
+        "annual_reclaimed_water_use_target_rate": "年度中水使用量目标达成率（%）",
+        "water_saving_target": "节水目标/水资源减排目标",
+        "water_saving_target_rate": "水资源减排目标达成率（%）",
+        "water_management_policy": "水资源管理政策",
+        "water_risk_management": "水资源风险管理",
+        "water_saving_action": "节水行动"
+    }, "env_opportunities": {
+        "clean_technology_strategy": "清洁技术战略", "clean_technology_practice": "清洁技术实践"
+    }, "bio_conservation": {
+        "biodiversity_impact": "生物多样性影响", "ecological_restoration": "生态修复"
+    }, "env_inc_management": {
+        "environmental_accident": "环境事故", "environmental_penalty": "环境处罚",
+    }, "management": {
+        "environmental_management_system": "环境管理体系认证与披露",
+        "environmental_resource_policy": "环境/资源使用政策",
+        "environmental_emergency_plan": "环境应急预案办法",
+        "green_office": "绿色办公",
+        "green_factory_policy": "绿色工厂政策以及目标计划",
+        "environmental_committee": "环保委员会或工作组的设置",
+        "key_pollution_unit": "列入重点排污单位",
+        "waste_product_recycling": "废旧产品回收项目",
+        "hazardous_waste_emission_target": "有害废弃物排放总量目标",
+        "hazardous_waste_emission_target_rate": "有害废弃物排放总量目标达成率（%）",
+        "sustainable_product_certification": "可持续产品认证与信披"
+    }, "material_consumption": {
+        "material_reduction_target": "减少物料消耗目标",
+        "annual_packaging_material_target": "年度包装材料消耗目标",
+        "annual_packaging_material_target_rate": "年度包装材料消耗目标达成率（%）",
+        "packaging_material_reduction_target": "包装材料资源降低目标",
+        "packaging_material_reduction_target_rate": "包装材料资源降低目标达成率（%）",
+        "product_lifecycle_management": "产品生命周期管理",
+        "annual_office_paper_target": "年度办公用纸消耗量目标",
+        "annual_office_paper_target_rate": "年度办公用纸消耗量目标达成率（%）",
+        "chemical_management": "化学品管理",
+        "chemical_inventory": "化学品清单"
+    }, "energy_consumption": {
+        "energy_reduction_target": "减少能源消耗目标",
+        "renewable_energy_target": "可再生能源目标",
+        "renewable_energy_use_development": "可再生能源利用及开发",
+        "energy_saving_action_results": "能源节约行动与成果",
+        "energy_management_system": "能源管理体系认证与信披"
+    }, "carbon_emission": {
+        "product_carbon_footprint": "产品碳足迹",
+        "product_carbon_footprint_plan": "产品碳足迹计划及执行情况说明",
+        "carbon_neutrality_target_year": "碳中和目标年份",
+        "carbon_neutrality_plan": "碳中和计划",
+        "carbon_neutrality_target_scheme": "碳中和目标指标方案",
+        "carbon_neutrality_plan_rate": "碳中和计划达成率（%）",
+        "carbon_reduction_target": "碳减排目标",
+        "joined_sbti": "是否加入科学碳目标SBTi",
+        "cdp_disclosure": "CDP收据披露及说明",
+        "carbon_inventory_disclosure": "碳盘查数据披露",
+        "carbon_inventory_report_verification": "碳盘查报告验证",
+        "greenhouse_gas_verification_system": "是否有温室气体核查体系"
+    }
 };
 
-// 定性指标分类映射
-export const INDICATOR_CATEGORIES = {
-    "气候变化": ["board_supervision", "management_responsibility", "environment_strategy", "risk_opportunity_identification", "climate_risk_disclosure", "risk_matrix", "risk_impact", "resilience", "risk_process", "risk_management_process", "business_strategy", "ghg_reduction_target", "ghg_reduction_rate", "ghg_reduction_action", "carbon_capture_target", "carbon_capture_rate"],
-    "废弃物": ["waste_reduction_target", "waste_reduction_action"],
-    "水资源": ["annual_water_use_target", "annual_water_use_target_rate", "annual_reclaimed_water_use_target", "annual_reclaimed_water_use_target_rate", "water_saving_target", "water_saving_target_rate", "water_management_policy", "water_risk_management", "water_saving_action"],
-    "环境机遇": ["clean_technology_strategy", "clean_technology_practice"],
-    "生物多样性保护": ["biodiversity_impact", "ecological_restoration"],
-    "环境事故管理": ["environmental_accident", "environmental_penalty"],
-    "环境管理": ["environmental_management_system", "environmental_resource_policy", "environmental_emergency_plan", "green_office", "green_factory_policy", "environmental_committee", "key_pollution_unit", "waste_product_recycling", "hazardous_waste_emission_target", "hazardous_waste_emission_target_rate", "sustainable_product_certification"],
-    "物料消耗": ["material_reduction_target", "annual_packaging_material_target", "annual_packaging_material_target_rate", "packaging_material_reduction_target", "packaging_material_reduction_target_rate", "product_lifecycle_management", "annual_office_paper_target", "annual_office_paper_target_rate", "chemical_management", "chemical_inventory"],
-    "能源消耗": ["energy_reduction_target", "renewable_energy_target", "renewable_energy_use_development", "energy_saving_action_results", "energy_management_system"],
-    "碳排放": ["product_carbon_footprint", "product_carbon_footprint_plan", "carbon_neutrality_target_year", "carbon_neutrality_plan", "carbon_neutrality_target_scheme", "carbon_neutrality_plan_rate", "carbon_reduction_target", "joined_sbti", "cdp_disclosure", "carbon_inventory_disclosure", "carbon_inventory_report_verification", "greenhouse_gas_verification_system"]
-};
+
+
+

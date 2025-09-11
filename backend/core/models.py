@@ -193,42 +193,42 @@ class EmploymentData(Base):
     year = Column(Integer, primary_key=True)
 
     # 员工构成数据
-    full_time = Column(JSON, default=0)
-    part_time = Column(JSON, default=0)
-    male = Column(JSON, default=0)
-    female = Column(JSON, default=0)
-    management = Column(JSON, default=0)
-    management_female = Column(JSON, default=0)
-    middle = Column(JSON, default=0)
-    general = Column(JSON, default=0)
-    mainland = Column(JSON, default=0)
-    overseas = Column(JSON, default=0)
-    edu_phd = Column(JSON, default=0)
-    edu_master = Column(JSON, default=0)
-    edu_bachelor = Column(JSON, default=0)
-    edu_junior = Column(JSON, default=0)
+    full_time = Column(JSON, nullable=False)
+    part_time = Column(JSON, nullable=False)
+    male = Column(JSON, nullable=False)
+    female = Column(JSON, nullable=False)
+    management = Column(JSON, nullable=False)
+    management_female = Column(JSON, nullable=False)
+    middle = Column(JSON, nullable=False)
+    general = Column(JSON, nullable=False)
+    mainland = Column(JSON, nullable=False)
+    overseas = Column(JSON, nullable=False)
+    edu_phd = Column(JSON, nullable=False)
+    edu_master = Column(JSON, nullable=False)
+    edu_bachelor = Column(JSON, nullable=False)
+    edu_junior = Column(JSON, nullable=False)
 
     # 五险一金数据
-    avg_social_fund = Column(JSON, default=0.0)
-    inc_social_fund = Column(JSON, default=0.0)
+    avg_social_fund = Column(JSON, nullable=False)
+    inc_social_fund = Column(JSON, nullable=False)
 
     # 年龄分布
-    age18_30 = Column(JSON, default=0)
-    age31_45 = Column(JSON, default=0)
-    age46_60 = Column(JSON, default=0)
+    age18_30 = Column(JSON, nullable=False)
+    age31_45 = Column(JSON, nullable=False)
+    age46_60 = Column(JSON, nullable=False)
 
     # 新员工与离职数据
-    new_hires = Column(JSON, default=0)
-    quit_male = Column(JSON, default=0)
-    quit_female = Column(JSON, default=0)
-    quit_mainland = Column(JSON, default=0)
-    quit_overseas = Column(JSON, default=0)
-    quit18_30 = Column(JSON, default=0)
-    quit31_45 = Column(JSON, default=0)
-    quit46_60 = Column(JSON, default=0)
-    quit_management = Column(JSON, default=0)
-    quit_middle = Column(JSON, default=0)
-    quit_general = Column(JSON, default=0)
+    new_hires = Column(JSON, nullable=False)
+    quit_male = Column(JSON, nullable=False)
+    quit_female = Column(JSON, nullable=False)
+    quit_mainland = Column(JSON, nullable=False)
+    quit_overseas = Column(JSON, nullable=False)
+    quit18_30 = Column(JSON, nullable=False)
+    quit31_45 = Column(JSON, nullable=False)
+    quit46_60 = Column(JSON, nullable=False)
+    quit_management = Column(JSON, nullable=False)
+    quit_middle = Column(JSON, nullable=False)
+    quit_general = Column(JSON, nullable=False)
 
     # 计算指标
     total_employees = Column(Integer, default=0)
@@ -436,7 +436,7 @@ class LaborReason(Base):
     __tablename__ = "labor_reasons"
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
-    indicator = Column(String(200), nullable=False)
+    indicator = Column(String(200), primary_key=True)
     reason = Column(String(2000), nullable=True)
 
 
@@ -444,7 +444,7 @@ class OtherReason(Base):
     __tablename__ = "other_reasons"
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
-    indicator = Column(String(200), nullable=False)
+    indicator = Column(String(200), primary_key=True)
     reason = Column(String(2000), nullable=True)
 
 
@@ -452,7 +452,7 @@ class LaborQualitative(Base):
     __tablename__ = "labor_qualitative"
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
-    indicator = Column(String(200), nullable=False)
+    indicator = Column(String(200), primary_key=True)
 
     current_text = Column(String(4000), nullable=True)
     last_text = Column(String(4000), nullable=True)
@@ -464,7 +464,7 @@ class OtherQualitative(Base):
     __tablename__ = "other_qualitative"
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
-    indicator = Column(String(200), nullable=False)
+    indicator = Column(String(200), primary_key=True)
 
     current_text = Column(String(4000), nullable=True)
     last_text = Column(String(4000), nullable=True)
@@ -477,29 +477,44 @@ class ProductResponsibilityData(Base):
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
 
+    complaints = Column(JSON, nullable=False)  # 客户投诉总数
+    handled = Column(JSON, nullable=False)  # 有效处理件数
+    quality_issues = Column(JSON, nullable=False)  # 产品质量问题数
+    recalls = Column(JSON, nullable=False)  # 发生产品召回的次数
+    shipments = Column(JSON, nullable=False)  # 产品出货量
+    customer_satisfaction = Column(JSON, nullable=False)  # 客户满意度结果
+    cyber_incidents = Column(JSON, nullable=False)  # 网络数据安全事件
     complaints_total = Column(Integer, default=0)  # 客户投诉总数
-    complaints_handled = Column(Integer, default=0)  # 有效处理件数
-    complaints_handle_rate = Column(Float, default=0.0)  # 客户投诉有效处理率
-    customer_satisfaction = Column(Float, default=0.0)  # 客户满意度结果
-    recall_count = Column(Integer, default=0)  # 发生产品召回的次数
-    recall_percent = Column(Float, default=0.0)  # 产品召回百分比
-    product_quality_issues = Column(Integer, default=0)  # 产品安全质量问题
-    cyber_incidents = Column(Integer, default=0)  # 网络数据安全事件
+    handled_total = Column(Integer, default=0)  # 有效处理件数
+    handled_rate = Column(Float, default=0.0)  # 客户投诉有效处理率
+    customer_satisfaction_average = Column(Float, default=0.0)  # 客户满意度结果
+    recall_total = Column(Integer, default=0)  # 发生产品召回的次数
+    recall_rate = Column(Float, default=0.0)  # 产品召回百分比
+    quality_issues_total = Column(Integer, default=0)  # 产品安全质量问题
+    cyber_incidents_total = Column(Integer, default=0)  # 网络数据安全事件
 
 
 class IPRData(Base):
-    __tablename__ = "ipr"
+    __tablename__ = "ip"
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
 
+    patents=Column(JSON, nullable=False)
+    inv_patents= Column(JSON, nullable=False)
+    inv_applications= Column(JSON, nullable=False)
+    utility_patents= Column(JSON, nullable=False)
+    design_patents= Column(JSON, nullable=False)
+    granted_patents= Column(JSON, nullable=False)
+    software_copyrights= Column(JSON, nullable=False)
+    trademarks=Column(JSON, nullable=False)
+    new_patents= Column(Integer, default=0)
     patents_total = Column(Integer, default=0)  # 累计获得专利数量
-    invention_total = Column(Integer, default=0)  # 累计发明专利数量
-    invention_applications = Column(Integer, default=0)  # 发明专利申请数量
-    utility_model_total = Column(Integer, default=0)  # 累计实用新型专利数量
-    design_total = Column(Integer, default=0)  # 累计外观设计专利数量
-    authorized_total = Column(Integer, default=0)  # 累计被授权专利数
-    new_patents_year = Column(Integer, default=0)  # 本年新增专利数量
-    software_copyright_total = Column(Integer, default=0)  # 累计软件著作权数量
+    inv_patents_total = Column(Integer, default=0)  # 累计发明专利数量
+    inv_applications_total = Column(Integer, default=0)  # 发明专利申请数量
+    utility_patents_total = Column(Integer, default=0)  # 累计实用新型专利数量
+    design_patents_total = Column(Integer, default=0)  # 累计外观设计专利数量
+    granted_patents_total = Column(Integer, default=0)  # 累计被授权专利数
+    software_copyrights_total = Column(Integer, default=0)  # 累计软件著作权数量
     trademarks_total = Column(Integer, default=0)  # 累计商标注册数量
 
 

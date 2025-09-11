@@ -18,10 +18,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                                                           ProductResponsibilityData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
-        data_dict = {"complaints_total": data.complaints_total, "complaints_handled": data.complaints_handled,
-            "complaints_handle_rate": data.complaints_handle_rate, "customer_satisfaction": data.customer_satisfaction,
-            "recall_count": data.recall_count, "recall_percent": data.recall_percent,
-            "product_quality_issues": data.product_quality_issues, "cyber_incidents": data.cyber_incidents}
+        data_dict = {"complaints": data.complaints, "handled": data.handled, "qualityIssues": data.quality_issues,
+                     "recalls": data.recalls, "shipments": data.shipments,
+                     "customerSatisfaction": data.customer_satisfaction, "cyberIncidents": data.cyber_incidents}
         return {"status": "success", "data": data_dict}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -32,11 +31,17 @@ async def submit_data(data: ProductResponsibilitySubmission, db: Session = Depen
                       current_user: dict = Depends(get_current_user)):
     try:
         require_factory(data.factory, current_user)
-        db_record = ProductResponsibilityData(factory=data.factory, year=data.year,
-            complaints_total=data.complaints_total, complaints_handled=data.complaints_handled,
-            complaints_handle_rate=data.complaints_handle_rate, customer_satisfaction=data.customer_satisfaction,
-            recall_count=data.recall_count, recall_percent=data.recall_percent,
-            product_quality_issues=data.product_quality_issues, cyber_incidents=data.cyber_incidents)
+        db_record = ProductResponsibilityData(factory=data.factory, year=data.year, complaints=data.complaints,
+                                              handled=data.handled, quality_issues=data.qualityIssues,
+                                              recalls=data.recalls, shipments=data.shipments,
+                                              customer_satisfaction=data.customerSatisfaction,
+                                              cyber_incidents=data.cyberIncidents,
+                                              complaints_total=data.complaintsTotal, handled_total=data.handledTotal,
+                                              handled_rate=data.handledRate,
+                                              customer_satisfaction_average=data.customerSatisfactionAverage,
+                                              recall_total=data.recallsTotal, recall_rate=data.recallRate,
+                                              quality_issues_total=data.qualityIssuesTotal,
+                                              cyber_incidents_total=data.cyberIncidentsTotal)
         merged_record = db.merge(db_record)
         db.commit()
         return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}

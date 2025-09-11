@@ -1,4 +1,4 @@
-from typing import Any, List, Dict
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
@@ -10,21 +10,30 @@ from core.permissions import get_current_user, require_access, require_factory
 router = APIRouter(prefix="/analytical/env_quantitative", tags=["分析数据-环境定量"])
 
 
-def fetch_and_process_data(db, model, factory, year, fields):
+def fix_data(data, field, function: str = "sum"):
+    value = getattr(data, field) if data else None
+    if isinstance(value, list):
+        if function == "avg":
+            filtered = [v for v in value if v not in (None, 0)]
+            l = len(filtered)
+            value = sum(filtered) / l if l > 0 else None
+        else:
+            value = sum(value)
+    if value is not None and isinstance(value, (int, float)):
+        value = round(value, 2)
+    return value
+
+
+def fetch_and_process_data(db, model, factory, year, fields, index: list = None):
     current_data = db.query(model).filter(model.factory == factory, model.year == year).first()
     last_year_data = db.query(model).filter(model.factory == factory,
                                             model.year == year - 1).first() if year > 1 else None
     result = {}
     reasons = current_data.reasons if (current_data and current_data.reasons) else []
     for i, field in enumerate(fields):
-        current_value = getattr(current_data, field) if current_data else None
-        last_value = getattr(last_year_data, field) if last_year_data else None
-        if isinstance(current_value, list): current_value = sum(current_value)
-        if isinstance(last_value, list): last_value = sum(last_value)
-        if current_value is not None and isinstance(current_value, (int, float)):
-            current_value = round(current_value, 2)
-        if last_value is not None and isinstance(last_value, (int, float)):
-            last_value = round(last_value, 2)
+        function = "avg" if (index and i in index) else "sum"
+        current_value = fix_data(current_data, field, function)
+        last_value = fix_data(last_year_data, field, function)
         comparison = None if (current_value is None or last_value is None or last_value == 0) else round(
             ((current_value - last_value) / last_value) * 100, 2)
         reason = reasons[i] if i < len(reasons) else ""
@@ -48,7 +57,7 @@ async def get_data(factory: str = Query(..., description="工厂名称"), year: 
         result["investment"] = fetch_and_process_data(db, InvestmentData, factory, year,
                                                       envquant_indicators["investment"])
         result["management"] = fetch_and_process_data(db, ManagementData, factory, year,
-                                                      envquant_indicators["management"])
+                                                      envquant_indicators["management"],  [0, 1, 2])
         if not any(result.values()):
             raise HTTPException(status_code=404, detail="未找到环境定量数据")
         return result
@@ -58,18 +67,20 @@ async def get_data(factory: str = Query(..., description="工厂名称"), year: 
 
 @router.post("")
 async def save_reasons(factory: str = Body(..., description="工厂名称"), year: int = Body(..., description="统计年份"),
-                       reasonsMap: Dict[str, Dict[str, str]] = Body(...), db: Session = Depends(get_db),
+                       data: Dict[str, Dict[str, str]] = Body(...), db: Session = Depends(get_db),
                        current_user: dict = Depends(get_current_user)):
     try:
         require_factory(factory, current_user)
-        reason_mapping = {"materialReasons": (MaterialData, reasonsMap["material"]),
-                          "energyReasons": (EnergyData, reasonsMap["energy"]), "waterReasons": (WaterData, reasonsMap["water"]),
-                          "emissionReasons": (EmissionData, reasonsMap["emission"]), "wasteReasons": (WasteData, reasonsMap["waste"]),
-                          "investmentReasons": (InvestmentData, reasonsMap["investment"]),
-                          "managementReasons": (ManagementData, reasonsMap["management"])}
+        reason_mapping = {"materialReasons": (MaterialData, data["material"]),
+                          "energyReasons": (EnergyData, data["energy"]),
+                          "waterReasons": (WaterData, data["water"]),
+                          "emissionReasons": (EmissionData, data["emission"]),
+                          "wasteReasons": (WasteData, data["waste"]),
+                          "investmentReasons": (InvestmentData, data["investment"]),
+                          "managementReasons": (ManagementData, data["management"])}
         for model_class, reasons in reason_mapping.values():
             if data := db.query(model_class).filter_by(factory=factory, year=year).first():
-                data.reasons = [v for (k,v) in reasons.items()]
+                data.reasons = [v for (k, v) in reasons.items()]
         db.commit()
         return {"status": "success", "message": "原因分析提交成功"}
     except Exception as e:

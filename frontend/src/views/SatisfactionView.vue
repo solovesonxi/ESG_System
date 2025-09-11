@@ -1,91 +1,25 @@
-```vue
 <template>
   <div class="shared-form">
     <form>
-      <fieldset>
-        <legend>基础信息</legend>
-        <div class="form-row">
-          <div class="form-group">
-            <label>工厂名称</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleFactoryDropdown">
-                {{ factory }}
-                <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown"
-                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div
-                    v-for="f in selectionStore.factories"
-                    :key="f"
-                    class="option"
-                    :class="{ 'selected-option': f === factory }"
-                    @click="selectionStore.selectFactory(f)"
-                >
-                  {{ f }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>统计年份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleYearDropdown">
-                {{ year }}年
-                <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showYearDropdown">
-                <div
-                    v-for="y in selectionStore.years"
-                    :key="y"
-                    class="option"
-                    :class="{ 'selected-option': y === year }"
-                    @click="selectionStore.selectYear(y)"
-                >
-                  {{ y }}年
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>统计月份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleMonthDropdown">
-                {{ month }}月
-                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showMonthDropdown">
-                <div
-                    v-for="m in selectionStore.months"
-                    :key="m"
-                    class="option"
-                    :class="{ 'selected-option': m === month }"
-                    @click="selectionStore.selectMonth(m)"
-                >
-                  {{ m }}月
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-
-      <!-- 满意度数据部分（样式与能源统计保持一致） -->
+      <BaseInfoSelector @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
-        <legend>员工满意度调查统计</legend>
+        <legend>{{ year }}年{{ month }}月员工满意度调查统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
         <div class="form-row" v-else>
           <div class="form-group">
             <label>员工满意度 （%）</label>
-            <input
-                type="number"
-                v-model.number="formData.satisfaction[month-1]"
-                min="0"
-                max="100"
-                step="0.1"
-                :readonly="!isEditing"
-                :class="{ 'editable-field': isEditing }"
-                required
-            >
+            <input type="number" v-model.number="formData.satisfaction[month-1]" min="0" max="100" step="0.01"
+                   :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset class="summary-fieldset">
+        <legend>{{ year }}年员工满意度统计 - 汇总</legend>
+        <div class="loading" v-if="isLoading">数据加载中...</div>
+        <div class="form-row" v-else>
+          <div class="form-group">
+            <label>年平均员工满意度 （%）</label>
+            <input type="number" v-model.number="annualAverage" min="0" max="100" step="0.01" disabled>
           </div>
         </div>
       </fieldset>
@@ -94,9 +28,10 @@
 </template>
 
 <script setup>
-import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {useSelectionStore} from '@/stores/selectionStore'
 import apiClient from '@/utils/axios'
+import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
@@ -122,11 +57,7 @@ const annualAverage = computed(() => {
   const validMonths = formData.satisfaction.filter(v => v > 0);
   if (validMonths.length === 0) return null;
   const sum = validMonths.reduce((total, value) => total + toNum(value), 0);
-  return (sum / validMonths.length).toFixed(1);
-})
-
-watch([factory, year], () => {
-  fetchData()
+  return (sum / validMonths.length).toFixed(2);
 })
 
 onMounted(() => {

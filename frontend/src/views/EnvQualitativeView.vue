@@ -1,63 +1,123 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector/>
-      <QualitativeDataTable
-          v-for="category in Object.keys(INDICATOR_CATEGORIES)"
-          :key="category"
-          :title="category"
-          :data="getCategoryData(category)"
-          :indicators="INDICATOR_CATEGORIES[category]"
-          :indicator-names="ENV_QUAL_INDICATORS"
-          :is-editing="isEditing"
-          :year="year"
-          @update:temp-current-year="updateTempCurrentYear($event, category)"
-          @update:temp-comparisons="updateTempComparisons($event, category)"
-          @update:temp-reasons="updateTempReasons($event, category)"
-      />
+      <BaseInfoSelector @selection-changed="fetchData"/>
+      <fieldset class="summary-fieldset" v-for="(indicators, category) in data" :key="category">
+        <legend>{{ CATEGORY[category] }}</legend>
+        <div class="form-row">
+          <table class="data-table">
+            <thead>
+            <tr>
+              <th>指标</th>
+              <th>上一年 ({{ year - 1 }})</th>
+              <th>当前年 ({{ year }})</th>
+              <th>对比上期 (%)</th>
+              <th>原因分析</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(item, key) in indicators" :key="key">
+              <td>{{ ENV_QUAL_INDICATORS[category][key] || key }}</td>
+              <td>{{ item.lastYear || '' }}</td>
+              <td>
+                <span v-if="!isEditing">{{ item.currentYear || '' }}</span>
+                <textarea v-else v-model="tempEdits[category][key].currentYear" class="reason-input"></textarea>
+              </td>
+              <td>
+                <span v-if="!isEditing">{{ item.comparison || '' }}</span>
+                <textarea v-else v-model="tempEdits[category][key].comparison" class="reason-input"></textarea>
+              </td>
+              <td>
+                <span v-if="!isEditing">{{ item.reason || '' }}</span>
+                <textarea v-else v-model="tempEdits[category][key].reason" class="reason-input"></textarea>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </fieldset>
     </form>
   </div>
 </template>
 
 <script setup>
-import {ref} from 'vue';
-import BaseInfoSelector from '@/components/BaseInfoSelector.vue';
-import QualitativeDataTable from '@/components/QualitativeDataTable.vue';
-import {useQualData} from '@/router/useEnvData.js';
-import {ENV_QUAL_INDICATORS, INDICATOR_CATEGORIES} from '@/constants/indicators.js';
-import {fetchQualData, postQualData} from '@/router/envData.js';
+import {computed, onMounted, ref} from 'vue';
 
-// 使用组合函数获取数据
-const {data: envQualData, factory, year} = useQualData();
+import {CATEGORY, ENV_QUAL_INDICATORS} from '@/constants/indicators.js';
+import {useSelectionStore} from "@/stores/selectionStore.js";
+import apiClient from "@/utils/axios.js";
+import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 
-// 本地编辑状态和方法
+const selectionStore = useSelectionStore()
+const factory = computed(() => selectionStore.selectedFactory)
+const year = computed(() => selectionStore.selectedYear)
+
+const data = ref({});
 const isEditing = ref(false);
+const tempEdits = ref({})
+
+
+const fetchData = async () => {
+  try {
+    const res = await apiClient.get('/analytical/env_qualitative', {
+      params: {
+        factory: factory.value,
+        year: year.value
+      }
+    })
+    data.value = res.data
+    console.log(res.data)
+  } catch (e) {
+    console.error(e)
+    alert(`获取劳动定性数据失败: ${e.response?.data?.detail || e.message}`)
+  }
+}
+onMounted(() => {
+  document.addEventListener('click', selectionStore.handleClickOutside)
+})
 
 const startEditing = () => {
   isEditing.value = true;
-  tempCurrentYear.value = {};
-  tempComparisons.value = {};
-  tempReasons.value = {};
-
-  Object.keys(envQualData.value).forEach(key => {
-    tempCurrentYear.value[key] = envQualData.value[key]?.currentYear || '';
-    tempComparisons.value[key] = envQualData.value[key]?.comparison || '';
-    tempReasons.value[key] = envQualData.value[key]?.reason || '';
-  });
+  const draft = {}
+  Object.entries(data.value).forEach(([category, indicators]) => {
+    draft[category] = {}
+    Object.entries(indicators).forEach(([key, item]) => {
+      draft[category][key] = {
+        lastYear: item.lastYear || '',
+        currentYear: item.currentYear || '',
+        comparison: item.comparison || '',
+        reason: item.reason || ''
+      }
+    })
+  })
+  tempEdits.value = draft
 };
 
 const cancelEditing = () => {
   isEditing.value = false;
-  tempCurrentYear.value = {};
-  tempComparisons.value = {};
-  tempReasons.value = {};
+  tempEdits.value = {}
 };
+
 
 const submitEdit = async () => {
   try {
-    await submitData();
+    console.log("初始数据：", data.value)
+    console.log("提交原因：", tempEdits.value)
+    const response = await apiClient.post(`/analytical/env_qualitative`, {
+      factory: factory.value,
+      year: parseInt(year.value),
+      data: tempEdits.value
+    });
+    if (response.data.status === 'success') {
+      alert('排放数据提交成功!')
+    }
   } catch (error) {
-    console.error('提交失败:', error);
+    console.error('提交原因分析失败:', error);
+    alert(`提交原因分析失败: ${error.response?.data?.detail || error.message}`);
+  } finally {
+    console.log('提交完成，即将刷新');
+    isEditing.value = false;
+    await fetchData();
   }
 };
 
@@ -65,87 +125,7 @@ defineExpose({
   startEditing,
   cancelEditing,
   submitEdit,
+  fetchData
 });
-
-// 临时数据
-const tempCurrentYear = ref({});
-const tempComparisons = ref({});
-const tempReasons = ref({});
-
-// 按分类提取数据
-const getCategoryData = (category) => {
-  const result = {};
-  INDICATOR_CATEGORIES[category].forEach(indicator => {
-    if (envQualData.value[indicator]) {
-      result[indicator] = envQualData.value[indicator];
-    }
-  });
-  return result;
-};
-
-// 更新临时数据
-const updateTempCurrentYear = (newData, category) => {
-  const indicators = INDICATOR_CATEGORIES[category];
-  indicators.forEach(indicator => {
-    if (newData[indicator] !== undefined) {
-      tempCurrentYear.value[indicator] = newData[indicator];
-    }
-  });
-};
-
-const updateTempComparisons = (newData, category) => {
-  const indicators = INDICATOR_CATEGORIES[category];
-  indicators.forEach(indicator => {
-    if (newData[indicator] !== undefined) {
-      tempComparisons.value[indicator] = newData[indicator];
-    }
-  });
-};
-
-const updateTempReasons = (newData, category) => {
-  const indicators = INDICATOR_CATEGORIES[category];
-  indicators.forEach(indicator => {
-    if (newData[indicator] !== undefined) {
-      tempReasons.value[indicator] = newData[indicator];
-    }
-  });
-};
-
-// 提交数据
-const submitData = async () => {
-  try {
-    const payload = {
-      factory: factory.value,
-      year: parseInt(year.value),
-      envQualData: {}
-    };
-
-    Object.keys(envQualData.value).forEach(key => {
-      payload.envQualData[key] = {
-        currentYear: tempCurrentYear.value[key] || '',
-        comparison: tempComparisons.value[key] || '',
-        reason: tempReasons.value[key] || ''
-      };
-    });
-
-    await postQualData(payload);
-
-    // 更新前端显示
-    Object.keys(envQualData.value).forEach(key => {
-      if (envQualData.value[key]) {
-        envQualData.value[key].currentYear = tempCurrentYear.value[key];
-        envQualData.value[key].comparison = tempComparisons.value[key];
-        envQualData.value[key].reason = tempReasons.value[key];
-      }
-    });
-
-    isEditing.value = false;
-    alert('数据提交成功！');
-    await fetchQualData(factory.value, year.value);
-  } catch (error) {
-    console.error('提交数据失败:', error);
-    alert(`提交数据失败: ${error.response?.data?.detail || error.message}`);
-  }
-};
 </script>
 

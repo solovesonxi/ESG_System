@@ -1,43 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <fieldset>
-        <legend>基础信息</legend>
-        <div class="form-row">
-          <div class="form-group">
-            <label>工厂名称</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleFactoryDropdown">
-                {{ factory }}
-                <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown"
-                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div v-for="f in factories" :key="f" class="option" :class="{ 'selected-option': f === factory }"
-                     @click="selectionStore.selectFactory(f)">
-                  {{ f }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>统计年份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleYearDropdown">
-                {{ year }}年
-                <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showYearDropdown">
-                <div v-for="y in years" :key="y" class="option" :class="{ 'selected-option': y === year }"
-                     @click="selectionStore.selectYear(y)">
-                  {{ y }}年
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-
+      <BaseInfoSelector @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset" v-for="(indicators, category) in laborData" :key="category">
         <legend>{{ category }}</legend>
         <div class="form-row">
@@ -54,9 +18,9 @@
             <tbody>
             <tr v-for="(item, key) in indicators" :key="key">
               <td>{{ indicatorNames[key] || key }}</td>
-              <td>{{ formatValue(item.lastYear) || ''}}</td>
-              <td>{{ formatValue(item.currentYear) || ''}}</td>
-              <td>{{ formatComparison(item.comparison) || ''}}</td>
+              <td>{{ formatValue(item.lastYear) || '' }}</td>
+              <td>{{ formatValue(item.currentYear) || '' }}</td>
+              <td>{{ formatComparison(item.comparison) || '' }}</td>
               <td>
                 <span v-if="!isEditing">{{ item.reason || '' }}</span>
                 <textarea v-else v-model="tempReasons[key]" class="reason-input"></textarea>
@@ -71,22 +35,20 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref, watch} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js"
+import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
-const factories = computed(() => selectionStore.factories)
 const year = computed(() => selectionStore.selectedYear)
-const years = computed(() => selectionStore.years)
 
 const laborData = ref({})
 const isEditing = ref(false)
 const tempReasons = ref({})
 
 const indicatorNames = {
-  // 雇佣
   employment_total_employees: '员工总数（人）',
   employment_full_time: '全职（人）',
   employment_part_time: '兼职（人）',
@@ -166,8 +128,13 @@ const indicatorNames = {
 
 const fetchData = async () => {
   try {
-    const res = await apiClient.get('/analytical/social_quantitative_labor', {params: {factory: factory.value, year: year.value}})
-    laborData.value = { ...res.data } // 使用展开运算符确保响应式更新
+    const res = await apiClient.get('/analytical/social_quantitative_labor', {
+      params: {
+        factory: factory.value,
+        year: year.value
+      }
+    })
+    laborData.value = {...res.data} // 使用展开运算符确保响应式更新
     console.log('Fetched data:', laborData.value)
     console.log('labor data (raw):', JSON.parse(JSON.stringify(laborData.value)));
   } catch (e) {
@@ -177,8 +144,9 @@ const fetchData = async () => {
 }
 
 const formatComparison = (value) => {
-  if (value === null || value === undefined) return ''
-  return `${value > 0 ? '+' : ''}${value}%`
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  return `${value > 0 ? '+' : ''}${value}%`;
 }
 
 const formatValue = (v) => {

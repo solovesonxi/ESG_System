@@ -29,7 +29,7 @@ const isDataPage = computed(() => route.path !== '/' && route.path !== '/login' 
 const handleStartEdit = () => {
   console.log('currentComponent:', currentComponent.value);
   if (currentComponent.value && currentComponent.value.startEditing) {
-    console.log('Calling startEditing on currentComponent');
+    console.log('开始编辑');
     currentComponent.value.startEditing();
     isEditing.value = true;
   } else {
@@ -39,7 +39,7 @@ const handleStartEdit = () => {
 
 const handleCancelEdit = () => {
   if (currentComponent.value && currentComponent.value.cancelEditing) {
-    console.log('Calling cancelEditing on currentComponent');
+    console.log('取消编辑');
     currentComponent.value.cancelEditing();
     isEditing.value = false;
   } else {
@@ -49,7 +49,7 @@ const handleCancelEdit = () => {
 
 const handleSubmitEdit = () => {
   if (currentComponent.value && currentComponent.value.submitEdit) {
-    console.log('Calling submitEdit on currentComponent');
+    console.log('提交编辑内容');
     currentComponent.value.submitEdit();
     isEditing.value = false;
   } else {
@@ -62,6 +62,7 @@ watch(() => route.path, () => {
   setTimeout(() => {
     if (currentComponent.value) {
       currentComponent.value.fetchData();
+      console.log('切换到新路由：', route.path);
     }
   }, 10);
 });

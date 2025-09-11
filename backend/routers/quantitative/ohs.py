@@ -17,8 +17,13 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
         data = db.query(OHSData).filter(OHSData.factory == factory, OHSData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
-        data_dict = {}
-
+        data_dict = {"trainingCount": data.training_count, "trainingParticipants": data.training_participants,
+                     "trainingHours": data.training_hours, "injuryCount": data.injury_count,
+                     "incidentCount": data.incident_count, "fatalityCount": data.fatality_count,
+                     "lostWorkdays": data.lost_workdays, "safetyInvestment": data.safety_investment,
+                     "safetyManagers": data.safety_managers, "medicalChecks": data.medical_checks,
+                     "coverageRate": data.coverage_rate, "emergencyDrills": data.emergency_drills,
+                     "hazardsFound": data.hazards_found, "occupationalChecks": data.occupational_checks}
         return {"status": "success", "data": data_dict}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

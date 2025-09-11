@@ -1,100 +1,39 @@
 <template>
   <div class="shared-form">
     <form>
-      <fieldset>
-        <legend>基础信息</legend>
-        <div class="form-row">
-          <div class="form-group">
-            <label>工厂名称</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleFactoryDropdown">
-                {{ factory }}
-                <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown"
-                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div
-                    v-for="f in selectionStore.factories"
-                    :key="f"
-                    class="option"
-                    :class="{ 'selected-option': f === factory }"
-                    @click="selectionStore.selectFactory(f)"
-                >
-                  {{ f }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>统计年份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleYearDropdown">
-                {{ year }}年
-                <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showYearDropdown">
-                <div
-                    v-for="y in selectionStore.years"
-                    :key="y"
-                    class="option"
-                    :class="{ 'selected-option': y === year }"
-                    @click="selectionStore.selectYear(y)"
-                >
-                  {{ y }}年
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>统计月份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleMonthDropdown">
-                {{ month }}月
-                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showMonthDropdown">
-                <div
-                    v-for="m in selectionStore.months"
-                    :key="m"
-                    class="option"
-                    :class="{ 'selected-option': m === month }"
-                    @click="selectionStore.selectMonth(m)"
-                >
-                  {{ m }}月
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-
-      <!-- 温室气体盘查统计 -->
+      <BaseInfoSelector @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
         <legend>{{ year }}年{{ month }}月温室气体盘查统计 (吨CO2e)</legend>
         <div class="form-row">
           <div class="form-group">
             <label>范畴一 (类别一)</label>
-            <input type="number" v-model.number="emissionData.categoryOne" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
+            <input type="number" v-model.number="emissionData.categoryOne" step="1" min="0" :readonly="!isEditing"
+                   :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>范畴二 (类别二)</label>
-            <input type="number" v-model.number="emissionData.categoryTwo" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
+            <input type="number" v-model.number="emissionData.categoryTwo" step="1" min="0" :readonly="!isEditing"
+                   :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>范畴三 (类别三)</label>
-            <input type="number" v-model.number="emissionData.categoryThree" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
+            <input type="number" v-model.number="emissionData.categoryThree" step="1" min="0" :readonly="!isEditing"
+                   :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>范畴三 (类别四)</label>
-            <input type="number" v-model.number="emissionData.categoryFour" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
+            <input type="number" v-model.number="emissionData.categoryFour" step="1" min="0" :readonly="!isEditing"
+                   :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>范畴三 (类别五)</label>
-            <input type="number" v-model.number="emissionData.categoryFive" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
+            <input type="number" v-model.number="emissionData.categoryFive" step="1" min="0" :readonly="!isEditing"
+                   :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>范畴三 (类别六)</label>
-            <input type="number" v-model.number="emissionData.categorySix" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
+            <input type="number" v-model.number="emissionData.categorySix" step="1" min="0" :readonly="!isEditing"
+                   :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>范畴三合计</label>
@@ -106,7 +45,8 @@
           </div>
           <div class="form-group">
             <label>营业收入 (万元)</label>
-            <input type="number" v-model.number="emissionData.total_revenue" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            <input type="number" v-model.number="emissionData.total_revenue" step="1" min="0" :readonly="!isEditing"
+                   :class="{ 'editable-field': isEditing }" required>
           </div>
           <div class="form-group">
             <label>排放强度</label>
@@ -121,23 +61,28 @@
         <div class="form-row">
           <div class="form-group">
             <label>挥发性有机物 (VOC)</label>
-            <input type="number" v-model.number="wasteGasData.voc" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
+            <input type="number" v-model.number="wasteGasData.voc" step="1" min="0" :readonly="!isEditing"
+                   :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>碳氢化合物 (非甲烷总烃)</label>
-            <input type="number" v-model.number="wasteGasData.nmhc" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
+            <input type="number" v-model.number="wasteGasData.nmhc" step="1" min="0" :readonly="!isEditing"
+                   :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>苯类 (苯、甲苯、二甲苯)</label>
-            <input type="number" v-model.number="wasteGasData.benzene" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
+            <input type="number" v-model.number="wasteGasData.benzene" step="1" min="0" :readonly="!isEditing"
+                   :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>颗粒物</label>
-            <input type="number" v-model.number="wasteGasData.particulate" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
+            <input type="number" v-model.number="wasteGasData.particulate" step="1" min="0" :readonly="!isEditing"
+                   :class="{ 'editable-field': isEditing }">
           </div>
           <div class="form-group">
             <label>氮氧化物 (NOx)、硫氧化物 (SOx)和其他重大气体排放</label>
-            <input type="number" v-model.number="wasteGasData.nox_sox_other" step="1" min="0" :readonly="!isEditing" :class="{ 'editable-field': isEditing }">
+            <input type="number" v-model.number="wasteGasData.nox_sox_other" step="1" min="0" :readonly="!isEditing"
+                   :class="{ 'editable-field': isEditing }">
           </div>
 
           <div class="form-group">
@@ -151,9 +96,10 @@
 </template>
 
 <script setup>
-import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {useSelectionStore} from "@/stores/selectionStore.js";
 import apiClient from "@/utils/axios.js";
+import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
@@ -223,10 +169,6 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', selectionStore.handleClickOutside)
 })
 
-watch([factory, year], () => {
-  fetchData();
-});
-
 const resetFormData = () => {
   emissionData.categoryOne = 0;
   emissionData.categoryTwo = 0;
@@ -249,7 +191,7 @@ const fetchData = async () => {
   }
   try {
     const response = await apiClient.get(`/quantitative/emission`, {
-      params: { factory: factory.value, year: year.value }
+      params: {factory: factory.value, year: year.value}
     });
     if (response.data && response.data.data) {
       const data = response.data.data;

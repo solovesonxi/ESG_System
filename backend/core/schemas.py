@@ -29,7 +29,6 @@ class MaterialSubmission(BaseModel):
     renewableOutputRatio: float  # 可再生出料占比 (%)
 
 
-
 class EnergySubmission(BaseModel):
     factory: str
     year: int
@@ -143,6 +142,7 @@ class InvestmentSubmission(BaseModel):
     greenIncomeRatio: float
     totalRevenue: float
     envInvestIntensity: float
+
 
 class ManagementSubmission(BaseModel):
     factory: str
@@ -318,42 +318,50 @@ class EnvManagementSubmission(BaseModel):
     reason: str
 
 
-class IndicatorData(BaseModel):
-    currentYear: str
-    comparison: str
-    reason: str
-
-
-class EnvQualDataRequest(BaseModel):
-    factory: str
-    year: int
-    envQualData: Dict[str, IndicatorData]
 # 产品责任
 class ProductResponsibilitySubmission(BaseModel):
     factory: str
     year: int
-    complaints_total: int
-    complaints_handled: int
-    complaints_handle_rate: float
-    customer_satisfaction: float
-    recall_count: int
-    recall_percent: float
-    product_quality_issues: int
-    cyber_incidents: int
+
+    complaints: list[int]
+    handled: list[int]
+    qualityIssues: list[int]
+    recalls: list[int]
+    shipments: list[int]
+    customerSatisfaction: list[float]
+    cyberIncidents: list[int]
+    complaintsTotal: int
+    handledTotal: int
+    handledRate: float
+    customerSatisfactionAverage: float
+    recallsTotal: int
+    recallRate: float
+    qualityIssuesTotal: int
+    cyberIncidentsTotal: int
+
 
 # 知识产权
-class IPRSubmission(BaseModel):
+class IPSubmission(BaseModel):
     factory: str
     year: int
-    patents_total: int
-    invention_total: int
-    invention_applications: int
-    utility_model_total: int
-    design_total: int
-    authorized_total: int
-    new_patents_year: int
-    software_copyright_total: int
-    trademarks_total: int
+    patents: List[int]
+    invPatents: List[int]
+    invApplications: List[int]
+    utilityPatents: List[int]
+    designPatents: List[int]
+    grantedPatents: List[int]
+    softwareCopyrights: List[int]
+    trademarks: List[int]
+    newPatents: int
+    patentsTotal: int
+    invPatentsTotal: int
+    invApplicationsTotal: int
+    utilityPatentsTotal: int
+    designPatentsTotal: int
+    grantedPatentsTotal: int
+    softwareCopyrightsTotal: int
+    trademarksTotal: int
+
 
 # 社区参与
 class CommunitySubmission(BaseModel):
@@ -372,6 +380,7 @@ class GovernanceQualitativeItem(BaseModel):
     last_text: Optional[str] = None
     comparison_text: Optional[str] = None
     reason: Optional[str] = None
+
 
 class GovernanceQualitativeSubmission(BaseModel):
     factory: str

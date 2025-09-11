@@ -33,10 +33,7 @@ async def submit_data(data: InvestmentSubmission, db: Session = Depends(get_db),
         require_factory(data.factory, current_user)
         db_record = InvestmentData(factory=data.factory, year=data.year, env_invest=data.envInvest,
                                    clean_tech_invest=data.cleanTechInvest, climate_invest=data.climateInvest,
-                                   green_income=data.greenIncome, env_invest_total=data.envInvestTotal,
-                                   clean_tech_invest_total=data.cleanTechInvestTotal,
-                                   climate_invest_total=data.climateInvestTotal,
-                                   green_income_total=data.greenIncomeTotal, total_investment=data.totalInvestment,
+                                   green_income=data.greenIncome, total_investment=data.totalInvestment,
                                    green_income_ratio=data.greenIncomeRatio, total_revenue=data.totalRevenue,
                                    env_invest_intensity=data.envInvestIntensity)
         merged_record = db.merge(db_record)

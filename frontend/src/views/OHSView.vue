@@ -1,310 +1,124 @@
-```vue
 <template>
   <div class="shared-form">
     <form>
-      <fieldset>
-        <legend>基础信息</legend>
-        <div class="form-row">
-          <div class="form-group">
-            <label>工厂名称</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleFactoryDropdown">
-                {{ factory }}
-                <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown"
-                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div
-                    v-for="f in selectionStore.factories"
-                    :key="f"
-                    class="option"
-                    :class="{ 'selected-option': f === factory }"
-                    @click="selectionStore.selectFactory(f)"
-                >
-                  {{ f }}
-                </div>
-              </div>
+      <BaseInfoSelector @selection-changed="fetchData"/>
+      <fieldset class="summary-fieldset">
+        <legend>{{ year }}年{{ month }}月职业健康安全数据统计</legend>
+        <div class="loading" v-if="isLoading">数据加载中...</div>
+        <div v-else>
+          <div class="form-row">
+            <div class="form-group">
+              <label>培训次数 (次)</label>
+              <input type="number" v-model.number="formData.trainingCount[month - 1]" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
             </div>
-          </div>
-          <div class="form-group">
-            <label>统计年份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleYearDropdown">
-                {{ year }}年
-                <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showYearDropdown">
-                <div
-                    v-for="y in selectionStore.years"
-                    :key="y"
-                    class="option"
-                    :class="{ 'selected-option': y === year }"
-                    @click="selectionStore.selectYear(y)"
-                >
-                  {{ y }}年
-                </div>
-              </div>
+            <div class="form-group">
+              <label>培训参与人次 (人次)</label>
+              <input type="number"
+                     v-model.number="formData.trainingParticipants[month - 1]" min="0" step="1" :readonly="!isEditing"
+                     :class="{ 'editable-field': isEditing }" required>
             </div>
-          </div>
-          <div class="form-group">
-            <label>统计月份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleMonthDropdown">
-                {{ month }}月
-                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showMonthDropdown">
-                <div
-                    v-for="m in selectionStore.months"
-                    :key="m"
-                    class="option"
-                    :class="{ 'selected-option': m === month }"
-                    @click="selectionStore.selectMonth(m)"
-                >
-                  {{ m }}月
-                </div>
-              </div>
+            <div class="form-group">
+              <label>培训学时 (小时)</label>
+              <input type="number" v-model.number="formData.trainingHours[month - 1]" min="0" step="0.1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>工伤数量 (次)</label>
+              <input type="number" v-model.number="formData.injuryCount[month-1]" min="0" step="1"
+                     :readonly="!isEditing"
+                     :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>安全事故数量 (次)</label>
+              <input type="number" v-model.number="formData.incidentCount[month-1]" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>工亡人数 (人)</label>
+              <input type="number" v-model.number="formData.fatalityCount[month-1]" min="0" step="1"
+                     :readonly="!isEditing"
+                     :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>工伤损失工作日数 (天)</label>
+              <input type="number" v-model.number="formData.lostWorkdays[month-1]" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>安全生产投入 (万元)</label>
+              <input type="number" v-model.number="formData.safetyInvestment[month-1]" min="0" step="0.01"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>专职安全管理人员 (人)</label>
+              <input type="number" v-model.number="formData.safetyManagers" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>员工体检人数 (人)</label>
+              <input type="number" v-model.number="formData.medicalChecks" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>员工体检覆盖率 (%)</label>
+              <input type="number" v-model.number="formData.coverageRate" min="0" step="0.01"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>安全应急演练次数 (次)</label>
+              <input type="number" v-model.number="formData.emergencyDrills" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>安全检查排查隐患数 (个)</label>
+              <input type="number" v-model.number="formData.hazardsFound" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
+            </div>
+            <div class="form-group">
+              <label>职业病体检人数 (人)</label>
+              <input type="number" v-model.number="formData.occupationalChecks" min="0" step="1"
+                     :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
             </div>
           </div>
         </div>
       </fieldset>
-
-      <!-- 职业健康安全数据部分（样式与能源统计保持一致） -->
+      <!-- 汇总（与能源统计合计区块相同结构：form-row + form-group + disabled 计算值） -->
       <fieldset class="summary-fieldset">
-        <legend>职业健康安全数据统计</legend>
-
-        <div class="loading" v-if="isLoading">数据加载中...</div>
-
-        <div v-else>
-          <!-- 培训次数 -->
-          <fieldset>
-            <legend>{{ year }}年职业健康安全统计 - 培训次数 (次)</legend>
-            <div class="monthly-grid">
-              <div v-for="(_, index) in formData.trainingCount" :key="'tc-'+index" class="month-input">
-                <label>{{ getMonthName(index) }}</label>
-                <input
-                  type="number"
-                  v-model.number="formData.trainingCount[index]"
-                  :placeholder="`${getMonthName(index)}培训次数`"
-                  min="0"
-                  step="1"
-                  :readonly="!isEditing"
-                  :class="{ 'editable-field': isEditing }"
-                  required
-                >
-              </div>
-            </div>
-          </fieldset>
-
-          <!-- 培训参与人次 -->
-          <fieldset>
-            <legend>{{ year }}年职业健康安全统计 - 培训参与人次 (人次)</legend>
-            <div class="monthly-grid">
-              <div v-for="(_, index) in formData.trainingParticipants" :key="'tp-'+index" class="month-input">
-                <label>{{ getMonthName(index) }}</label>
-                <input
-                  type="number"
-                  v-model.number="formData.trainingParticipants[index]"
-                  :placeholder="`${getMonthName(index)}培训参与人次`"
-                  min="0"
-                  step="1"
-                  :readonly="!isEditing"
-                  :class="{ 'editable-field': isEditing }"
-                  required
-                >
-              </div>
-            </div>
-          </fieldset>
-
-          <!-- 培训学时 -->
-          <fieldset>
-            <legend>{{ year }}年职业健康安全统计 - 培训学时 (小时)</legend>
-            <div class="monthly-grid">
-              <div v-for="(_, index) in formData.trainingHours" :key="'th-'+index" class="month-input">
-                <label>{{ getMonthName(index) }}</label>
-                <input
-                  type="number"
-                  v-model.number="formData.trainingHours[index]"
-                  :placeholder="`${getMonthName(index)}培训学时`"
-                  min="0"
-                  step="0.1"
-                  :readonly="!isEditing"
-                  :class="{ 'editable-field': isEditing }"
-                  required
-                >
-              </div>
-            </div>
-          </fieldset>
-
-          <!-- 工伤数量 -->
-          <fieldset>
-            <legend>{{ year }}年职业健康安全统计 - 工伤数量 (次)</legend>
-            <div class="monthly-grid">
-              <div v-for="(_, index) in formData.injuryCount" :key="'inj-'+index" class="month-input">
-                <label>{{ getMonthName(index) }}</label>
-                <input
-                  type="number"
-                  v-model.number="formData.injuryCount[index]"
-                  :placeholder="`${getMonthName(index)}工伤数量`"
-                  min="0"
-                  step="1"
-                  :readonly="!isEditing"
-                  :class="{ 'editable-field': isEditing }"
-                  required
-                >
-              </div>
-            </div>
-          </fieldset>
-
-          <!-- 安全事故数量 -->
-          <fieldset>
-            <legend>{{ year }}年职业健康安全统计 - 安全事故数量 (次)</legend>
-            <div class="monthly-grid">
-              <div v-for="(_, index) in formData.incidentCount" :key="'acc-'+index" class="month-input">
-                <label>{{ getMonthName(index) }}</label>
-                <input
-                  type="number"
-                  v-model.number="formData.incidentCount[index]"
-                  :placeholder="`${getMonthName(index)}安全事故数量`"
-                  min="0"
-                  step="1"
-                  :readonly="!isEditing"
-                  :class="{ 'editable-field': isEditing }"
-                  required
-                >
-              </div>
-            </div>
-          </fieldset>
-
-          <!-- 工亡人数 -->
-          <fieldset>
-            <legend>{{ year }}年职业健康安全统计 - 工亡人数 (人)</legend>
-            <div class="monthly-grid">
-              <div v-for="(_, index) in formData.fatalityCount" :key="'fat-'+index" class="month-input">
-                <label>{{ getMonthName(index) }}</label>
-                <input
-                  type="number"
-                  v-model.number="formData.fatalityCount[index]"
-                  :placeholder="`${getMonthName(index)}工亡人数`"
-                  min="0"
-                  step="1"
-                  :readonly="!isEditing"
-                  :class="{ 'editable-field': isEditing }"
-                  required
-                >
-              </div>
-            </div>
-          </fieldset>
-
-          <!-- 工伤损失工作日数 -->
-          <fieldset>
-            <legend>{{ year }}年职业健康安全统计 - 工伤损失工作日数 (天)</legend>
-            <div class="monthly-grid">
-              <div v-for="(_, index) in formData.lostWorkdays" :key="'lost-'+index" class="month-input">
-                <label>{{ getMonthName(index) }}</label>
-                <input
-                  type="number"
-                  v-model.number="formData.lostWorkdays[index]"
-                  :placeholder="`${getMonthName(index)}工伤损失工作日数`"
-                  min="0"
-                  step="1"
-                  :readonly="!isEditing"
-                  :class="{ 'editable-field': isEditing }"
-                  required
-                >
-              </div>
-            </div>
-          </fieldset>
-
-          <!-- 安全生产投入 -->
-          <fieldset>
-            <legend>{{ year }}年职业健康安全统计 - 安全生产投入 (万元)</legend>
-            <div class="monthly-grid">
-              <div v-for="(_, index) in formData.safetyInvestment" :key="'safeinv-'+index" class="month-input">
-                <label>{{ getMonthName(index) }}</label>
-                <input
-                  type="number"
-                  v-model.number="formData.safetyInvestment[index]"
-                  :placeholder="`${getMonthName(index)}安全生产投入`"
-                  min="0"
-                  step="0.01"
-                  :readonly="!isEditing"
-                  :class="{ 'editable-field': isEditing }"
-                  required
-                >
-              </div>
-            </div>
-
-          </fieldset>
-
-          <!-- 汇总（与能源统计合计区块相同结构：form-row + form-group + disabled 计算值） -->
-          <fieldset class="summary-fieldset">
-            <legend>{{ year }}年职业健康安全统计 - 汇总</legend>
-            <div class="form-row">
-              <div class="form-group">
-                <label>培训次数合计 (次)</label>
-                <input type="number" :value="trainingCountTotal" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>培训参与人次合计 (人次)</label>
-                <input type="number" :value="trainingParticipantsTotal" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>培训学时合计 (小时)</label>
-                <input type="number" :value="trainingHoursTotal" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>工伤数量合计 (次)</label>
-                <input type="number" :value="injuryCountTotal" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>安全事故数量合计 (次)</label>
-                <input type="number" :value="incidentCountTotal" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>工亡人数合计 (人)</label>
-                <input type="number" :value="fatalityCountTotal" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>工伤损失工作日数合计 (天)</label>
-                <input type="number" :value="lostWorkdaysTotal" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>安全生产投入合计 (万元)</label>
-                <input type="number" :value="safetyInvestmentTotal" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>专职安全管理人员 (人)</label>
-                <input type="number" v-model.number="formData.safetyManagers" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>员工体检人数 (人)</label>
-                <input type="number" v-model.number="formData.medicalChecks" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>员工体检覆盖率 (%)</label>
-                <input type="number" v-model.number="formData.coverageRate" min="0" step="0.01"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>安全应急演练次数 (次)</label>
-                <input type="number" v-model.number="formData.emergencyDrills" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>安全检查排查隐患数 (个)</label>
-                <input type="number" v-model.number="formData.hazardsFound" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-              <div class="form-group">
-                <label>职业病体检人数 (人)</label>
-                <input type="number" v-model.number="formData.occupationalChecks" min="0" step="1"
-                       :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
-              </div>
-            </div>
-          </fieldset>
+        <legend>{{ year }}年职业健康安全统计 - 汇总</legend>
+        <div class="form-row">
+          <div class="form-group">
+            <label>培训次数合计 (次)</label>
+            <input type="number" :value="trainingCountTotal" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>培训参与人次合计 (人次)</label>
+            <input type="number" :value="trainingParticipantsTotal" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>培训学时合计 (小时)</label>
+            <input type="number" :value="trainingHoursTotal" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>工伤数量合计 (次)</label>
+            <input type="number" :value="injuryCountTotal" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>安全事故数量合计 (次)</label>
+            <input type="number" :value="incidentCountTotal" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>工亡人数合计 (人)</label>
+            <input type="number" :value="fatalityCountTotal" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>工伤损失工作日数合计 (天)</label>
+            <input type="number" :value="lostWorkdaysTotal" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>安全生产投入合计 (万元)</label>
+            <input type="number" :value="safetyInvestmentTotal" disabled class="calculated-field">
+          </div>
         </div>
       </fieldset>
     </form>
@@ -312,9 +126,10 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { useSelectionStore } from '@/stores/selectionStore'
+import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
+import {useSelectionStore} from '@/stores/selectionStore'
 import apiClient from '@/utils/axios'
+import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
@@ -324,10 +139,6 @@ const month = computed(() => selectionStore.selectedMonth);
 
 const isEditing = ref(false)
 const isLoading = ref(false)
-
-// 月份名称映射 & 工具函数（与能源一致）
-const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
-const getMonthName = (index) => monthNames[index]
 
 // —— 职业健康安全数据 —— //
 const formData = reactive({
@@ -364,11 +175,6 @@ const fatalityCountTotal = computed(() => rowSum(formData.fatalityCount))
 const lostWorkdaysTotal = computed(() => rowSum(formData.lostWorkdays))
 const safetyInvestmentTotal = computed(() => rowSum(formData.safetyInvestment))
 
-// —— 与能源统计保持一致：监听工厂/年份变化并拉取数据 —— //
-watch([factory, year], () => {
-  fetchData()
-})
-
 onMounted(() => {
   document.addEventListener('click', selectionStore.handleClickOutside)
   // 首次进入拉取一次
@@ -388,7 +194,7 @@ const fetchData = async () => {
   isLoading.value = true
   try {
     const resp = await apiClient.get('/quantitative/ohs', {
-      params: { factory: factory.value, year: year.value }
+      params: {factory: factory.value, year: year.value}
     })
     const data = resp?.data?.data
     if (data) {

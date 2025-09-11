@@ -83,7 +83,8 @@
       "environmental_violation"
     ]
   },
-  "env_qual": [
+  "env_qual": {
+    "climate_change": [
       "board_supervision",
       "management_responsibility",
       "environment_strategy",
@@ -99,9 +100,13 @@
       "ghg_reduction_rate",
       "ghg_reduction_action",
       "carbon_capture_target",
-      "carbon_capture_rate",
+      "carbon_capture_rate"
+    ],
+    "waste": [
       "waste_reduction_target",
-      "waste_reduction_action",
+      "waste_reduction_action"
+    ],
+    "water": [
       "annual_water_use_target",
       "annual_water_use_target_rate",
       "annual_reclaimed_water_use_target",
@@ -110,13 +115,21 @@
       "water_saving_target_rate",
       "water_management_policy",
       "water_risk_management",
-      "water_saving_action",
+      "water_saving_action"
+    ],
+    "env_opportunities": [
       "clean_technology_strategy",
-      "clean_technology_practice",
+      "clean_technology_practice"
+    ],
+    "bio_conservation": [
       "biodiversity_impact",
-      "ecological_restoration",
+      "ecological_restoration"
+    ],
+    "env_inc_management": [
       "environmental_accident",
-      "environmental_penalty",
+      "environmental_penalty"
+    ],
+    "management": [
       "environmental_management_system",
       "environmental_resource_policy",
       "environmental_emergency_plan",
@@ -127,7 +140,9 @@
       "waste_product_recycling",
       "hazardous_waste_emission_target",
       "hazardous_waste_emission_target_rate",
-      "sustainable_product_certification",
+      "sustainable_product_certification"
+    ],
+    "material_consumption": [
       "material_reduction_target",
       "annual_packaging_material_target",
       "annual_packaging_material_target_rate",
@@ -137,12 +152,16 @@
       "annual_office_paper_target",
       "annual_office_paper_target_rate",
       "chemical_management",
-      "chemical_inventory",
+      "chemical_inventory"
+    ],
+    "energy_consumption": [
       "energy_reduction_target",
       "renewable_energy_target",
       "renewable_energy_use_development",
       "energy_saving_action_results",
-      "energy_management_system",
+      "energy_management_system"
+    ],
+    "carbon_emission": [
       "product_carbon_footprint",
       "product_carbon_footprint_plan",
       "carbon_neutrality_target_year",
@@ -156,4 +175,5 @@
       "carbon_inventory_report_verification",
       "greenhouse_gas_verification_system"
     ]
+  }
 }

@@ -62,14 +62,14 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
             data["供应链管理"][f"supply_{key}"] = entry(f"supply_{key}", gv(supply_cur, key), gv(supply_prev, key))
 
         # 产品责任
-        for key in ['complaints_total', 'complaints_handled', 'complaints_handle_rate', 'customer_satisfaction',
-                    'recall_count', 'recall_percent', 'product_quality_issues', 'cyber_incidents']:
+        for key in ['complaints_total', 'handled_total', 'handled_rate', 'customer_satisfaction_average',
+                    'recall_total', 'recall_rate', 'quality_issues_total', 'cyber_incidents_total']:
             data["产品责任"][f"product_{key}"] = entry(f"product_{key}", gv(product_cur, key),
                                                        gv(product_prev, key))
 
         # 知识产权
-        for key in ['patents_total', 'invention_total', 'invention_applications', 'utility_model_total',
-                    'design_total', 'authorized_total', 'new_patents_year', 'software_copyright_total',
+        for key in ['patents_total', 'inv_patents_total', 'inv_applications_total', 'utility_patents_total',
+                    'design_patents_total', 'granted_patents_total', 'new_patents', 'software_copyrights_total',
                     'trademarks_total']:
             data["知识产权保护"][f"ipr_{key}"] = entry(f"ipr_{key}", gv(ipr_cur, key), gv(ipr_prev, key))
 

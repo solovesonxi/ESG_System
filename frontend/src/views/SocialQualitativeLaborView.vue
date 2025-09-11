@@ -1,40 +1,7 @@
 <template>
-  <div class="shared-form">
+  <div class="shared-form" @selection-changed="fetchData">
     <form>
-      <fieldset>
-        <legend>基础信息</legend>
-        <div class="form-row">
-          <div class="form-group">
-            <label>工厂名称</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleFactoryDropdown">
-                {{ factory }}
-                <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown" :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div v-for="f in factories" :key="f" class="option" :class="{ 'selected-option': f === factory }" @click="selectionStore.selectFactory(f)">
-                  {{ f }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>统计年份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleYearDropdown">
-                {{ year }}年
-                <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showYearDropdown">
-                <div v-for="y in years" :key="y" class="option" :class="{ 'selected-option': y === year }" @click="selectionStore.selectYear(y)">
-                  {{ y }}年
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-
+      <BaseInfoSelector @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset" v-for="(indicators, category) in qualData" :key="category">
         <legend>{{ category }}</legend>
         <div class="form-row">
@@ -51,21 +18,21 @@
             <tbody>
             <tr v-for="(item, key) in indicators" :key="key">
               <td>{{ key }}</td>
-              <td>
-                <div v-if="!isEditing">{{ item.lastText || '' }}</div>
-                <textarea v-else v-model="tempEdits[category][key].lastText" class="reason-input" :placeholder="item.lastText || ''"></textarea>
-              </td>
+              <td>{{ item.lastText || '' }}</td>
               <td>
                 <div v-if="!isEditing">{{ item.currentText || '' }}</div>
-                <textarea v-else v-model="tempEdits[category][key].currentText" class="reason-input" :placeholder="item.currentText || ''"></textarea>
+                <textarea v-else v-model="tempEdits[category][key].currentText" class="reason-input"
+                          :placeholder="item.currentText || ''"></textarea>
               </td>
               <td>
                 <div v-if="!isEditing">{{ item.comparisonText || '' }}</div>
-                <textarea v-else v-model="tempEdits[category][key].comparisonText" class="reason-input" :placeholder="item.comparisonText || ''"></textarea>
+                <textarea v-else v-model="tempEdits[category][key].comparisonText" class="reason-input"
+                          :placeholder="item.comparisonText || ''"></textarea>
               </td>
               <td>
                 <div v-if="!isEditing">{{ item.reason || '' }}</div>
-                <textarea v-else v-model="tempEdits[category][key].reason" class="reason-input" :placeholder="item.reason || ''"></textarea>
+                <textarea v-else v-model="tempEdits[category][key].reason" class="reason-input"
+                          :placeholder="item.reason || ''"></textarea>
               </td>
             </tr>
             </tbody>
@@ -77,15 +44,14 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref, watch} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js"
+import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
-const factories = computed(() => selectionStore.factories)
 const year = computed(() => selectionStore.selectedYear)
-const years = computed(() => selectionStore.years)
 
 const qualData = ref({})
 const isEditing = ref(false)
@@ -93,8 +59,8 @@ const tempEdits = ref({})
 
 const fetchData = async () => {
   try {
-    const res = await apiClient.get('/analytical/social_qualitative_other', {
-      params: { factory: factory.value, year: year.value }
+    const res = await apiClient.get('/analytical/social_qualitative_labor', {
+      params: {factory: factory.value, year: year.value}
     })
     qualData.value = res.data
   } catch (e) {
@@ -105,12 +71,8 @@ const fetchData = async () => {
 
 onMounted(() => {
   document.addEventListener('click', selectionStore.handleClickOutside)
-  fetchData()
 })
 
-watch([factory, year], () => {
-  fetchData()
-})
 
 const startEditing = () => {
   isEditing.value = true
@@ -137,7 +99,7 @@ const cancelEditing = () => {
 
 const submitEdit = async () => {
   try {
-    await apiClient.post('/analytical/social_qualitative_other', {
+    await apiClient.post('/analytical/social_qualitative_labor', {
       factory: factory.value,
       year: parseInt(year.value),
       data: tempEdits.value

@@ -1,74 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <fieldset>
-        <legend>基础信息</legend>
-        <div class="form-row">
-          <div class="form-group">
-            <label>工厂名称</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleFactoryDropdown">
-                {{ factory }}
-                <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown"
-                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div
-                    v-for="f in selectionStore.factories"
-                    :key="f"
-                    class="option"
-                    :class="{ 'selected-option': f === factory }"
-                    @click="selectionStore.selectFactory(f)"
-                >
-                  {{ f }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>统计年份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleYearDropdown">
-                {{ year }}年
-                <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showYearDropdown">
-                <div
-                    v-for="y in selectionStore.years"
-                    :key="y"
-                    class="option"
-                    :class="{ 'selected-option': y === year }"
-                    @click="selectionStore.selectYear(y)"
-                >
-                  {{ y }}年
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>统计月份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleMonthDropdown">
-                {{ month }}月
-                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showMonthDropdown">
-                <div
-                    v-for="m in selectionStore.months"
-                    :key="m"
-                    class="option"
-                    :class="{ 'selected-option': m === month }"
-                    @click="selectionStore.selectMonth(m)"
-                >
-                  {{ m }}月
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-
-      <!-- 物料统计部分 -->
+      <BaseInfoSelector @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
         <legend>{{ year }}年{{ month }}月物料进出统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
@@ -128,7 +61,7 @@
       </fieldset>
 
       <fieldset class="summary-fieldset">
-        <legend>{{ year }}年物料年度统计</legend>
+        <legend>{{ year }}年物料统计 - 汇总</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
         <div class="form-row" v-else>
           <!-- 进料部分 -->
@@ -168,9 +101,10 @@
 </template>
 
 <script setup>
-import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
 import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js"
+import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory);
@@ -227,11 +161,6 @@ const paperIntensity = computed(() => {
   return formData.value.total_revenue > 0 ?
       (rowSum(formData.value.paper) / formData.value.total_revenue).toFixed(2) : 0
 })
-
-
-// 监听工厂和年份变化
-watch([factory, year], () => {fetchData()})
-
 onMounted(() => {
   document.addEventListener("click", selectionStore.handleClickOutside);
 });
@@ -302,11 +231,11 @@ const submitEdit = async () => {
       year: year.value,
       month: month.value, // 添加当前月份
       ...formData.value,
-      packagingIntensity: packagingIntensity.value, 
+      packagingIntensity: packagingIntensity.value,
       paperIntensity: paperIntensity.value,
-      totalInput: totalInput.value, 
+      totalInput: totalInput.value,
       totalOutput: totalOutput.value,
-      renewableInputRatio: renewableInputRatio.value, 
+      renewableInputRatio: renewableInputRatio.value,
       renewableOutputRatio: renewableOutputRatio.value
     }
     const response = await apiClient.post('/quantitative/material', payload);

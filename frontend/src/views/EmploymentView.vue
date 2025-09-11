@@ -1,89 +1,12 @@
-```vue
 <template>
   <div class="shared-form">
     <form>
-      <fieldset>
-        <legend>基础信息</legend>
-        <div class="form-row">
-          <div class="form-group">
-            <label>工厂名称</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleFactoryDropdown">
-                {{ factory }}
-                <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown"
-                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div
-                    v-for="f in selectionStore.factories"
-                    :key="f"
-                    class="option"
-                    :class="{ 'selected-option': f === factory }"
-                    @click="selectionStore.selectFactory(f)"
-                >
-                  {{ f }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>统计年份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleYearDropdown">
-                {{ year }}年
-                <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showYearDropdown">
-                <div
-                    v-for="y in selectionStore.years"
-                    :key="y"
-                    class="option"
-                    :class="{ 'selected-option': y === year }"
-                    @click="selectionStore.selectYear(y)"
-                >
-                  {{ y }}年
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>统计月份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleMonthDropdown">
-                {{ month }}月
-                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showMonthDropdown">
-                <div
-                    v-for="m in selectionStore.months"
-                    :key="m"
-                    class="option"
-                    :class="{ 'selected-option': m === month }"
-                    @click="selectionStore.selectMonth(m)"
-                >
-                  {{ m }}月
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-
-      <!-- 员工雇佣数据部分（样式与能源统计保持一致） -->
+      <BaseInfoSelector @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
-        <legend>员工雇佣数据统计</legend>
-
+        <legend>{{ year }}年{{month}}月员工雇佣统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
-
         <div v-else>
-          <!-- 员工雇佣统计 -->
-          <fieldset>
-            <legend>{{ year }}年员工雇佣统计</legend>
             <div class="form-row">
-              <div class="form-group">
-                <label>员工总数</label>
-                <input type="number" :value="totalEmployees" disabled class="calculated-field">
-              </div>
               <div class="form-group">
                 <label>全职</label>
                 <input type="number" v-model.number="formData.fullTime[month - 1]" min="0" step="1"
@@ -185,10 +108,6 @@
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
               <div class="form-group">
-                <label>离职总数</label>
-                <input type="number" :value="quitTotal" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
                 <label>男离职</label>
                 <input type="number" v-model.number="formData.quitMale[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
@@ -238,52 +157,64 @@
                 <input type="number" v-model.number="formData.quitGeneral[month - 1]" min="0" step="1"
                        :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
               </div>
-              <div class="form-group">
-                <label>总流失率 (%)</label>
-                <input type="number" :value="turnoverRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>男流失率 (%)</label>
-                <input type="number" :value="maleTurnoverRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>女流失率 (%)</label>
-                <input type="number" :value="femaleTurnoverRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>大陆流失率 (%)</label>
-                <input type="number" :value="mainlandTurnoverRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>海外流失率 (%)</label>
-                <input type="number" :value="overseasTurnoverRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>18-30岁流失率 (%)</label>
-                <input type="number" :value="age18_30TurnoverRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>31-45岁流失率 (%)</label>
-                <input type="number" :value="age31_45TurnoverRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>46-60岁流失率 (%)</label>
-                <input type="number" :value="age46_60TurnoverRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>管理层流失率 (%)</label>
-                <input type="number" :value="managementTurnoverRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>中层流失率 (%)</label>
-                <input type="number" :value="middleTurnoverRate" disabled class="calculated-field">
-              </div>
-              <div class="form-group">
-                <label>普通流失率 (%)</label>
-                <input type="number" :value="generalTurnoverRate" disabled class="calculated-field">
-              </div>
             </div>
-          </fieldset>
+        </div>
+      </fieldset>
+      <fieldset class="summary-fieldset">
+        <legend>{{ year }}年雇佣统计 - 汇总</legend>
+        <div class="form-row">
+          <div class="form-group">
+            <label>员工总数</label>
+            <input type="number" :value="totalEmployees" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>离职总数</label>
+            <input type="number" :value="quitTotal" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>总流失率 (%)</label>
+            <input type="number" :value="turnoverRate" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>男流失率 (%)</label>
+            <input type="number" :value="maleTurnoverRate" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>女流失率 (%)</label>
+            <input type="number" :value="femaleTurnoverRate" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>大陆流失率 (%)</label>
+            <input type="number" :value="mainlandTurnoverRate" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>海外流失率 (%)</label>
+            <input type="number" :value="overseasTurnoverRate" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>18-30岁流失率 (%)</label>
+            <input type="number" :value="age18_30TurnoverRate" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>31-45岁流失率 (%)</label>
+            <input type="number" :value="age31_45TurnoverRate" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>46-60岁流失率 (%)</label>
+            <input type="number" :value="age46_60TurnoverRate" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>管理层流失率 (%)</label>
+            <input type="number" :value="managementTurnoverRate" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>中层流失率 (%)</label>
+            <input type="number" :value="middleTurnoverRate" disabled class="calculated-field">
+          </div>
+          <div class="form-group">
+            <label>普通流失率 (%)</label>
+            <input type="number" :value="generalTurnoverRate" disabled class="calculated-field">
+          </div>
         </div>
       </fieldset>
     </form>
@@ -291,9 +222,10 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { useSelectionStore } from '@/stores/selectionStore'
+import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue'
+import {useSelectionStore} from '@/stores/selectionStore'
 import apiClient from '@/utils/axios'
+import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
@@ -338,22 +270,33 @@ const formData = reactive({
   quitGeneral: Array(12).fill(0)
 })
 
-// 汇总与强度计算（保持原逻辑与命名，默认保留两位小数行为）
-const toNum = (v, d = 0) => {
-  const n = Number(v)
-  return Number.isFinite(n) ? n : d
-}
 
-const totalEmployees = computed(() => toNum(formData.fullTime) + toNum(formData.partTime))
-const quitTotal = computed(() => toNum(formData.quitMale) + toNum(formData.quitFemale))
+const totalEmployees = computed(() => {
+  let sum = 0
+  for (let i = 0; i < 12; i++) {
+    const monthTotal = formData.fullTime[i] + formData.partTime[i]
+    if (monthTotal > 0) {
+      sum = monthTotal
+    }
+  }
+  return sum
+})
+
+const quitTotal = computed(() => {
+  let yearTotal = 0
+  for (let i = 0; i < 12; i++) {
+    yearTotal += formData.quitMale[i] + formData.quitFemale[i]
+  }
+  return yearTotal
+})
 
 const calculateRate = (numerator, denominator) => {
-  const num = toNum(numerator)
-  const denom = toNum(denominator)
+  const num = numerator
+  const denom = denominator
   return denom > 0 ? ((num / denom) * 100).toFixed(2) : 0
 }
 
-const turnoverRate = computed(() => calculateRate(quitTotal.value, totalEmployees.value))
+const turnoverRate = computed(() => calculateRate(quitTotal.value, totalEmployees.value + quitTotal.value))
 const maleTurnoverRate = computed(() => calculateRate(formData.quitMale, formData.male))
 const femaleTurnoverRate = computed(() => calculateRate(formData.quitFemale, formData.female))
 const mainlandTurnoverRate = computed(() => calculateRate(formData.quitMainland, formData.mainland))
@@ -365,15 +308,8 @@ const managementTurnoverRate = computed(() => calculateRate(formData.quitManagem
 const middleTurnoverRate = computed(() => calculateRate(formData.quitMiddle, formData.middle))
 const generalTurnoverRate = computed(() => calculateRate(formData.quitGeneral, formData.general))
 
-// —— 与能源统计保持一致：监听工厂/年份变化并拉取数据 —— //
-watch([factory, year], () => {
-  fetchData()
-})
-
 onMounted(() => {
   document.addEventListener('click', selectionStore.handleClickOutside)
-  // 首次进入拉取一次
-  fetchData()
 })
 
 onBeforeUnmount(() => {
@@ -389,41 +325,44 @@ const fetchData = async () => {
   isLoading.value = true
   try {
     const resp = await apiClient.get('/quantitative/employment', {
-      params: { factory: factory.value, year: year.value }
+      params: {factory: factory.value, year: year.value}
     })
     const data = resp?.data?.data
     if (data) {
-      // 兼容后端下划线/驼峰
-      formData.fullTime = toNum(data.fullTime || data.full_time)
-      formData.partTime = toNum(data.partTime || data.part_time)
-      formData.male = toNum(data.male)
-      formData.female = toNum(data.female)
-      formData.management = toNum(data.management)
-      formData.managementFemale = toNum(data.managementFemale || data.management_female)
-      formData.middle = toNum(data.middle)
-      formData.general = toNum(data.general)
-      formData.mainland = toNum(data.mainland)
-      formData.overseas = toNum(data.overseas)
-      formData.eduPhd = toNum(data.eduPhd || data.edu_phd)
-      formData.eduMaster = toNum(data.eduMaster || data.edu_master)
-      formData.eduBachelor = toNum(data.eduBachelor || data.edu_bachelor)
-      formData.eduJunior = toNum(data.eduJunior || data.edu_junior)
-      formData.avgSocialFund = toNum(data.avgSocialFund || data.avg_social_fund)
-      formData.incSocialFund = toNum(data.incSocialFund || data.inc_social_fund)
-      formData.age18_30 = toNum(data.age18_30 || data.age18_30)
-      formData.age31_45 = toNum(data.age31_45 || data.age31_45)
-      formData.age46_60 = toNum(data.age46_60 || data.age46_60)
-      formData.newHires = toNum(data.newHires || data.new_hires)
-      formData.quitMale = toNum(data.quitMale || data.quit_male)
-      formData.quitFemale = toNum(data.quitFemale || data.quit_female)
-      formData.quitMainland = toNum(data.quitMainland || data.quit_mainland)
-      formData.quitOverseas = toNum(data.quitOverseas || data.quit_overseas)
-      formData.quit18_30 = toNum(data.quit18_30 || data.quit_18_30)
-      formData.quit31_45 = toNum(data.quit31_45 || data.quit_31_45)
-      formData.quit46_60 = toNum(data.quit46_60 || data.quit_46_60)
-      formData.quitManagement = toNum(data.quitManagement || data.quit_management)
-      formData.quitMiddle = toNum(data.quitMiddle || data.quit_middle)
-      formData.quitGeneral = toNum(data.quitGeneral || data.quit_general)
+      // 处理数组数据，统一驼峰命名，默认值为12个月的0值数组
+      formData.fullTime = data.fullTime || Array(12).fill(0)
+      formData.partTime = data.partTime || Array(12).fill(0)
+      formData.male = data.male || Array(12).fill(0)
+      formData.female = data.female || Array(12).fill(0)
+      formData.management = data.management || Array(12).fill(0)
+      formData.managementFemale = data.managementFemale || Array(12).fill(0)
+      formData.middle = data.middle || Array(12).fill(0)
+      formData.general = data.general || Array(12).fill(0)
+      formData.mainland = data.mainland || Array(12).fill(0)
+      formData.overseas = data.overseas || Array(12).fill(0)
+      formData.eduPhd = data.eduPhd || Array(12).fill(0)
+      formData.eduMaster = data.eduMaster || Array(12).fill(0)
+      formData.eduBachelor = data.eduBachelor || Array(12).fill(0)
+      formData.eduJunior = data.eduJunior || Array(12).fill(0)
+      formData.avgSocialFund = data.avgSocialFund || Array(12).fill(0)
+      formData.incSocialFund = data.incSocialFund || Array(12).fill(0)
+      formData.age18_30 = data.age18_30 || Array(12).fill(0)
+      formData.age31_45 = data.age31_45 || Array(12).fill(0)
+      formData.age46_60 = data.age46_60 || Array(12).fill(0)
+      formData.newHires = data.newHires || Array(12).fill(0)
+      formData.quitMale = data.quitMale || Array(12).fill(0)
+      formData.quitFemale = data.quitFemale || Array(12).fill(0)
+      formData.quitMainland = data.quitMainland || Array(12).fill(0)
+      formData.quitOverseas = data.quitOverseas || Array(12).fill(0)
+      formData.quit18_30 = data.quit18_30 || Array(12).fill(0)
+      formData.quit31_45 = data.quit31_45 || Array(12).fill(0)
+      formData.quit46_60 = data.quit46_60 || Array(12).fill(0)
+      formData.quitManagement = data.quitManagement || Array(12).fill(0)
+      formData.quitMiddle = data.quitMiddle || Array(12).fill(0)
+      formData.quitGeneral = data.quitGeneral || Array(12).fill(0)
+
+      console.log("原始数据:", data)
+      console.log('获取员工雇佣数据成功:', formData)
     } else {
       resetFormData()
     }
@@ -441,36 +380,36 @@ const fetchData = async () => {
 
 // —— 重置（与能源一致的重置思路） —— //
 const resetFormData = () => {
-  formData.fullTime = 0
-  formData.partTime = 0
-  formData.male = 0
-  formData.female = 0
-  formData.management = 0
-  formData.managementFemale = 0
-  formData.middle = 0
-  formData.general = 0
-  formData.mainland = 0
-  formData.overseas = 0
-  formData.eduPhd = 0
-  formData.eduMaster = 0
-  formData.eduBachelor = 0
-  formData.eduJunior = 0
-  formData.avgSocialFund = 0
-  formData.incSocialFund = 0
-  formData.age18_30 = 0
-  formData.age31_45 = 0
-  formData.age46_60 = 0
-  formData.newHires = 0
-  formData.quitMale = 0
-  formData.quitFemale = 0
-  formData.quitMainland = 0
-  formData.quitOverseas = 0
-  formData.quit18_30 = 0
-  formData.quit31_45 = 0
-  formData.quit46_60 = 0
-  formData.quitManagement = 0
-  formData.quitMiddle = 0
-  formData.quitGeneral = 0
+  formData.fullTime = Array(12).fill(0)
+  formData.partTime = Array(12).fill(0)
+  formData.male = Array(12).fill(0)
+  formData.female = Array(12).fill(0)
+  formData.management = Array(12).fill(0)
+  formData.managementFemale = Array(12).fill(0)
+  formData.middle = Array(12).fill(0)
+  formData.general = Array(12).fill(0)
+  formData.mainland = Array(12).fill(0)
+  formData.overseas = Array(12).fill(0)
+  formData.eduPhd = Array(12).fill(0)
+  formData.eduMaster = Array(12).fill(0)
+  formData.eduBachelor = Array(12).fill(0)
+  formData.eduJunior = Array(12).fill(0)
+  formData.avgSocialFund = Array(12).fill(0)
+  formData.incSocialFund = Array(12).fill(0)
+  formData.age18_30 = Array(12).fill(0)
+  formData.age31_45 = Array(12).fill(0)
+  formData.age46_60 = Array(12).fill(0)
+  formData.newHires = Array(12).fill(0)
+  formData.quitMale = Array(12).fill(0)
+  formData.quitFemale = Array(12).fill(0)
+  formData.quitMainland = Array(12).fill(0)
+  formData.quitOverseas = Array(12).fill(0)
+  formData.quit18_30 = Array(12).fill(0)
+  formData.quit31_45 = Array(12).fill(0)
+  formData.quit46_60 = Array(12).fill(0)
+  formData.quitManagement = Array(12).fill(0)
+  formData.quitMiddle = Array(12).fill(0)
+  formData.quitGeneral = Array(12).fill(0)
 }
 
 // —— 提交编辑（保持原字段，不改动内容，只改样式） —— //

@@ -1,74 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <fieldset>
-        <legend>基础信息</legend>
-        <div class="form-row">
-          <div class="form-group">
-            <label>工厂名称</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleFactoryDropdown">
-                {{ factory }}
-                <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown"
-                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div
-                    v-for="f in selectionStore.factories"
-                    :key="f"
-                    class="option"
-                    :class="{ 'selected-option': f === factory }"
-                    @click="selectionStore.selectFactory(f)"
-                >
-                  {{ f }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>统计年份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleYearDropdown">
-                {{ year }}年
-                <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showYearDropdown">
-                <div
-                    v-for="y in selectionStore.years"
-                    :key="y"
-                    class="option"
-                    :class="{ 'selected-option': y === year }"
-                    @click="selectionStore.selectYear(y)"
-                >
-                  {{ y }}年
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>统计月份</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleMonthDropdown">
-                {{ month }}月
-                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showMonthDropdown">
-                <div
-                    v-for="m in selectionStore.months"
-                    :key="m"
-                    class="option"
-                    :class="{ 'selected-option': m === month }"
-                    @click="selectionStore.selectMonth(m)"
-                >
-                  {{ m }}月
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-
-      <!-- 废弃物数据部分（样式与能源统计保持一致） -->
+      <BaseInfoSelector @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
         <legend>{{ year }}年{{ month }}月废弃物数据统计</legend>
 
@@ -79,13 +12,13 @@
           <div class="form-group">
             <label>回收料（EPE）(T)</label>
             <input
-              type="number"
-              v-model.number="epe[month - 1]"
-              min="0"
-              step="0.01"
-              :readonly="!isEditing"
-              :class="{ 'editable-field': isEditing }"
-              required
+                type="number"
+                v-model.number="epe[month - 1]"
+                min="0"
+                step="0.01"
+                :readonly="!isEditing"
+                :class="{ 'editable-field': isEditing }"
+                required
             >
           </div>
 
@@ -93,13 +26,13 @@
           <div class="form-group">
             <label>回收料（吸塑、纸塑）(T)</label>
             <input
-              type="number"
-              v-model.number="plasticPaper[month - 1]"
-              min="0"
-              step="0.01"
-              :readonly="!isEditing"
-              :class="{ 'editable-field': isEditing }"
-              required
+                type="number"
+                v-model.number="plasticPaper[month - 1]"
+                min="0"
+                step="0.01"
+                :readonly="!isEditing"
+                :class="{ 'editable-field': isEditing }"
+                required
             >
           </div>
 
@@ -107,13 +40,13 @@
           <div class="form-group">
             <label>生活&工业垃圾 (T)</label>
             <input
-              type="number"
-              v-model.number="domesticIndustrial[month - 1]"
-              min="0"
-              step="0.01"
-              :readonly="!isEditing"
-              :class="{ 'editable-field': isEditing }"
-              required
+                type="number"
+                v-model.number="domesticIndustrial[month - 1]"
+                min="0"
+                step="0.01"
+                :readonly="!isEditing"
+                :class="{ 'editable-field': isEditing }"
+                required
             >
           </div>
 
@@ -121,13 +54,13 @@
           <div class="form-group">
             <label>危废 (T)</label>
             <input
-              type="number"
-              v-model.number="hazardous[month - 1]"
-              min="0"
-              step="0.01"
-              :readonly="!isEditing"
-              :class="{ 'editable-field': isEditing }"
-              required
+                type="number"
+                v-model.number="hazardous[month - 1]"
+                min="0"
+                step="0.01"
+                :readonly="!isEditing"
+                :class="{ 'editable-field': isEditing }"
+                required
             >
           </div>
 
@@ -135,13 +68,13 @@
           <div class="form-group">
             <label>废水排放量 (T)</label>
             <input
-              type="number"
-              v-model.number="wastewater[month - 1]"
-              min="0"
-              step="0.01"
-              :readonly="!isEditing"
-              :class="{ 'editable-field': isEditing }"
-              required
+                type="number"
+                v-model.number="wastewater[month - 1]"
+                min="0"
+                step="0.01"
+                :readonly="!isEditing"
+                :class="{ 'editable-field': isEditing }"
+                required
             >
           </div>
 
@@ -150,7 +83,7 @@
 
       <!-- 汇总（与能源统计合计区块相同结构：form-row + form-group + disabled 计算值） -->
       <fieldset class="summary-fieldset">
-        <legend>{{ year }}年{{ month }}月废弃物统计 - 汇总</legend>
+        <legend>{{ year }}年废弃物统计 - 汇总</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
         <div class="form-row" v-else>
           <div class="form-group">
@@ -223,9 +156,10 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { useSelectionStore } from '@/stores/selectionStore'
+import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
+import {useSelectionStore} from '@/stores/selectionStore'
 import apiClient from '@/utils/axios'
+import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
@@ -235,10 +169,6 @@ const month = computed(() => selectionStore.selectedMonth);
 
 const isEditing = ref(false)
 const isLoading = ref(false)
-
-// 月份名称映射 & 工具函数（与能源一致）
-const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月']
-const getMonthName = (index) => monthNames[index]
 
 // —— 废弃物月度数据（保持字段与原来一致） —— //
 const epe = reactive(Array(12).fill(0))
@@ -263,24 +193,24 @@ const hazardousTotal = computed(() => rowSum(hazardous))
 const wastewaterTotal = computed(() => rowSum(wastewater))
 
 const nonHazardousTotal = computed(() => (
-  (parseFloat(epeTotal.value) +
-   parseFloat(plasticPaperTotal.value) +
-   parseFloat(domesticIndustrialTotal.value)).toFixed(2)
+    (parseFloat(epeTotal.value) +
+        parseFloat(plasticPaperTotal.value) +
+        parseFloat(domesticIndustrialTotal.value)).toFixed(2)
 ))
 
 const recyclableTotal = computed(() => (
-  (parseFloat(epeTotal.value) +
-   parseFloat(plasticPaperTotal.value)).toFixed(2)
+    (parseFloat(epeTotal.value) +
+        parseFloat(plasticPaperTotal.value)).toFixed(2)
 ))
 
 const totalWaste = computed(() => (
-  (parseFloat(nonHazardousTotal.value) +
-   parseFloat(hazardousTotal.value)).toFixed(2)
+    (parseFloat(nonHazardousTotal.value) +
+        parseFloat(hazardousTotal.value)).toFixed(2)
 ))
 
 const disposalRequiredTotal = computed(() => (
-  (parseFloat(domesticIndustrialTotal.value) +
-   parseFloat(hazardousTotal.value)).toFixed(2)
+    (parseFloat(domesticIndustrialTotal.value) +
+        parseFloat(hazardousTotal.value)).toFixed(2)
 ))
 
 const recycleRate = computed(() => {
@@ -292,20 +222,15 @@ const recycleRate = computed(() => {
 const hazardousIntensity = computed(() => {
   const hz = parseFloat(hazardousTotal.value)
   return (totalRevenue.value > 0 && hz > 0)
-    ? (hz / totalRevenue.value).toFixed(4)
-    : 0
+      ? (hz / totalRevenue.value).toFixed(4)
+      : 0
 })
 
 const wastewaterIntensity = computed(() => {
   const ww = parseFloat(wastewaterTotal.value)
   return (totalRevenue.value > 0 && ww > 0)
-    ? (ww / totalRevenue.value).toFixed(4)
-    : 0
-})
-
-// —— 与能源统计保持一致：监听工厂/年份变化并拉取数据 —— //
-watch([factory, year], () => {
-  fetchData()
+      ? (ww / totalRevenue.value).toFixed(4)
+      : 0
 })
 
 onMounted(() => {
@@ -327,7 +252,7 @@ const fetchData = async () => {
   isLoading.value = true
   try {
     const resp = await apiClient.get('/quantitative/waste', {
-      params: { factory: factory.value, year: year.value }
+      params: {factory: factory.value, year: year.value}
     })
     const data = resp?.data?.data
     if (data) {

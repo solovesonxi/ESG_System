@@ -93,8 +93,8 @@ const dataModeItems = [
   {name: 'ohs', path: '/ohs', label: '职健与安全'},
   {name: 'satisfaction', path: '/satisfaction', label: '员工满意度'},
   {name: 'supply', path: '/supply', label: '供应链'},
-  {name: 'ip', path: '/ip', label: '知识产权'},
   {name: 'responsibility', path: '/responsibility', label: '产品责任'},
+  {name: 'ip', path: '/ip', label: '知识产权'},
   {name: 'community', path: '/community', label: '社区参与'},
   {name: 'profile', path: '/profile', label: '个人中心'}
 ]
