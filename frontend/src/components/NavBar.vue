@@ -1,15 +1,40 @@
 <template>
   <div class="navbar-wrapper">
-    <nav class="navbar" @mouseenter="handleNavbarEnter" @mouseleave="handleNavbarLeave">
+    <nav class="navbar" :class="{ 'navbar-hidden': isNavbarHidden }" @mouseenter="handleNavbarEnter" @mouseleave="handleNavbarLeave">
+      <div class="esg-logo" @click="navigateToDashboard">
+        ESG
+      </div>
       <ul class="nav-list">
         <li v-for="route in menuItems" :key="route.name">
-          <router-link
-              :to="route.path"
-              :class="{ 'router-link-active': isActive(route.path) }"
-          >
-            <span class="link-text">{{ route.label }}</span>
-            <div class="link-hover-effect"></div>
-          </router-link>
+          <template v-if="!route.children">
+            <router-link
+                :to="route.path"
+                :class="{ 'router-link-active': isActive(route.path) }"
+            >
+              <span class="link-text">{{ route.label }}</span>
+              <div class="link-hover-effect"></div>
+            </router-link>
+          </template>
+          <template v-else>
+            <div class="dropdown-trigger" @mouseenter="handleDropdownEnter(route.name)" @mouseleave="handleDropdownLeave">
+              <span class="link-text">{{ route.label }}</span>
+              <i class="arrow-down"></i>
+              <div class="link-hover-effect"></div>
+            </div>
+            <ul class="dropdown-menu"
+                :class="{ 'show': activeDropdown === route.name }"
+                @mouseenter="handleMenuEnter"
+                @mouseleave="handleMenuLeave">
+              <li v-for="child in route.children" :key="child.name">
+                <router-link
+                    :to="child.path"
+                    :class="{ 'router-link-active': isActive(child.path) }"
+                >
+                  <span class="link-text">{{ child.label }}</span>
+                </router-link>
+              </li>
+            </ul>
+          </template>
         </li>
       </ul>
     </nav>
@@ -18,7 +43,8 @@
       <div class="logout-dropdown" v-if="showLogout" @mouseenter="handleDropdownEnter"
            @mouseleave="handleDropdownLeave">
         <div class="user-avatar">
-          <svg viewBox="0 0 100 100">
+          <img v-if="authStore.user?.avatar" :src="authStore.user.avatar" alt="用户头像" class="avatar-image" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%;"/>
+          <svg v-else viewBox="0 0 100 100" style="width: 80px; height: 80px;">
             <circle cx="50" cy="40" r="25" fill="#fff"/>
             <circle cx="50" cy="100" r="40" fill="#fff"/>
           </svg>
@@ -38,13 +64,40 @@
 </template>
 
 <script setup>
-import {useRoute} from 'vue-router'
-import {computed, ref, watch} from 'vue';
+import {useRoute, useRouter} from 'vue-router'
+import {computed, ref, watch, onMounted, onUnmounted} from 'vue';
 import {useAuthStore} from '@/stores/authStore';
 
 const authStore = useAuthStore();
 const showLogout = ref(false);
+const isNavbarHidden = ref(false);
+const activeDropdown = ref(null);
+const lastScrollY = ref(0);
 let hideTimeout = null;
+let dropdownTimeout = null;
+
+// 滚轮监听逻辑
+const handleScroll = () => {
+  const currentScrollY = window.scrollY;
+
+  if (currentScrollY > lastScrollY.value && currentScrollY > 100) {
+    // 向下滚动且超过100px时隐藏
+    isNavbarHidden.value = true;
+  } else if (currentScrollY < lastScrollY.value) {
+    // 向上滚动时显示
+    isNavbarHidden.value = false;
+  }
+
+  lastScrollY.value = currentScrollY;
+};
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll, { passive: true });
+});
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll);
+});
 
 const handleNavbarEnter = () => {
   clearTimeout(hideTimeout);
@@ -56,21 +109,48 @@ const handleNavbarLeave = () => {
     if (!document.querySelector('.logout-dropdown:hover')) {
       showLogout.value = false;
     }
-  }, 300);
+  }, 150);
 };
 
-const handleDropdownEnter = () => {
+// 修复下拉菜单逻辑，参考登出按钮的丝滑交互
+const handleDropdownEnter = (dropdownName = null) => {
+  clearTimeout(dropdownTimeout);
   clearTimeout(hideTimeout);
+  if (dropdownName) {
+    activeDropdown.value = dropdownName;
+  }
 };
 
 const handleDropdownLeave = () => {
-  showLogout.value = false;
+  dropdownTimeout = setTimeout(() => {
+    if (!document.querySelector('.logout-dropdown:hover')) {
+      showLogout.value = false;
+      activeDropdown.value = null;
+    }
+  }, 150);
+};
+
+// 下拉菜单容器的鼠标事件
+const handleMenuEnter = () => {
+  clearTimeout(dropdownTimeout);
+};
+
+const handleMenuLeave = () => {
+  dropdownTimeout = setTimeout(() => {
+    activeDropdown.value = null;
+  }, 150);
 };
 
 const handleLogout = () => {
   authStore.logout();
 };
 const route = useRoute()
+
+const router = useRouter();
+
+const navigateToDashboard = () => {
+  router.push('/home');
+};
 
 const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/');
@@ -81,33 +161,49 @@ const menuItems = computed(() => {
 })
 
 const dataModeItems = [
-  {name: 'material', path: '/material', label: '物料'},
-  {name: 'energy', path: '/energy', label: '能源'},
-  {name: 'water', path: '/water', label: '水资源'},
-  {name: 'emission', path: '/emission', label: '排放'},
-  {name: 'waste', path: '/waste', label: '废弃物'},
-  {name: 'investment', path: '/investment', label: '资金投入'},
-  {name: 'management', path: '/management', label: '环境管理'},
-  {name: 'employment', path: '/employment', label: '雇佣'},
-  {name: 'training', path: '/training', label: '教育与培训'},
-  {name: 'ohs', path: '/ohs', label: '职健与安全'},
-  {name: 'satisfaction', path: '/satisfaction', label: '员工满意度'},
-  {name: 'supply', path: '/supply', label: '供应链'},
-  {name: 'responsibility', path: '/responsibility', label: '产品责任'},
-  {name: 'ip', path: '/ip', label: '知识产权'},
-  {name: 'community', path: '/community', label: '社区参与'},
-  {name: 'profile', path: '/profile', label: '个人中心'}
+  {name: 'home', path: '/home', label: '首页'},
+  {
+    name: 'environment', label: '环境',
+    children: [
+      {name: 'material', path: '/material', label: '物料'},
+      {name: 'energy', path: '/energy', label: '能源'},
+      {name: 'water', path: '/water', label: '水资源'},
+      {name: 'emission', path: '/emission', label: '排放'},
+      {name: 'waste', path: '/waste', label: '废弃物'},
+      {name: 'investment', path: '/investment', label: '资金投入'},
+      {name: 'management', path: '/management', label: '环境管理'}
+    ]
+  },
+  {
+    name: 'social', label: '社会-劳工',
+    children: [
+      {name: 'employment', path: '/employment', label: '雇佣'},
+      {name: 'training', path: '/training', label: '教育与培训'},
+      {name: 'ohs', path: '/ohs', label: '职健与安全'},
+      {name: 'satisfaction', path: '/satisfaction', label: '员工满意度'}
+    ]
+  },
+  {
+    name: 'governance', label: '社会-其他',
+    children: [
+      {name: 'supply', path: '/supply', label: '供应链'},
+      {name: 'responsibility', path: '/responsibility', label: '产品责任'},
+      {name: 'ip', path: '/ip', label: '知识产权'}
+    ]
+  },
+  {name: 'account', path: '/account', label: '账号管理'}
 ]
 
 const analyzeModeItems = [
+  {name: 'home', path: '/home', label: '首页'},
   {name: 'env-quantitative', path: '/env-quantitative', label: '环境定量'},
   {name: 'env-qualitative', path: '/env-qualitative', label: '环境定性'},
   {name: 'social-quantitative-labor', path: '/social-quantitative-labor', label: '社会定量-劳工'},
   {name: 'social-qualitative-labor', path: '/social-qualitative-labor', label: '社会定性-劳工'},
   {name: 'social-quantitative-other', path: '/social-quantitative-other', label: '社会定量-其他'},
   {name: 'social-qualitative-other', path: '/social-qualitative-other', label: '社会定性-其他'},
-  {name: 'governance', path: '/governance', label: '管治'},
-  {name: 'profile', path: '/profile', label: '个人中心'}
+  {name: 'governance', path: '/governance', label: '治理'},
+  {name: 'account', path: '/account', label: '账号管理'}
 ]
 
 // 监听路由变化并更新 localStorage
@@ -130,34 +226,45 @@ watch(() => route.path, (newPath) => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 70px;
-  background-size: 200% 200%;
+  height: 60px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   z-index: 1000;
-  overflow: hidden;
-  animation: gradientShift 8s ease infinite;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: visible;
+  transform: translateY(0);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
 }
 
+/* NavBar隐藏状态 */
+.navbar-hidden {
+  transform: translateY(-100%);
+}
 
-@keyframes gradientShift {
-  0% {
-    background-position: 0 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0 50%;
-  }
+.esg-logo {
+  font-family: 'Playfair Display', serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: #ffffff;
+  cursor: pointer;
+  margin-right: 2rem;
+  margin-left: 2rem;
+  transition: all 0.3s ease;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+.esg-logo:hover {
+  transform: scale(1.05);
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
 }
 
 .nav-list {
   list-style: none;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
+  flex-grow: 1;
   margin: 0;
   padding: 0;
   width: 100%;
@@ -166,60 +273,221 @@ watch(() => route.path, (newPath) => {
 
 .nav-list li {
   position: relative;
+  display: flex;
+  align-items: center;
+  /* 统一所有导航项的宽度 */
   flex: 1;
-  max-width: 200px;
-  text-align: center;
+  min-width: 120px;
+  max-width: 150px;
 }
 
 .nav-list a {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
   font-weight: 500;
   padding: 0 15px;
   height: 100%;
-  min-height: 70px;
   transition: all 0.3s ease;
   font-size: 1rem;
   position: relative;
   overflow: hidden;
-  border-bottom: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .nav-list a:hover {
   color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
-.nav-list a:hover .link-hover-effect {
-  transform: translateX(0) scale(1);
+.dropdown-trigger {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0 15px;
+  height: 100%;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dropdown-trigger:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* 下拉箭头 */
+.arrow-down {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 6px solid currentColor;
+  transition: transform 0.3s ease;
+}
+
+.dropdown-trigger:hover .arrow-down,
+.dropdown-menu.show + .dropdown-trigger .arrow-down {
+  transform: rotate(180deg);
+}
+
+/* 改进的下拉菜单 */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px) scale(0.95);
+  background: linear-gradient(145deg, #1e1e3f 0%, #3f1e36 100%);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1001;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  padding: 0;
+  list-style: none;
+  margin: 0;
+  overflow: hidden; /* 防止子元素溢出 */
+}
+
+.dropdown-menu.show {
   opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+.dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #1e1e3f;
+}
+
+.dropdown-menu li {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.dropdown-menu li:first-child a {
+  border-radius: 0 0 0 0;
+
+}
+
+.dropdown-menu li:last-child a {
+  border-bottom: none;
+  border-radius: 0 0 0 0;
+
+}
+
+.dropdown-menu a {
+  display: block;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 14px 20px; /* 增加左右内边距 */
+  transition: all 0.3s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.dropdown-menu a:hover {
+  color: #fff;
+  background: linear-gradient(90deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.2));
+  /* 移除transform和padding-left变化，保持完整宽度 */
+  padding: 14px 0;
+}
+
+.dropdown-menu a::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px; /* 增加紫色条的宽度 */
+  background: linear-gradient(180deg, #8a2be2, #4b0082);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+}
+
+.dropdown-menu a:hover::before {
+  transform: scaleY(1);
+}
+
+.dropdown-menu a .link-text {
+  display: inline-block;
+  width: 100%;
+  padding: 0 20px; /* 在link-text上添加左右内边距 */
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+.dropdown-menu a:hover .link-text {
+  padding-left: 24px; /* 悬停时给紫色条让出空间 */
+  padding-right: 20px;
 }
 
 .link-text {
-  color: white;
-  text-shadow: -1px -1px 2px #e512e5,
-  1px -1px 4px #a61a58,
-  -1px 1px 6px #591bb7,
-  1px 1px 8px #04108f;
+  color: inherit;
+  text-shadow: none;
   transition: all 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nav-list a.router-link-active .link-text {
-  color: #8a2be2;
-  text-shadow: 0 0 10px #8a2be2, 0 0 20px #8a2be2, 0 0 30px #8a2be2;
-  animation: pulse 1.5s infinite;
+  color: #bb7df5;
+  text-shadow: 0 0 15px #8a2be2;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    text-shadow: 0 0 10px #8a2be2, 0 0 20px #8a2be2, 0 0 30px #8a2be2;
-  }
-  50% {
-    text-shadow: 0 0 15px #8a2be2, 0 0 30px #8a2be2, 0 0 45px #8a2be2;
-  }
+.nav-list a.router-link-active {
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.3), rgba(75, 0, 130, 0.3));
+  border: 1px solid rgba(187, 125, 245, 0.4);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
+}
+
+.dropdown-trigger.router-link-active {
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.3), rgba(75, 0, 130, 0.3));
+  border: 1px solid rgba(187, 125, 245, 0.4);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
 }
 
 .link-hover-effect {
@@ -228,215 +496,135 @@ watch(() => route.path, (newPath) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent);
-  transform: translateX(-100%) scale(0.8);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: translateX(-100%);
   opacity: 0;
   transition: all 0.5s ease;
-  z-index: 1;
 }
 
-/* 激活状态样式 - 更加炫酷 */
-.nav-list a.router-link-active {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.15);
-  border-bottom: 2px solid #fff;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5),
-  inset 0 0 10px rgba(255, 255, 255, 0.2);
-  font-weight: 600;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-  animation: backgroundBreathe 2s infinite;
+.nav-list a:hover .link-hover-effect,
+.dropdown-trigger:hover .link-hover-effect {
+  transform: translateX(100%);
+  opacity: 1;
 }
-
-@keyframes backgroundBreathe {
-  0%, 100% {
-    background: rgba(255, 255, 255, 0.15);
-  }
-  50% {
-    background: rgba(255, 255, 255, 0.25);
-  }
-}
-
-.nav-list a.router-link-active::before {
-  content: '';
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6px;
-  height: 6px;
-  background: #fff;
-  border-radius: 50%;
-  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.8);
-  animation: activePulse 1.5s infinite;
-}
-
-@keyframes activePulse {
-  0%, 100% {
-    opacity: 0.5;
-    transform: translateX(-50%) scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: translateX(-50%) scale(1.5);
-  }
-}
-
-.nav-list a.router-link-active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, #fff, transparent);
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -100% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
 
 /* 登出下拉菜单 */
 .logout-dropdown {
   position: fixed;
-  top: 75px;
-  right: 5px;
-  background: rgba(25, 25, 35, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 1rem 1.2rem;
+  top: 80px;
+  right: 20px;
+  background: linear-gradient(145deg, #1e1e3f 0%, #2a2a5a 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 1rem;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2),
-  0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3),
+              0 0 0 1px rgba(255, 255, 255, 0.1);
   z-index: 1001;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.8rem;
-  min-width: 180px;
+  gap: 0.75rem;
+  min-width: 160px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .dropdown-enter-active,
 .dropdown-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dropdown-enter-from,
 .dropdown-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(-15px) scale(0.95);
 }
 
 .user-avatar {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background: linear-gradient(135deg, #4776E6, #8E54E9);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 15px rgba(71, 118, 230, 0.5);
+  box-shadow: 0 0 25px rgba(71, 118, 230, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .user-avatar svg {
-  width: 60%;
-  height: 60%;
+  width: 65%;
+  height: 65%;
 }
 
 .welcome-text {
   color: #fff;
-  font-size: 0.9rem;
+  font-size: 1rem;
   text-align: center;
+  font-weight: 500;
 }
 
 .logout-btn {
   background: linear-gradient(135deg, #ff6b6b, #ee5a52);
   color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 25px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 30px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   transition: all 0.3s ease;
-  font-weight: 500;
-  box-shadow: 0 4px 15px rgba(238, 90, 82, 0.3);
+  font-weight: 600;
+  box-shadow: 0 8px 25px rgba(238, 90, 82, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .logout-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(238, 90, 82, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(238, 90, 82, 0.5);
+  background: linear-gradient(135deg, #ff5252, #d32f2f);
 }
 
 .logout-btn:active {
-  transform: translateY(0);
+  transform: translateY(-1px);
 }
 
-/* 响应式设计 */
-@media (max-width: 1200px) {
-  .nav-list li {
-    max-width: 160px;
-  }
-
-  .nav-list a {
-    font-size: 0.9rem;
-    padding: 0 10px;
-  }
-}
-
-@media (max-width: 992px) {
-  .navbar {
-    height: 60px;
-  }
-
-  .nav-list {
-    overflow-x: auto;
-    justify-content: flex-start;
-    padding: 0 10px;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .nav-list::-webkit-scrollbar {
-    display: none;
-  }
-
-  .nav-list li {
-    flex: 0 0 auto;
-    max-width: none;
-  }
-
-  .nav-list a {
-    min-height: 60px;
-    min-width: 100px;
-  }
-
-  .logout-dropdown {
-    top: 65px;
-    right: 10px;
-  }
-}
 
 @media (max-width: 576px) {
-  .nav-list a {
-    min-width: 80px;
-    font-size: 0.8rem;
+  .navbar {
+    padding: 0 0.5rem;
   }
 
-  .welcome-text {
+  .esg-logo {
+    font-size: 1.1rem;
+    margin-right: 0.5rem;
+  }
+
+  .nav-list li {
+    min-width: 75px;
+  }
+
+  .nav-list a,
+  .dropdown-trigger {
+    font-size: 0.75rem;
+    padding: 0 8px;
+  }
+
+  .dropdown-menu {
+    width: 120px;
+  }
+
+  .dropdown-menu a {
+    padding: 10px 15px;
     font-size: 0.8rem;
+  }
+  .welcome-text {
+    font-size: 0.85rem;
   }
 
   .logout-btn {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.85rem;
   }
 }
 </style>

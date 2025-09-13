@@ -6,7 +6,7 @@
     @mousedown="startDrag"
     @mouseup="stopDrag"
   >
-    <div class="ball-text">{{ authStore.isDataMode ? '年度分析':'月度填报'  }}</div>
+    <div class="ball-text">{{ authStore.isDataMode ? '月度填报':'年度分析'  }}</div>
   </div>
 </template>
 

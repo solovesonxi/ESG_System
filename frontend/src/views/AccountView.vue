@@ -1,83 +1,33 @@
 <template>
-  <div class="profile-container">
-    <div class="profile-header">
-      <h1>个人中心</h1>
-      <div class="profile-avatar">
-        <span>👤</span>
+  <div class="account-container">
+    <div class="account-left">
+      <h1 class="account-title">账号管理</h1>
+      <div class="account-avatar" @click="openAvatarPicker" @mouseenter="showAvatarTip = true" @mouseleave="showAvatarTip = false">
+        <img :src="authStore.user?.avatar || '/default-avatar.png'" alt="用户头像" class="avatar-image-large"/>
+        <div v-if="showAvatarTip" class="avatar-tip">更换头像</div>
       </div>
-    </div>
-
-    <div class="profile-content">
-      <div class="profile-info">
-        <div class="info-item">
-          <div class="info-label">
-            <i class="fas fa-user"></i>
-            <span>用户名</span>
-          </div>
-          <div class="info-value">
-            <span>{{ user.username }}</span>
-          </div>
-          <button class="edit-btn" @click="openEditModal('username')">
-            <i class="fas fa-edit"></i>
-            <span>编辑</span>
-          </button>
-        </div>
-
-        <div class="info-item">
-          <div class="info-label">
-            <i class="fas fa-industry"></i>
-            <span>工厂名</span>
-          </div>
-          <div class="info-value">
-            <span>{{ user.factory }}</span>
-          </div>
-        </div>
-
-        <div class="info-item">
-          <div class="info-label">
-            <i class="fas fa-user-tag"></i>
-            <span>账号类型</span>
-          </div>
-          <div class="info-value">
-            <span>{{ user.type }}</span>
-          </div>
-        </div>
-
-        <div class="info-item">
-          <div class="info-label">
-            <i class="fas fa-phone"></i>
-            <span>电话</span>
-          </div>
-          <div class="info-value">
-            <span>{{ user.phone }}</span>
-          </div>
-          <button class="edit-btn" @click="openEditModal('phone')">
-            <i class="fas fa-edit"></i>
-            <span>编辑</span>
-          </button>
-        </div>
-
-        <div class="info-item">
-          <div class="info-label">
-            <i class="fas fa-envelope"></i>
-            <span>邮箱</span>
-          </div>
-          <div class="info-value">
-            <span>{{ user.email }}</span>
-          </div>
-          <button class="edit-btn" @click="openEditModal('email')">
-            <i class="fas fa-edit"></i>
-            <span>编辑</span>
-          </button>
-        </div>
-      </div>
-
       <button class="change-password-btn" @click="openPasswordModal">
         <i class="fas fa-key"></i>
         <span>更改密码</span>
       </button>
     </div>
-
+    <div class="account-right">
+      <div class="account-info">
+        <div class="info-item" v-for="item in infoItems" :key="item.field">
+          <div class="info-label">
+            <i :class="item.icon"></i>
+            <span>{{ item.label }}</span>
+          </div>
+          <div class="info-value">
+            <span>{{ user[item.field] }}</span>
+          </div>
+          <button v-if="item.editable" class="edit-btn" @click="openEditModal(item.field)">
+            <i class="fas fa-edit"></i>
+            <span>编辑</span>
+          </button>
+        </div>
+      </div>
+    </div>
     <!-- 编辑信息模态框 -->
     <div class="modal-overlay" v-if="showEditModal">
       <div class="edit-modal">
@@ -87,7 +37,6 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
-
         <div class="input-group">
           <label>{{ fieldLabel }}</label>
           <input
@@ -112,7 +61,6 @@
             </button>
           </div>
         </div>
-
         <div class="modal-actions">
           <button class="submit-btn" @click="submitEdit">
             <i class="fas fa-check"></i>
@@ -121,14 +69,12 @@
         </div>
       </div>
     </div>
-
     <!-- 更改密码模态框 -->
     <div class="modal-overlay" v-if="showPasswordModal">
       <div class="edit-modal">
         <div class="modal-header">
           <h2>更改密码</h2>
         </div>
-
         <div class="input-group">
           <label>当前密码</label>
           <input
@@ -138,7 +84,6 @@
               placeholder="请输入当前密码"
           >
         </div>
-
         <div class="input-group">
           <label>新密码</label>
           <input
@@ -148,7 +93,6 @@
               placeholder="请输入新密码"
           >
         </div>
-
         <div class="input-group">
           <label>确认新密码</label>
           <input
@@ -158,7 +102,6 @@
               placeholder="请再次输入新密码"
           >
         </div>
-
         <div class="modal-actions">
           <button class="cancel-btn" @click="closePasswordModal">
             <i class="fas fa-times"></i>
@@ -171,7 +114,6 @@
         </div>
       </div>
     </div>
-
     <!-- 通知消息 -->
     <div class="notification" :class="{ show: showNotification, error: notificationError }">
       <i class="fas" :class="notificationError ? 'fa-exclamation-circle' : 'fa-check-circle'"></i>
@@ -187,14 +129,67 @@ import apiClient from '@/utils/axios';
 
 const authStore = useAuthStore();
 
-// 用户信息
+// 主题切换相关
+const isDark = ref(true);
+function toggleTheme() {
+  isDark.value = !isDark.value;
+  document.body.classList.toggle('dark-theme', isDark.value);
+}
+
+// 账号信息相关
 const user = ref({
   username: authStore.user?.username || '未设置',
   factory: authStore.user?.factory || '未设置',
   type: authStore.user?.account_type === "factory" ? '工厂账号' : '总部账号',
   phone: authStore.user?.phone || '未设置',
-  email: authStore.user?.email || '未设置'
+  email: authStore.user?.email || '未设置',
+  avatar: authStore.user?.avatar || '/default-avatar.png'
 });
+
+const infoItems = [
+  {field: 'username', label: '用户名', icon: 'fas fa-user', editable: true},
+  {field: 'factory', label: '工厂名', icon: 'fas fa-industry', editable: false},
+  {field: 'type', label: '账号类型', icon: 'fas fa-user-tag', editable: false},
+  {field: 'phone', label: '电话', icon: 'fas fa-phone', editable: true},
+  {field: 'email', label: '邮箱', icon: 'fas fa-envelope', editable: true}
+];
+
+// 打开头像选择器
+const openAvatarPicker = () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/png, image/jpeg, image/jpg, image/gif';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      await uploadAvatar(file);
+    }
+  };
+  input.click();
+};
+
+// 上传头像到后端
+const uploadAvatar = async (file) => {
+  const formData = new FormData();
+  formData.append('avatar', file);
+  try {
+    const response = await apiClient.patch('/update/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    if (response.data.status === 'success') {
+      const fullAvatarUrl = `${apiClient.defaults.baseURL}${response.data.avatar}?t=${new Date().getTime()}`;
+      user.value.avatar = fullAvatarUrl;
+      authStore.user.avatar = fullAvatarUrl;
+      showNotificationMessage('头像上传成功！');
+    } else {
+      showNotificationMessage('头像上传失败，请稍后重试', true);
+    }
+  } catch (error) {
+    console.error('上传头像失败:', error);
+  }
+};
 
 // 编辑模态框状态
 const showEditModal = ref(false);
@@ -238,6 +233,9 @@ const confirmPassword = ref('');
 const showNotification = ref(false);
 const notificationMessage = ref('');
 const notificationError = ref(false);
+
+// 鼠标悬停头像时显示“更换头像”提示文字
+const showAvatarTip = ref(false);
 
 // 打开编辑模态框
 const openEditModal = (field) => {
@@ -379,103 +377,156 @@ const showNotificationMessage = (message, isError = false, duration = 3000) => {
 </script>
 
 <style scoped>
-/* 磨砂玻璃效果覆盖整个容器 */
-.profile-container {
-  width: 80%;
-  max-height: 68vh;
-  margin: 2rem auto;
-  padding: 2rem;
+.account-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 72vh;
   background: rgba(30, 30, 40, 0.7);
-  border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  position: relative;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
   overflow: hidden;
 }
 
-
-.profile-header {
+.account-left {
+  flex: 0 0 380px;
+  background: linear-gradient(135deg, rgba(71, 118, 230, 0.25) 0%, rgba(142, 84, 233, 0.18) 100%),
+  rgba(40, 50, 80, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right: 2px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: space-between;
+  padding: 48px 0 48px 0;
+  width: auto;
+  height: 100%;
   position: relative;
 }
 
-.profile-header::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #4776E6, transparent);
-}
-
-.profile-header h1 {
-  font-weight: 700;
-  font-size: 2.5rem;
-  color: #ffffff;
-  margin: 0;
-  text-shadow: 0 0 10px rgba(71, 118, 230, 0.5);
-}
-
-.profile-avatar {
-  width: 80px;
-  height: 80px;
+.account-avatar {
+  width: 180px;
+  height: 180px;
   background: linear-gradient(135deg, #4776E6, #8E54E9);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  box-shadow: 0 0 20px rgba(71, 118, 230, 0.6);
+  box-shadow: 0 0 32px rgba(71, 118, 230, 0.5);
+  margin-bottom: 32px;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 }
-
-.profile-avatar::before {
+.account-avatar::after {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
-  transform: rotate(30deg);
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0);
+  border-radius: 50%;
+  pointer-events: none;
+  transition: background 0.3s;
+  z-index: 1;
+}
+.account-avatar:hover::after {
+  background: rgba(0,0,0,0.35);
 }
 
-.profile-content {
-  padding: 0 1rem;
+.avatar-image-large {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  transition: box-shadow 0.3s, filter 0.3s, transform 0.3s;
+  position: relative;
+  z-index: 2;
+}
+.account-avatar:hover .avatar-image-large {
+  box-shadow: 0 0 32px 0 #4776E6, 0 0 12px 2px #8E54E9;
+  filter: brightness(1.08) saturate(1.18);
+  transform: scale(1.06);
+}
+.avatar-tip {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(30, 34, 50, 0.92);
+  color: #fff;
+  padding: 8px 22px;
+  border-radius: 16px;
+  font-size: 1.08rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 2px 8px #4776E6;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  white-space: nowrap;
+  min-width: 80px;
+  max-width: 90%;
+  text-align: center;
+  transition: opacity 0.25s, transform 0.25s;
+}
+.account-avatar:hover .avatar-tip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
-.profile-info {
-  margin-bottom: 2rem;
+.account-title {
+  font-size: 2.8rem;
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 0 12px rgba(71, 118, 230, 0.5);
 }
 
-/* 优化信息项布局 */
+.change-password-btn {
+  width: 80%;
+  padding: 1.1rem;
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.3));
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.4);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.account-right {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 48px;
+  height: 100%;
+  background: transparent;
+}
+
+.account-info {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
 .info-item {
   display: grid;
   grid-template-columns: minmax(120px, auto) 1fr minmax(100px, auto);
   align-items: center;
-  padding: 0.8rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  position: relative;
+  padding: 1.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   gap: 10px;
-}
-
-.info-item::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
 }
 
 .info-label {
@@ -487,28 +538,27 @@ const showNotificationMessage = (message, isError = false, duration = 3000) => {
 }
 
 .info-label i {
-  font-size: 1rem;
+  font-size: 1.2rem;
   color: #8E54E9;
 }
 
 .info-value {
-  color: #ffffff;
-  font-size: 1rem;
+  color: #fff;
+  font-size: 1.1rem;
   padding: 0 10px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* 优化编辑按钮样式 */
 .edit-btn {
-  padding: 0.5rem 0.8rem;
+  padding: 0.6rem 1rem;
   background: rgba(71, 118, 230, 0.2);
   color: #4776E6;
   border: 1px solid rgba(71, 118, 230, 0.4);
   border-radius: 8px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1rem;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -526,30 +576,7 @@ const showNotificationMessage = (message, isError = false, duration = 3000) => {
 }
 
 .edit-btn i {
-  font-size: 0.9rem;
-}
-
-.change-password-btn {
-  width: 100%;
-  padding: 1rem;
-  background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.3));
-  color: #e74c3c;
-  border: 1px solid rgba(231, 76, 60, 0.4);
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1.1rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-
-.change-password-btn:hover {
-  background: linear-gradient(135deg, rgba(231, 76, 60, 0.3), rgba(192, 57, 43, 0.4));
-  transform: translateY(-3px);
-  box-shadow: 0 7px 20px rgba(231, 76, 60, 0.3);
+  font-size: 1rem;
 }
 
 /* 编辑模态框样式 */
@@ -748,17 +775,137 @@ const showNotificationMessage = (message, isError = false, duration = 3000) => {
   color: #e74c3c;
 }
 
+/* 深色主题只改变颜色，不改变布局 */
+.dark-theme .account-container {
+  background: rgba(18, 18, 18, 0.95);
+}
+.dark-theme .account-left {
+  background: linear-gradient(135deg, rgba(71, 118, 230, 0.12) 0%, rgba(142, 84, 233, 0.10) 100%), rgba(40, 50, 80, 0.55);
+  border-right: 2px solid rgba(255,255,255,0.08);
+}
+.dark-theme .account-title {
+  color: #bb86fc;
+  text-shadow: 0 0 12px rgba(187, 134, 252, 0.2);
+}
+.dark-theme .account-avatar {
+  background: linear-gradient(135deg, #3700b3, #8E54E9);
+  box-shadow: 0 0 32px rgba(98, 0, 234, 0.3);
+}
+.dark-theme .change-password-btn {
+  background: linear-gradient(135deg, rgba(98, 0, 234, 0.15), rgba(55, 0, 179, 0.18));
+  color: #bb86fc;
+  border: 1px solid rgba(98, 0, 234, 0.2);
+}
+.dark-theme .account-right {
+  background: transparent;
+}
+.dark-theme .info-label {
+  color: #bb86fc;
+}
+.dark-theme .info-value {
+  color: #e0e0e0;
+}
+.dark-theme .edit-btn {
+  background: rgba(98, 0, 234, 0.15);
+  color: #bb86fc;
+  border: 1px solid rgba(98, 0, 234, 0.2);
+}
+.dark-theme .edit-btn:hover {
+  background: rgba(98, 0, 234, 0.25);
+}
+.dark-theme .modal-overlay {
+  background: rgba(18, 18, 18, 0.85);
+}
+.dark-theme .edit-modal {
+  background: linear-gradient(135deg, #232323, #2a2a2a);
+  border: 1px solid rgba(187, 134, 252, 0.08);
+}
+.dark-theme .modal-header h2 {
+  color: #bb86fc;
+}
+.dark-theme .input-group label {
+  color: #bb86fc;
+}
+.dark-theme .input-field {
+  background: rgba(30, 30, 40, 0.7);
+  color: #e0e0e0;
+  border: 1px solid #444;
+}
+.dark-theme .input-field:focus {
+  border-color: #bb86fc;
+  box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.2);
+}
+.dark-theme .cancel-btn {
+  background: rgba(187, 134, 252, 0.08);
+  color: #bb86fc;
+  border: 1px solid rgba(187, 134, 252, 0.15);
+}
+.dark-theme .submit-btn {
+  background: linear-gradient(135deg, #3700b3, #8E54E9);
+  color: #fff;
+}
+.dark-theme .submit-btn:hover {
+  background: linear-gradient(135deg, #6200ea, #bb86fc);
+}
+.dark-theme .notification {
+  background: rgba(30, 30, 40, 0.95);
+  border-left-color: #bb86fc;
+  color: #e0e0e0;
+}
+
 /* 响应式设计 */
-@media (max-width: 768px) {
-  .profile-container {
-    padding: 1.5rem;
-    width: 90%;
+@media (max-width: 900px) {
+  .account-container {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
   }
 
-  .profile-header {
-    flex-direction: column;
-    text-align: center;
-    gap: 1rem;
+  .account-left {
+    background: linear-gradient(135deg, rgba(71, 118, 230, 0.18) 0%, rgba(142, 84, 233, 0.12) 100%), rgba(40, 50, 80, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-right: none;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.12);
+    /* 其他样式不变 */
+  }
+
+  .account-right {
+    padding: 0 16px;
+    align-items: center;
+  }
+
+  .account-info {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .account-left {
+    background: linear-gradient(135deg, rgba(71, 118, 230, 0.12) 0%, rgba(142, 84, 233, 0.08) 100%),rgba(40, 50, 80, 0.35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 8px 0 rgba(31, 38, 135, 0.08);
+  }
+
+  .account-avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .account-title {
+    font-size: 2rem;
+  }
+
+  .change-password-btn {
+    font-size: 1rem;
+    padding: 0.8rem;
+  }
+
+  .account-right {
+    padding: 0 4px;
   }
 
   .info-item {
@@ -766,41 +913,11 @@ const showNotificationMessage = (message, isError = false, duration = 3000) => {
     gap: 8px;
   }
 
-  .info-value {
-    padding: 0;
-    width: 100%;
-  }
-
   .edit-btn {
     width: 100%;
     max-width: none;
     margin-top: 10px;
     margin-left: 0;
-  }
-}
-
-@media (max-width: 480px) {
-  .profile-header h1 {
-    font-size: 2rem;
-  }
-
-  .profile-avatar {
-    width: 70px;
-    height: 70px;
-  }
-
-  .edit-modal {
-    padding: 1.5rem;
-  }
-
-  .modal-actions {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .cancel-btn, .submit-btn {
-    width: 100%;
-    justify-content: center;
   }
 }
 </style>

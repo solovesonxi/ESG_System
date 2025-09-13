@@ -33,7 +33,7 @@ def login(username: str = Body(..., description="用户名"), password: str = Bo
     access_token = create_access_token(data=token_data, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"token": access_token,
             "user": {"username": user.username, "factory": user.factory, "account_type": user.account_type,
-                     "phone": user.phone, "email": user.email}}
+                     "phone": user.phone, "email": user.email, "avatar": user.avatar}}
 
 
 @router.post("/refresh")

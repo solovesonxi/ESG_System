@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+from starlette.staticfiles import StaticFiles
 
 from core.dependencies import engine
 from core.models import Base
@@ -19,9 +20,9 @@ sys.path.append(str(Path(__file__).parent.parent))
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ESG System API", description="企业 ESG 数据管理系统接口文档", version="1.0.0", )
-# 添加CORS中间件
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"],
                    allow_headers=["*"], )
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/")

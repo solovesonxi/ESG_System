@@ -23,11 +23,15 @@ import SocialQuantitativeOtherView from "@/views/SocialQuantitativeOtherView.vue
 import SocialQualitativeOtherView from "@/views/SocialQualitativeOtherView.vue";
 import GovernanceView from "@/views/GovernanceView.vue";
 import LoginView from "@/views/LoginView.vue";
-import ProfileView from "@/views/ProfileView.vue";
+import AccountView from "@/views/AccountView.vue";
+import Home from "@/views/Home.vue";
 
 const routes = [{path: '/', redirect: '/login'}, {path: '/login', component: LoginView}, {
-    path: '/profile', component: ProfileView
-}, {path: '/material', component: MaterialView}, {path: '/energy', component: EnergyView}, {
+    path: '/account', component: AccountView
+}, {path: '/home', component: Home}, {path: '/material', component: MaterialView}, {
+    path: '/energy',
+    component: EnergyView
+}, {
     path: '/water', component: WaterView
 }, {path: '/emission', component: EmissionView}, {path: '/waste', component: WasteView}, {
     path: '/investment', component: InvestmentView
@@ -54,7 +58,6 @@ const router = createRouter({
 })
 
 const publicRoutes = ['/login']
-const headquartersRoutes = ['/env-quantitative', '/env-qualitative', '/social-quantitative-labor', '/social-qualitative-labor', '/social-quantitative-other', '/social-qualitative-other', '/governance', '/profile']
 
 // 路由守卫 - 保护需要认证的路由
 router.beforeEach((to, from, next) => {
@@ -65,14 +68,9 @@ router.beforeEach((to, from, next) => {
     if (!authStore.isAuthenticated) {
         return next('/login');
     }
-    if (authStore.isHeadquarters && !headquartersRoutes.includes(to.path)) {
-        return next('/env-quantitative');
-    }
-    if (authStore.isFactory) {
-        const lastPath = localStorage.getItem(`lastPath_${authStore.isDataMode ? 'data' : 'analyze'}`);
-        if (!lastPath && to.path !== '/material' && to.path !== '/env-quantitative') {
-            return next(authStore.isDataMode ? '/material' : '/env-quantitative');
-        }
+    const lastPath = localStorage.getItem(`lastPath_${authStore.isDataMode ? 'data' : 'analyze'}`);
+    if (!lastPath && to.path !== '/material' && to.path !== '/env-quantitative' && to.path !== '/home') {
+        return next(authStore.isDataMode ? '/material' : '/env-quantitative');
     }
     next();
 })

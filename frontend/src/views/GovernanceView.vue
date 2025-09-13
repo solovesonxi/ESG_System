@@ -3,7 +3,7 @@
     <form>
       <BaseInfoSelector @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
-        <legend>管治定性</legend>
+        <legend>治理定性</legend>
         <div class="form-row">
           <table class="data-table">
             <thead>
@@ -60,7 +60,7 @@ const fetchData = async () => {
     qualData.value = res.data || {}
   } catch (e) {
     console.error(e)
-    alert(`获取管治定性数据失败: ${e.response?.data?.detail || e.message}`)
+    alert(`获取治理定性数据失败: ${e.response?.data?.detail || e.message}`)
   }
 }
 

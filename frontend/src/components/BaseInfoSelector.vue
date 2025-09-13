@@ -44,7 +44,7 @@
           </div>
         </div>
       </div>
-      <div class="form-group">
+      <div class="form-group" v-if="authStore.isDataMode">
         <label>统计月份</label>
         <div class="custom-select">
           <div class="selected" @click="selectionStore.toggleMonthDropdown">
@@ -71,7 +71,9 @@
 <script setup>
 import {computed, watch} from 'vue';
 import { useSelectionStore } from "@/stores/selectionStore.js";
+import {useAuthStore} from '@/stores/authStore';
 const selectionStore = useSelectionStore();
+const authStore = useAuthStore();
 const emit = defineEmits(['selection-changed']);
 const factory = computed(() => selectionStore.selectedFactory);
 const year = computed(() => selectionStore.selectedYear);

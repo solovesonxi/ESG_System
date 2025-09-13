@@ -18,10 +18,6 @@
         </div>
         <div class="feature">
           <span class="feature-icon">✓</span>
-          <span>可持续性发展报告生成</span>
-        </div>
-        <div class="feature">
-          <span class="feature-icon">✓</span>
           <span>合规性管理与风险预警</span>
         </div>
       </div>
@@ -260,7 +256,7 @@ export default {
         const response = await apiClient.post('/login', payload);
         const {token, user} = response.data;
         useAuthStore().initAuth(token, user);
-        await router.push(user["account_type"] === 'factory' ? '/material' : '/env-quantitative');
+        await router.push('/home');
       } catch (error) {
         this.loginError = '用户名或密码错误';
         console.error('登录失败:', error);
@@ -294,7 +290,7 @@ export default {
       if (!this.registerForm.contact) {
         this.registrationErrors.contact = '请输入手机号或邮箱';
         isValid = false;
-      }else{
+      } else {
         const input = this.registerForm.contact;
         const isPhone = /^1[3-9]\d{9}$/.test(input);
         const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);

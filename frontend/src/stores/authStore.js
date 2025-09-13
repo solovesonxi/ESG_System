@@ -13,14 +13,15 @@ export const useAuthStore = defineStore('auth', () => {
     const isHeadquarters = computed(() => user.value?.account_type === 'headquarters')
     const isFactory = computed(() => user.value?.account_type === 'factory')
     const factory = computed(() => user.value?.factory)
-    const isDataMode = ref(false);
+    const isDataMode = ref(true);
     const selectionStore = useSelectionStore();
 
     // 初始化认证信息
     const initAuth = (token, userData) => {
         accessToken.value = token
         user.value = userData
-        isDataMode.value=isFactory.value;
+        user.value.avatar = apiClient.defaults.baseURL + userData.avatar;
+        isDataMode.value = isFactory.value;
         localStorage.setItem('access_token', token)
         localStorage.setItem('user', JSON.stringify(userData))
         localStorage.setItem('lastPath_data', '/material');
@@ -55,7 +56,7 @@ export const useAuthStore = defineStore('auth', () => {
                 const expireTime = payload.exp * 1000; // 转换为毫秒
                 const currentTime = Date.now();
                 const remainingTime = expireTime - currentTime;
-                console.log('Token剩余时间（秒）:', remainingTime/1000);
+                console.log('Token剩余时间（秒）:', remainingTime / 1000);
                 return remainingTime > 0 ? 'valid' : 'expire';
             } catch (error) {
                 console.error('解析 Token 失败:', error);

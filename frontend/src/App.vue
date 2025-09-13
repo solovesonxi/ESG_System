@@ -1,11 +1,11 @@
 <template>
-    <NavBar v-if="isDataPage || route.path === '/profile'" ref="navBar"/>
+    <NavBar v-if="isDataPage || route.path === '/account' || route.path === '/home'" ref="navBar"/>
     <main>
       <router-view v-slot="{ Component }">
         <component :is="Component" ref="currentComponent"/>
       </router-view>
     </main>
-    <FloatingBall v-if="isDataPage && authStore.isFactory"/>
+    <FloatingBall v-if="isDataPage"/>
     <EditControls v-if="isDataPage && authStore.isFactory" :is-editing="isEditing" @start-edit="handleStartEdit" @cancel-edit="handleCancelEdit"
                   @submit-edit="handleSubmitEdit"/>
     <canvas id="starry-bg"></canvas>
@@ -24,7 +24,7 @@ const navBar = ref(null)
 const isEditing = ref(false)
 const currentComponent = ref(null)
 const route = useRoute()
-const isDataPage = computed(() => route.path !== '/' && route.path !== '/login'  && route.path !== '/profile')
+const isDataPage = computed(() => route.path !== '/' && route.path !== '/login'  && route.path !== '/account')
 
 const handleStartEdit = () => {
   console.log('currentComponent:', currentComponent.value);

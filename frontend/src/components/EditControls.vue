@@ -108,23 +108,4 @@ defineEmits(['start-edit', 'cancel-edit', 'submit-edit']);
   background-color: #1976d2;
   transform: translateY(-2px);
 }
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .edit-controls {
-    right: 20px;
-    bottom: 20px;
-    padding: 10px;
-  }
-
-  .edit-controls::before {
-    top: 50%;
-    left: -40px;
-    transform: translateY(-50%) translateX(10px);
-  }
-
-  .edit-controls:hover::before {
-    transform: translateY(-50%) translateX(0);
-  }
-}
 </style>

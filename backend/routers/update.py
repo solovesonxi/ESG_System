@@ -1,7 +1,9 @@
+import os
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
 import redis
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, UploadFile, File
 from jose import jwt
 from sqlalchemy.orm import Session
 
@@ -11,9 +13,47 @@ from core.permissions import get_current_user
 
 router = APIRouter(prefix="/update", tags=["更改信息"])
 
+AVATAR_DIR = "static/avatars"
+os.makedirs(AVATAR_DIR, exist_ok=True)
+
+
+@router.patch("/avatar")
+async def update_avatar(avatar: UploadFile = File(..., description="用户头像文件"), db: Session = Depends(get_db),
+                        current_user: dict = Depends(get_current_user)):
+    try:
+        if not current_user or not current_user["user"]:
+            raise HTTPException(status_code=400, detail="用户未登录")
+        user = current_user["user"]
+        file_ext = os.path.splitext(avatar.filename)[1].lower()
+        if file_ext not in [".png", ".jpg", ".jpeg", ".gif"]:
+            raise HTTPException(status_code=400, detail="仅支持 PNG、JPG、JPEG 或 GIF 格式")
+
+        # 检查用户是否已有头像，并删除旧头像文件
+        if user.avatar:
+            if isinstance(user.avatar, UploadFile):
+                old_avatar_filename = os.path.basename(user.avatar.filename)
+            else:
+                old_avatar_filename = os.path.basename(str(user.avatar))
+            old_avatar_path = os.path.join(AVATAR_DIR, old_avatar_filename)
+            if os.path.exists(old_avatar_path):
+                os.remove(old_avatar_path)
+
+        # 保存新头像
+        avatar_filename = f"user_{user.username}{file_ext}"
+        avatar_path = os.path.join(AVATAR_DIR, avatar_filename)
+        with open(avatar_path, "wb") as buffer:
+            buffer.write(await avatar.read())
+        user.avatar = f"/{AVATAR_DIR}/{avatar_filename}"
+        db.commit()
+        return {"status": "success", "avatar": user.avatar}
+    except Exception as e:
+        db.rollback()
+        logger.error(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.patch("/username")
-def update_password(new_username: str = Body(..., description="新用户名"), db: Session = Depends(get_db),
+def update_username(new_username: str = Body(..., description="新用户名"), db: Session = Depends(get_db),
                     current_user: dict = Depends(get_current_user)):
     try:
         if not current_user or not current_user["user"]:
@@ -21,8 +61,19 @@ def update_password(new_username: str = Body(..., description="新用户名"), d
         user = current_user["user"]
         if db.query(User).filter(User.username == new_username).first():
             raise HTTPException(status_code=400, detail="用户名已存在")
+
+        # 检查用户是否有头像，且头像文件存在
+        if user.avatar:
+            file_ext = Path(user.avatar).suffix.lower()
+            if file_ext in [".png", ".jpg", ".jpeg", ".gif"]:
+                old_avatar_path = os.path.join(AVATAR_DIR, f"user_{user.username}{file_ext}")
+                if os.path.exists(old_avatar_path):
+                    new_avatar_path = os.path.join(AVATAR_DIR, f"user_{new_username}{file_ext}")
+                    os.rename(old_avatar_path, new_avatar_path)
+                    user.avatar = f"/{AVATAR_DIR}/user_{new_username}{file_ext}"
         user.username = new_username
         db.commit()
+        # 生成新 token
         payload = {"username": new_username, "account_type": current_user["account_type"],
                    "factory": current_user["factory"], "exp": datetime.now(timezone.utc) + timedelta(minutes=15)}
         new_token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
@@ -32,7 +83,7 @@ def update_password(new_username: str = Body(..., description="新用户名"), d
     except Exception as e:
         db.rollback()
         logger.error(e)
-        raise (HTTPException(status_code=500, detail=str(e)))
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.patch("/phone")
@@ -71,7 +122,6 @@ def verify_and_update_email(new_email: str = Body(..., description="新邮箱"),
         db.commit()
         logger.info(f"用户{current_user['user'].username}更新了邮箱为{new_email}")
         redis_client.delete(f"verification_code:{new_email}")
-        logger.info(f"删除了验证码{new_email}")
         return {"status": "success"}
     except Exception as e:
         db.rollback()

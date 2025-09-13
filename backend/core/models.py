@@ -11,6 +11,7 @@ class User(Base):
     account_type = Column(String(20), nullable=False, default='factory')  # 'headquarters' 或 'factory'
     phone = Column(String(20), nullable=True)
     email = Column(String(50), nullable=True)
+    avatar = Column(String(60), nullable=True)
 
 
 class MaterialData(Base):

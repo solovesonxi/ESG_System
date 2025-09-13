@@ -271,24 +271,120 @@ button {
 }
 
 
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+/* 极简暗黑风格深色主题，仅覆盖颜色、透明度、阴影，不改变布局 */
+.dark-theme .shared-form {
+    background: #181a1b;
+    color: #e0e0e0;
+    border: 1px solid #232526;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    backdrop-filter: blur(4px);
+    transition: box-shadow 0.2s, background 0.2s;
 }
-
-.data-table th, .data-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
+.dark-theme .shared-form:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.22);
 }
-
-.data-table th {
-    background-color: #f2f2f2;
+.dark-theme h1, .dark-theme legend {
+    color: #e0e0e0;
+    text-shadow: none;
+    animation: none;
 }
-
-.reason-input {
-    width: 100%;
-    min-height: 60px;
+.dark-theme .editable-field, .dark-theme input {
+    background: #232526;
+    color: #e0e0e0;
+    border: 1px solid #232526;
+    box-shadow: none;
+    transition: border-color 0.2s;
 }
-
+.dark-theme input:focus, .dark-theme .editable-field:focus {
+    border-color: #4a90e2;
+    box-shadow: none;
+}
+.dark-theme input:read-only:not(.calculated-field) {
+    background: #232526;
+    color: #bbb;
+    box-shadow: none;
+}
+.dark-theme .calculated-field {
+    background: #232526;
+    color: #b0b0b0;
+    border: 1px solid #232526;
+    box-shadow: none;
+}
+.dark-theme fieldset, .dark-theme .summary-fieldset {
+    background: #181a1b;
+    border: 1px solid #232526;
+    box-shadow: none;
+}
+.dark-theme .form-row, .dark-theme .form-group {
+    background: transparent;
+}
+.dark-theme label {
+    color: #b0b0b0;
+    text-shadow: none;
+}
+.dark-theme button {
+    background: #232526;
+    color: #e0e0e0;
+    border: 1px solid #232526;
+    box-shadow: none;
+    transition: background 0.2s;
+}
+.dark-theme button:hover:not(:disabled) {
+    background: #232526;
+    filter: brightness(1.1);
+    box-shadow: none;
+}
+.dark-theme button:disabled {
+    background: #232526;
+    color: #888;
+    box-shadow: none;
+}
+.dark-theme .custom-select .selected {
+    background: #232526;
+    color: #e0e0e0;
+    border: 1px solid #232526;
+    box-shadow: none;
+}
+.dark-theme .custom-select .options {
+    background: #232526;
+    border: 1px solid #232526;
+    color: #e0e0e0;
+    box-shadow: none;
+}
+.dark-theme .custom-select .option {
+    color: #e0e0e0;
+    transition: background 0.2s;
+}
+.dark-theme .custom-select .option:hover {
+    background: #232526;
+    color: #e0e0e0;
+}
+.dark-theme .selected-option {
+    background: #232526;
+    color: #e0e0e0;
+}
+.dark-theme .monthly-grid, .dark-theme .month-input {
+    background: transparent;
+}
+.dark-theme .data-table {
+    background: #232526;
+    color: #e0e0e0;
+    border-color: #232526;
+    box-shadow: none;
+}
+.dark-theme .data-table th {
+    background: #232526;
+    color: #e0e0e0;
+    border-bottom: 1px solid #232526;
+    text-shadow: none;
+}
+.dark-theme .data-table td {
+    color: #e0e0e0;
+    border-color: #2cb67d;
+}
+.dark-theme .reason-input {
+    background: #232323;
+    color: #e0e0e0;
+    border: 1.5px solid #2cb67d;
+    box-shadow: 0 0 8px #2cb67d80;
+}
