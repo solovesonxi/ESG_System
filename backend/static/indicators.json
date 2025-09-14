@@ -1,4 +1,321 @@
 {
+  "community": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "charityDonations": "charity_donations",
+      "communityInvestment": "community_investment",
+      "volunteerParticipants": "volunteer_participants",
+      "volunteerHours": "volunteer_hours"
+    }
+  },
+  "emission": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "categoryOne": "category_one",
+      "categoryTwo": "category_two",
+      "categoryThree": "category_three",
+      "categoryFour": "category_four",
+      "categoryFive": "category_five",
+      "categorySix": "category_six",
+      "total_revenue": "total_revenue",
+      "categoryThreeTotal": "category_three_total",
+      "totalEmission": "total_emission",
+      "emissionIntensity": "emission_intensity",
+      "voc": "voc",
+      "nmhc": "nmhc",
+      "benzene": "benzene",
+      "particulate": "particulate",
+      "nox_sox_other": "nox_sox_other",
+      "wasteGasTotal": "waste_gas_total"
+    }
+  },
+  "employment": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "fullTime": "full_time",
+      "partTime": "part_time",
+      "male": "male",
+      "female": "female",
+      "management": "management",
+      "managementFemale": "management_female",
+      "middle": "middle",
+      "general": "general",
+      "mainland": "mainland",
+      "overseas": "overseas",
+      "eduPhd": "edu_phd",
+      "eduMaster": "edu_master",
+      "eduBachelor": "edu_bachelor",
+      "eduJunior": "edu_junior",
+      "avgSocialFund": "avg_social_fund",
+      "incSocialFund": "inc_social_fund",
+      "age18_30": "age18_30",
+      "age31_45": "age31_45",
+      "age46_60": "age46_60",
+      "newHires": "new_hires",
+      "quitMale": "quit_male",
+      "quitFemale": "quit_female",
+      "quitMainland": "quit_mainland",
+      "quitOverseas": "quit_overseas",
+      "quit18_30": "quit18_30",
+      "quit31_45": "quit31_45",
+      "quit46_60": "quit46_60",
+      "quitManagement": "quit_management",
+      "quitMiddle": "quit_middle",
+      "quitGeneral": "quit_general",
+      "totalEmployees": "total_employees",
+      "quitTotal": "quit_total",
+      "turnoverRate": "turnover_rate",
+      "maleTurnoverRate": "male_turnover_rate",
+      "femaleTurnoverRate": "female_turnover_rate",
+      "mainlandTurnoverRate": "mainland_turnover_rate",
+      "overseasTurnoverRate": "overseas_turnover_rate",
+      "age18_30TurnoverRate": "age18_30_turnover_rate",
+      "age31_45TurnoverRate": "age31_45_turnover_rate",
+      "age46_60TurnoverRate": "age46_60_turnover_rate",
+      "managementTurnoverRate": "management_turnover_rate",
+      "middleTurnoverRate": "middle_turnover_rate",
+      "generalTurnoverRate": "general_turnover_rate"
+    }
+  },
+  "energy": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "purchasedPower": "purchased_power",
+      "renewableEnergyPower": "renewable_power",
+      "gasoline": "gasoline",
+      "diesel": "diesel",
+      "naturalGas": "natural_gas",
+      "otherEnergy": "other_energy",
+      "water": "water",
+      "coal": "coal",
+      "totalEnergyConsumption": "total_energy_consumption",
+      "turnover": "turnover",
+      "energyConsumptionIntensity": "energy_consumption_intensity"
+    }
+  },
+  "investment": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "envInvest": "env_invest",
+      "cleanTechInvest": "clean_tech_invest",
+      "climateInvest": "climate_invest",
+      "greenIncome": "green_income",
+      "totalInvestment": "total_investment",
+      "greenIncomeRatio": "green_income_ratio",
+      "totalRevenue": "total_revenue",
+      "envInvestIntensity": "env_invest_intensity"
+    }
+  },
+  "ip": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "patents": "patents",
+      "invPatents": "inv_patents",
+      "utilityPatents": "utility_patents",
+      "designPatents": "design_patents",
+      "grantedPatents": "granted_patents",
+      "softwareCopyrights": "software_copyrights",
+      "trademarks": "trademarks",
+      "newPatents": "new_patents",
+      "patentsTotal": "patents_total",
+      "invPatentsTotal": "inv_patents_total",
+      "invApplicationsTotal": "inv_applications_total",
+      "utilityPatentsTotal": "utility_patents_total",
+      "designPatentsTotal": "design_patents_total",
+      "grantedPatentsTotal": "granted_patents_total",
+      "softwareCopyrightsTotal": "software_copyrights_total",
+      "trademarksTotal": "trademarks_total"
+    }
+  },
+  "management": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "nationalGreenFactory": "national_green_factory",
+      "provincialGreenFactory": "provincial_green_factory",
+      "environmentalPenaltyIntensity": "environmental_penalty_intensity",
+      "environmentalPenaltyAmount": "environmental_penalty_amount",
+      "environmentalViolation": "environmental_violation"
+    }
+  },
+  "material": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "renewableInput": "renewable_input",
+      "nonRenewableInput": "non_renewable_input",
+      "renewableOutput": "renewable_output",
+      "nonRenewableOutput": "non_renewable_output",
+      "materialConsumption": "material_consumption",
+      "woodFiber": "wood_fiber",
+      "aluminum": "aluminum",
+      "packagingMaterial": "packaging_material",
+      "paper": "paper_consumption",
+      "total_revenue": "total_revenue",
+      "packagingIntensity": "packaging_intensity",
+      "paperIntensity": "paper_intensity",
+      "totalInput": "total_input",
+      "totalOutput": "total_output",
+      "renewableInputRatio": "renewable_input_ratio",
+      "renewableOutputRatio": "renewable_output_ratio"
+    }
+  },
+  "ohs": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "trainingCount": "training_count",
+      "trainingParticipants": "training_participants",
+      "trainingHours": "training_hours",
+      "injuryCount": "injury_count",
+      "incidentCount": "incident_count",
+      "fatalityCount": "fatality_count",
+      "lostWorkdays": "lost_workdays",
+      "safetyInvestment": "safety_investment",
+      "trainingCountTotal": "training_count_total",
+      "trainingParticipantsTotal": "training_participants_total",
+      "trainingHoursTotal": "training_hours_total",
+      "injuryCountTotal": "injury_count_total",
+      "incidentCountTotal": "incident_count_total",
+      "fatalityCountTotal": "fatality_count_total",
+      "lostWorkdaysTotal": "lost_workdays_total",
+      "safetyInvestmentTotal": "safety_investment_total",
+      "safetyManagers": "safety_managers",
+      "medicalChecks": "medical_checks",
+      "coverageRate": "coverage_rate",
+      "emergencyDrills": "emergency_drills",
+      "hazardsFound": "hazards_found",
+      "occupationalChecks": "occupational_checks"
+    }
+  },
+  "responsibility": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "complaints": "complaints",
+      "handled": "handled",
+      "qualityIssues": "quality_issues",
+      "recalls": "recalls",
+      "shipments": "shipments",
+      "customerSatisfaction": "customer_satisfaction",
+      "cyberIncidents": "cyber_incidents",
+      "complaintsTotal": "complaints_total",
+      "handledTotal": "handled_total",
+      "handledRate": "handled_rate",
+      "customerSatisfactionAverage": "customer_satisfaction_average",
+      "recallsTotal": "recall_total",
+      "recallRate": "recall_rate",
+      "qualityIssuesTotal": "quality_issues_total",
+      "cyberIncidentsTotal": "cyber_incidents_total"
+    }
+  },
+  "satisfaction": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "satisfaction": "satisfaction",
+      "annualAverage": "annual_average"
+    }
+  },
+  "supply": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "east": "east",
+      "south": "south",
+      "other": "other",
+      "totalSuppliers": "total_suppliers",
+      "envScreened": "env_screened",
+      "socScreened": "soc_screened",
+      "localAmount": "local_amount",
+      "totalAmount": "total_amount",
+      "envPenaltyCount": "env_penalty_count",
+      "envPenaltyAmount": "env_penalty_amount",
+      "cyberIncidents": "cyber_incidents",
+      "envRatio": "env_ratio",
+      "socRatio": "soc_ratio",
+      "localPurchaseRatio": "local_purchase_ratio"
+    }
+  },
+  "training": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "total": "total",
+      "trained": "trained",
+      "male": "male",
+      "female": "female",
+      "mgmt": "mgmt",
+      "middle": "middle",
+      "general": "general",
+      "hoursTotal": "hours_total",
+      "hoursMale": "hours_male",
+      "hoursFemale": "hours_female",
+      "hoursMgmt": "hours_mgmt",
+      "hoursMiddle": "hours_middle",
+      "hoursGeneral": "hours_general",
+      "coverageRate": "coverage_rate",
+      "maleRate": "male_rate",
+      "femaleRate": "female_rate",
+      "mgmtRate": "mgmt_rate",
+      "middleRate": "middle_rate",
+      "generalRate": "general_rate"
+    }
+  },
+  "waste": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "epe": "epe",
+      "plasticPaper": "plastic_paper",
+      "domesticIndustrial": "domestic_industrial",
+      "hazardous": "hazardous",
+      "wastewater": "wastewater",
+      "nonHazardousTotal": "non_hazardous_total",
+      "recyclableTotal": "recyclable_total",
+      "totalWaste": "total_waste",
+      "disposalRequiredTotal": "disposal_required_total",
+      "recycleRate": "recycle_rate",
+      "totalRevenue": "total_revenue",
+      "protectiveReuseRate": "protective_reuse_rate",
+      "exceedEvents": "exceed_events",
+      "hazardousIntensity": "hazardous_intensity",
+      "wastewaterIntensity": "wastewater_intensity"
+    }
+  },
+  "water": {
+    "submit": {
+      "factory": "factory",
+      "year": "year",
+      "industrial": "industrial",
+      "domestic": "domestic",
+      "reclaimed": "reclaimed",
+      "total": "total",
+      "industrialTotal": "industrial_total",
+      "industrialDrainage": "industrial_drainage",
+      "industrialConsumption": "industrial_consumption",
+      "industrialRecycled": "industrial_recycled",
+      "domesticTotal": "domestic_total",
+      "domesticDrainage": "domestic_drainage",
+      "domesticConsumption": "domestic_consumption",
+      "domesticRecycled": "domestic_recycled",
+      "reclaimedTotal": "reclaimed_total",
+      "totalRevenue": "total_revenue",
+      "reclaimedIntensity": "reclaimed_intensity",
+      "totalIntake": "total_intake",
+      "totalDrainage": "total_drainage",
+      "totalConsumption": "total_consumption",
+      "totalRecycled": "total_recycled",
+      "waterIntensity": "water_intensity",
+      "waterRecycleRate": "water_recycle_rate"
+    }
+  },
   "env_quant": {
     "material": [
       "renewable_input",

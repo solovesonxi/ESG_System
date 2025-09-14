@@ -5,6 +5,7 @@ from core.dependencies import get_db
 from core.models import ManagementData
 from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import ManagementSubmission
+from core.utils import submit_data
 
 router = APIRouter(prefix="/quantitative/management", tags=["定量数据-环境管理"])
 
@@ -28,22 +29,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
 
 
 @router.post("")
-async def submit_data(data: ManagementSubmission, db: Session = Depends(get_db),
+async def submit_management_data(data: ManagementSubmission, db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
-    try:
-        require_factory(data.factory, current_user)
-        db_record = ManagementData(factory=data.factory, year=data.year,
-                                   national_green_factory=data.national_green_factory,
-                                   provincial_green_factory=data.provincial_green_factory,
-                                   environmental_penalty_intensity=data.environmental_penalty_intensity,
-                                   environmental_penalty_amount=data.environmental_penalty_amount,
-                                   environmental_violation=data.environmental_violation)
-        merged_record = db.merge(db_record)
-        db.commit()
-        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
+    return await submit_data(db, ManagementData, data, current_user, "management")
 
 
 @router.get("/{factory}/{year}")

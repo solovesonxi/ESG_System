@@ -5,6 +5,7 @@ from core.dependencies import get_db
 from core.models import InvestmentData
 from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import InvestmentSubmission
+from core.utils import submit_data
 
 router = APIRouter(prefix="/quantitative/investment", tags=["定量数据-资金投入"])
 
@@ -27,21 +28,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
 
 
 @router.post("")
-async def submit_data(data: InvestmentSubmission, db: Session = Depends(get_db),
+async def submit_investment_data(data: InvestmentSubmission, db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
-    try:
-        require_factory(data.factory, current_user)
-        db_record = InvestmentData(factory=data.factory, year=data.year, env_invest=data.envInvest,
-                                   clean_tech_invest=data.cleanTechInvest, climate_invest=data.climateInvest,
-                                   green_income=data.greenIncome, total_investment=data.totalInvestment,
-                                   green_income_ratio=data.greenIncomeRatio, total_revenue=data.totalRevenue,
-                                   env_invest_intensity=data.envInvestIntensity)
-        merged_record = db.merge(db_record)
-        db.commit()
-        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"资金投入数据提交失败: {str(e)}")
+    return await submit_data(db, InvestmentData, data, current_user, "investment")
 
 
 @router.get("/{factory}/{year}")

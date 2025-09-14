@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import EmploymentData, TrainingData, OHSData, SatisfactionData, LaborReason
-from core.permissions import require_access, get_current_user, require_factory
+from core.permissions import require_access, get_current_user, require_factory, check_factory_year
 from core.utils import _calc_comparison
 
 router = APIRouter(prefix="/analytical/social_quantitative_labor", tags=["分析数据-社会定量-劳工"])
@@ -87,16 +87,16 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
                                                                    gv(emp_prev, 'management'))
         data["雇佣"]["employment_category_middle"] = entry_avg("employment_category_middle", gv(emp_cur, 'middle'),
                                                                gv(emp_prev, 'middle'))
-        data["雇佣"]["employment_category_general"] = entry_avg("employment_category_general",
-                                                                gv(emp_cur, 'general'), gv(emp_prev, 'general'))
+        data["雇佣"]["employment_category_general"] = entry_avg("employment_category_general", gv(emp_cur, 'general'),
+                                                                gv(emp_prev, 'general'))
 
         # 管理层女性占比
         mgmt_female_rate_cur = None
         mgmt_female_rate_prev = None
         try:
             if gv(emp_cur, 'management') and gv(emp_cur, 'management') != 0:
-                mgmt_female_rate_cur = round(
-                    (gv(emp_cur, 'management_female') or 0) / gv(emp_cur, 'management') * 100, 2)
+                mgmt_female_rate_cur = round((gv(emp_cur, 'management_female') or 0) / gv(emp_cur, 'management') * 100,
+                    2)
             if gv(emp_prev, 'management') and gv(emp_prev, 'management') != 0:
                 mgmt_female_rate_prev = round(
                     (gv(emp_prev, 'management_female') or 0) / gv(emp_prev, 'management') * 100, 2)
@@ -106,10 +106,10 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
                                                                 mgmt_female_rate_prev)
 
         # 地区
-        data["雇佣"]["employment_region_mainland"] = entry_avg("employment_region_mainland",
-                                                               gv(emp_cur, 'mainland'), gv(emp_prev, 'mainland'))
-        data["雇佣"]["employment_region_overseas"] = entry_avg("employment_region_overseas",
-                                                               gv(emp_cur, 'overseas'), gv(emp_prev, 'overseas'))
+        data["雇佣"]["employment_region_mainland"] = entry_avg("employment_region_mainland", gv(emp_cur, 'mainland'),
+                                                               gv(emp_prev, 'mainland'))
+        data["雇佣"]["employment_region_overseas"] = entry_avg("employment_region_overseas", gv(emp_cur, 'overseas'),
+                                                               gv(emp_prev, 'overseas'))
 
         # 年龄组
         for key in ['age18_30', 'age31_45', 'age46_60']:
@@ -155,8 +155,7 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
         # 学时总量与人均
         hours_total_cur = gv(trn_cur, 'hours_total')
         hours_total_prev = gv(trn_prev, 'hours_total')
-        data["教育和培训"]["training_hours_total"] = entry("training_hours_total", hours_total_cur,
-                                                           hours_total_prev)
+        data["教育和培训"]["training_hours_total"] = entry("training_hours_total", hours_total_cur, hours_total_prev)
 
         avg_hours_cur = None
         avg_hours_prev = None
@@ -180,8 +179,7 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
                 return None
 
         data["教育和培训"]["training_avg_hours_male"] = entry("training_avg_hours_male",
-                                                              safe_div(gv(trn_cur, 'hours_male'),
-                                                                       gv(trn_cur, 'male')),
+                                                              safe_div(gv(trn_cur, 'hours_male'), gv(trn_cur, 'male')),
                                                               safe_div(gv(trn_prev, 'hours_male'),
                                                                        gv(trn_prev, 'male')))
         data["教育和培训"]["training_avg_hours_female"] = entry("training_avg_hours_female",
@@ -190,8 +188,7 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
                                                                 safe_div(gv(trn_prev, 'hours_female'),
                                                                          gv(trn_prev, 'female')))
         data["教育和培训"]["training_avg_hours_mgmt"] = entry("training_avg_hours_mgmt",
-                                                              safe_div(gv(trn_cur, 'hours_mgmt'),
-                                                                       gv(trn_cur, 'mgmt')),
+                                                              safe_div(gv(trn_cur, 'hours_mgmt'), gv(trn_cur, 'mgmt')),
                                                               safe_div(gv(trn_prev, 'hours_mgmt'),
                                                                        gv(trn_prev, 'mgmt')))
         data["教育和培训"]["training_avg_hours_middle"] = entry("training_avg_hours_middle",
@@ -222,8 +219,7 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
                 fatality_rate_prev = round(gv(ohs_prev, 'fatality_count_total') / total_employees_prev * 100, 4)
         except Exception:
             pass
-        data["职业健康与安全"]["ohs_fatality_rate"] = entry("ohs_fatality_rate", fatality_rate_cur,
-                                                            fatality_rate_prev)
+        data["职业健康与安全"]["ohs_fatality_rate"] = entry("ohs_fatality_rate", fatality_rate_cur, fatality_rate_prev)
 
         # OHS 人均受训学时（使用培训参与人数）
         ohs_avg_hours_cur = None
@@ -251,10 +247,14 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
 
 
 @router.post("")
-async def save_reasons(factory: str = Body(...), year: int = Body(...), reasons: Dict[str, str] = Body(...),
+async def save_reasons(factory: str = Body(..., description="工厂名称"), year: int = Body(..., description="统计年份"),
+                       reasons: Dict[str, str] = Body(...), isSubmitted: bool = Body(..., description="是否提交"),
                        db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
         require_factory(factory, current_user)
+        check = check_factory_year(factory, year, db, isSubmitted, 2)
+        if check["status"] == "fail":
+            return check
         for indicator, reason in reasons.items():
             existing = db.query(LaborReason).filter(LaborReason.factory == factory, LaborReason.year == year,
                                                     LaborReason.indicator == indicator).first()

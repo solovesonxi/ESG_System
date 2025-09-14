@@ -5,6 +5,7 @@ from core.dependencies import get_db
 from core.models import WasteData
 from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import WasteSubmission
+from core.utils import submit_data
 
 router = APIRouter(prefix="/quantitative/waste", tags=["定量数据-废弃物"])
 
@@ -27,24 +28,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
 
 
 @router.post("")
-async def submit_data(data: WasteSubmission, db: Session = Depends(get_db),
+async def submit_waste_data(data: WasteSubmission, db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
-    try:
-        require_factory(data.factory, current_user)
-        db_record = WasteData(factory=data.factory, year=data.year, epe=data.epe, plastic_paper=data.plasticPaper,
-                              domestic_industrial=data.domesticIndustrial, hazardous=data.hazardous,
-                              wastewater=data.wastewater, non_hazardous_total=data.nonHazardousTotal,
-                              recyclable_total=data.recyclableTotal, total_waste=data.totalWaste,
-                              disposal_required_total=data.disposalRequiredTotal, recycle_rate=data.recycleRate,
-                              total_revenue=data.totalRevenue, protective_reuse_rate=data.protectiveReuseRate,
-                              exceed_events=data.exceedEvents, hazardous_intensity=data.hazardousIntensity,
-                              wastewater_intensity=data.wastewaterIntensity)
-        merged_record = db.merge(db_record)
-        db.commit()
-        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"废弃物数据提交失败: {str(e)}")
+    return await submit_data(db, WasteData, data, current_user, "waste")
 
 
 @router.get("/{factory}/{year}")

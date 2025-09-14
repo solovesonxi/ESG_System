@@ -5,6 +5,7 @@ from core.dependencies import get_db
 from core.models import OHSData
 from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import OHSSubmission
+from core.utils import submit_data
 
 router = APIRouter(prefix="/quantitative/ohs", tags=["定量数据-职健与安全"])
 
@@ -30,29 +31,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
 
 
 @router.post("")
-async def submit_data(data: OHSSubmission, db: Session = Depends(get_db),
+async def submit_ohs_data(data: OHSSubmission, db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
-    try:
-        require_factory(data.factory, current_user)
-        db_record = OHSData(factory=data.factory, year=data.year, training_count=data.trainingCount,
-                            training_participants=data.trainingParticipants, training_hours=data.trainingHours,
-                            injury_count=data.injuryCount, incident_count=data.incidentCount,
-                            fatality_count=data.fatalityCount, lost_workdays=data.lostWorkdays,
-                            safety_investment=data.safetyInvestment, training_count_total=data.trainingCountTotal,
-                            training_participants_total=data.trainingParticipantsTotal,
-                            training_hours_total=data.trainingHoursTotal, injury_count_total=data.injuryCountTotal,
-                            incident_count_total=data.incidentCountTotal, fatality_count_total=data.fatalityCountTotal,
-                            lost_workdays_total=data.lostWorkdaysTotal,
-                            safety_investment_total=data.safetyInvestmentTotal, safety_managers=data.safetyManagers,
-                            medical_checks=data.medicalChecks, coverage_rate=data.coverageRate,
-                            emergency_drills=data.emergencyDrills, hazards_found=data.hazardsFound,
-                            occupational_checks=data.occupationalChecks)
-        merged_record = db.merge(db_record)
-        db.commit()
-        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
+    return await submit_data(db, OHSData, data, current_user, "ohs")
 
 
 @router.get("/{factory}/{year}")

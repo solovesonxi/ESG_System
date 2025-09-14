@@ -96,14 +96,19 @@ const cancelEditing = () => {
   tempEdits.value = {}
 }
 
-const submitEdit = async () => {
+const submitEdit = async (ifSubmit) => {
   try {
-    await apiClient.post('/analytical/social_qualitative_other', {
+    const response = await apiClient.post('/analytical/social_qualitative_other', {
       factory: factory.value,
       year: parseInt(year.value),
-      data: tempEdits.value
+      data: tempEdits.value,
+      isSubmitted: ifSubmit
     })
-    alert('保存成功！')
+    if (response.data.status === 'success') {
+      alert('数据提交成功!')
+    } else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+    }
   } catch (e) {
     console.error(e)
     alert(`保存失败: ${e.response?.data?.detail || e.message}`)

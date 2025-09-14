@@ -99,17 +99,20 @@ const cancelEditing = () => {
 };
 
 
-const submitEdit = async () => {
+const submitEdit = async (ifSubmit) => {
   try {
     console.log("初始数据：", data.value)
     console.log("提交原因：", tempEdits.value)
     const response = await apiClient.post(`/analytical/env_qualitative`, {
       factory: factory.value,
       year: parseInt(year.value),
-      data: tempEdits.value
+      data: tempEdits.value,
+      isSubmitted: ifSubmit
     });
     if (response.data.status === 'success') {
-      alert('排放数据提交成功!')
+      alert('数据提交成功!')
+    }else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('提交原因分析失败:', error);

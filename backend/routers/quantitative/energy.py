@@ -5,6 +5,7 @@ from core.dependencies import get_db
 from core.models import EnergyData
 from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import EnergySubmission
+from core.utils import submit_data
 
 router = APIRouter(prefix="/quantitative/energy", tags=["定量数据-能源"])
 
@@ -28,21 +29,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
 
 
 @router.post("")
-async def submit_data(data: EnergySubmission, db: Session = Depends(get_db),
+async def submit_energy_data(data: EnergySubmission, db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
-    try:
-        require_factory(data.factory, current_user)
-        db_record = EnergyData(factory=data.factory, year=data.year, purchased_power=data.purchasedPower,
-                               renewable_power=data.renewableEnergyPower, gasoline=data.gasoline, diesel=data.diesel,
-                               natural_gas=data.naturalGas, other_energy=data.otherEnergy, water=data.water,
-                               coal=data.coal, total_energy_consumption=data.totalEnergyConsumption,
-                               turnover=data.turnover, energy_consumption_intensity=data.energyConsumptionIntensity)
-        merged_record = db.merge(db_record)
-        db.commit()
-        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
+    return await submit_data(db, EnergyData, data, current_user, "energy")
 
 
 @router.get("/{factory}/{year}")

@@ -3,7 +3,7 @@
     <form>
       <BaseInfoSelector @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
-        <legend>{{ year }}年{{ month }}月社区参与数据统计</legend>
+        <legend>{{ year }}年{{ month }}月社区参与与志愿活动数据统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
         <div v-else class="form-row">
           <div class="form-group">
@@ -102,10 +102,6 @@ onBeforeUnmount(() => {
 
 // —— 获取数据（与能源统计风格相同） —— //
 const fetchData = async () => {
-  if (!factory.value || !year.value) {
-    resetFormData()
-    return
-  }
   isLoading.value = true
   try {
     const resp = await apiClient.get('/quantitative/community', {
@@ -146,15 +142,12 @@ const resetFormData = () => {
 }
 
 // —— 提交编辑（保持原字段，不改动内容，只改样式） —— //
-const submitEdit = async () => {
-  if (!factory.value) {
-    alert('请选择工厂名称')
-    return
-  }
+const submitEdit = async (ifSubmit) => {
   try {
     const payload = {
       factory: factory.value,
       year: Number(year.value),
+      month: month.value,
       charityDonations: [...formData.charityDonations],
       communityInvestment: [...formData.communityInvestment],
       volunteerParticipants: [...formData.volunteerParticipants],
@@ -162,18 +155,19 @@ const submitEdit = async () => {
       charityDonationsTotal: charityDonationsTotal.value,
       communityInvestmentTotal: communityInvestmentTotal.value,
       volunteerParticipantsTotal: volunteerParticipantsTotal.value,
-      volunteerHoursTotal: volunteerHoursTotal.value
+      volunteerHoursTotal: volunteerHoursTotal.value,
+      isSubmitted: ifSubmit
     }
-
-    const resp = await apiClient.post('/quantitative/community', payload)
-    if (resp.data?.status === 'success') {
-      alert('社区参与数据提交成功!')
+    const response = await apiClient.post('/quantitative/community', payload)
+    if (response.data.status === 'success') {
+      alert('数据提交成功!')
+    }else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (err) {
     console.error('提交失败:', err)
     alert(`提交失败: ${err.response?.data?.detail || err.message}`)
   } finally {
-    // 与能源一致：提交后退出编辑并刷新
     isEditing.value = false
     await fetchData()
   }

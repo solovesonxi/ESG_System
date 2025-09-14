@@ -34,7 +34,6 @@ app.include_router(login.router)
 app.include_router(register.router)
 app.include_router(verification.router)
 app.include_router(update.router)
-
 app.include_router(material.router)
 app.include_router(energy.router)
 app.include_router(water.router)

@@ -3,6 +3,7 @@
     <button v-if="!isEditing" class="edit-button" @click="$emit('start-edit')">✏️</button>
     <div v-else class="edit-actions">
       <button @click="$emit('cancel-edit')" class="cancel-button">取消</button>
+      <button @click="$emit('save-edit')" class="save-button">保存</button>
       <button @click="$emit('submit-edit')" class="submit-button">提交</button>
     </div>
   </div>
@@ -13,7 +14,7 @@ defineProps({
   isEditing: Boolean
 });
 
-defineEmits(['start-edit', 'cancel-edit', 'submit-edit']);
+defineEmits(['start-edit', 'cancel-edit', 'save-edit', 'submit-edit']);
 </script>
 
 <style scoped>
@@ -62,7 +63,7 @@ defineEmits(['start-edit', 'cancel-edit', 'submit-edit']);
   transform: translateX(-50%) translateY(0);
 }
 
-.edit-button, .cancel-button, .submit-button {
+.edit-button, .cancel-button, .submit-button, .save-button {
   padding: 10px 16px;
   border: none;
   border-radius: 6px;
@@ -106,6 +107,16 @@ defineEmits(['start-edit', 'cancel-edit', 'submit-edit']);
 
 .submit-button:hover {
   background-color: #1976d2;
+  transform: translateY(-2px);
+}
+
+.save-button {
+  background-color: #ff9800;
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #f57c00;
   transform: translateY(-2px);
 }
 </style>

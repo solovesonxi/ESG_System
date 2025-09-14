@@ -1,36 +1,28 @@
 <template>
   <div class="dashboard">
+    <div class="theme-toggle">
+      <label class="theme-label">☀️</label>
+      <input type="checkbox" v-model="isDark" @click="toggleTheme" class="theme-switch"/>
+      <label class="theme-label">🌙</label>
+    </div>
+    <h1 class="welcome-text">欢迎回来, {{ authStore.user?.username }}!</h1>
+    <!-- 快速跳转区 -->
+    <div class="quick-actions">
+      <div v-for="action in quickActions" :key="action.label" class="action-card" @click="navigateTo(action.path)">
+        <span class="action-label">{{ action.label }}</span>
+      </div>
+    </div>
     <div class="main-layout">
       <!-- 左侧主内容区 -->
       <div class="main-left">
-        <div class="theme-toggle">
-          <label class="theme-label">☀️</label>
-          <input type="checkbox" v-model="isDark" @click="toggleTheme" class="theme-switch" />
-          <label class="theme-label">🌙</label>
-        </div>
-        <h1 class="welcome-text">欢迎回来, {{ authStore.user?.username }}!</h1>
-        <!-- 快速跳转区 -->
-        <div class="quick-actions">
-          <div
-              v-for="action in quickActions"
-              :key="action.label"
-              class="action-card"
-              @click="navigateTo(action.path)"
-          >
-            <span class="action-label">{{ action.label }}</span>
-          </div>
-        </div>
-        <!-- 填报进度区 -->
-        <div class="progress-section">
-          <h2>各页面填报进度</h2>
-          <div class="progress-list">
-            <div class="progress-card" v-for="item in progressData" :key="item.title">
-              <div class="progress-title">{{ item.title }}</div>
-              <div class="progress-bar-bg">
-                <div class="progress-bar" :style="{ width: item.percent + '%' }"></div>
-              </div>
-              <div class="progress-percent">{{ item.percent }}%</div>
+        <h2>各页面填报进度</h2>
+        <div class="progress-list">
+          <div class="progress-card" v-for="item in progressData" :key="item.title">
+            <div class="progress-title">{{ item.title }}</div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar" :style="{ width: item.percent + '%' }"></div>
             </div>
+            <div class="progress-percent">{{ item.percent }}%</div>
           </div>
         </div>
       </div>
@@ -43,13 +35,7 @@
             <span v-if="unreadCount > 0" class="unread-badge">{{ unreadCount }}</span>
           </div>
           <div class="message-list">
-            <div
-                v-for="msg in messages"
-                :key="msg.id"
-                class="message-card"
-                :class="{ unread: !msg.read }"
-                @click="openMessage(msg)"
-            >
+            <div v-for="msg in messages" :key="msg.id" class="message-card" :class="{ unread: !msg.read }" @click="openMessage(msg)">
               <span class="message-title">{{ msg.title }}</span>
               <span v-if="!msg.read" class="red-dot"></span>
               <span class="message-date">{{ msg.date }}</span>
@@ -60,12 +46,7 @@
         <div class="history-section">
           <h2>最近操作</h2>
           <div class="history-list">
-            <div
-                v-for="record in historyRecords"
-                :key="record.id"
-                class="history-card"
-                @click="openHistory(record)"
-            >
+            <div v-for="record in historyRecords" :key="record.id" class="history-card" @click="openHistory(record)">
               <span class="history-title">{{ record.title }}</span>
               <span class="history-date">{{ record.date }}</span>
             </div>
@@ -144,7 +125,7 @@ const showMessageModal = ref(false);
 const currentMessage = ref(null);
 const showHistoryModal = ref(false);
 const currentHistory = ref(null);
-const isDark = ref(true);
+const isDark = ref(false);
 
 const navigateTo = (path) => {
   authStore.isDataMode = !path.includes('env-quantitative');
@@ -177,10 +158,16 @@ function toggleTheme() {
 
 <style scoped>
 .dashboard {
-  padding: 2rem;
+  padding: 3rem;
   color: #222;
-  background: linear-gradient(120deg, #e3f2fd 0%, #f1f8e9 100%);
-  min-height: 90vh;
+  background: linear-gradient(120deg, #f8d3d3 0%, #b6e1ee 50%, #d1da79 100%);
+  background-size: 300% 300%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  animation: gradientFlow 8s ease infinite;
+  position: relative;
+  overflow: hidden;
 }
 
 .theme-toggle {
@@ -195,7 +182,7 @@ function toggleTheme() {
 
 .theme-label {
   font-size: 1.5rem;
-  color: #1976d2;
+  color: #66aff6;
   margin: 0 0.5rem;
 }
 
@@ -223,7 +210,7 @@ function toggleTheme() {
 }
 
 .theme-switch:checked {
-  background: #1976d2;
+  background: #66aff6;
 }
 
 .theme-switch:checked:before {
@@ -232,24 +219,36 @@ function toggleTheme() {
 
 .main-layout {
   display: flex;
-  gap: 2rem;
+  gap: 3rem;
   max-width: 1200px;
   margin: 0 auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
 }
 
 .main-left {
-  flex: 2;
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .main-right {
-  flex: 1;
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  justify-content: flex-start;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .welcome-text {
@@ -266,11 +265,11 @@ function toggleTheme() {
 }
 
 .action-card {
-  background: #1976d2;
+  background: #66aff6;
   color: #fff;
   border-radius: 10px;
-  padding: 1.2rem 2.5rem;
-  font-size: 1.2rem;
+  padding: 0.8rem 1.2rem;
+  font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(33, 150, 243, 0.08);
@@ -278,6 +277,7 @@ function toggleTheme() {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 0.2rem 0;
 }
 
 .action-card:hover {
@@ -289,12 +289,7 @@ function toggleTheme() {
   letter-spacing: 1px;
 }
 
-.progress-section {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.08);
-  padding: 1rem 1.2rem;
-}
+
 
 .progress-section h2 {
   font-size: 1.2rem;
@@ -304,14 +299,16 @@ function toggleTheme() {
 
 .progress-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  width: 100%;
 }
 
 .progress-card {
   background: #e3f2fd;
   border-radius: 8px;
-  padding: 1rem;
+  padding: 0.5rem 0.7rem;
+  margin: 0.2rem 0;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -319,7 +316,7 @@ function toggleTheme() {
 
 .progress-title {
   font-size: 1rem;
-  color: #1976d2;
+  color: #66aff6;
   margin-bottom: 0.5rem;
 }
 
@@ -334,7 +331,7 @@ function toggleTheme() {
 
 .progress-bar {
   height: 100%;
-  background: #43a047;
+  background: linear-gradient(120deg, #a26b04 0%, #4dfc56 100%);
   border-radius: 8px;
   transition: width 0.5s;
 }
@@ -349,8 +346,20 @@ function toggleTheme() {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(33, 150, 243, 0.08);
-  padding: 1rem 1.2rem;
+  padding: 0.7rem 0.8rem;
   position: relative;
+}
+
+.message-section h2,
+.history-section h2 {
+  font-size: 1.2rem;
+  color: #000000;
+  margin-bottom: 1rem;
+}
+
+.dark-theme .message-section h2,
+.dark-theme .history-section h2 {
+  color: #e0e0e0;
 }
 
 .section-header {
@@ -379,7 +388,8 @@ function toggleTheme() {
 .message-card {
   background: #e3f2fd;
   border-radius: 8px;
-  padding: 0.7rem 1rem;
+  padding: 0.5rem 0.7rem;
+  margin: 0.2rem 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -396,7 +406,7 @@ function toggleTheme() {
 
 .message-title {
   flex: 1;
-  color: #1976d2;
+  color: #66aff6;
 }
 
 .red-dot {
@@ -418,14 +428,9 @@ function toggleTheme() {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(33, 150, 243, 0.08);
-  padding: 1rem 1.2rem;
+  padding: 0.7rem 0.8rem;
 }
 
-.history-section h2 {
-  font-size: 1.2rem;
-  color: #1976d2;
-  margin-bottom: 0.5rem;
-}
 
 .history-list {
   display: flex;
@@ -436,7 +441,8 @@ function toggleTheme() {
 .history-card {
   background: #e3f2fd;
   border-radius: 8px;
-  padding: 0.7rem 1rem;
+  padding: 0.5rem 0.7rem;
+  margin: 0.2rem 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -447,7 +453,7 @@ function toggleTheme() {
 
 .history-title {
   flex: 1;
-  color: #1976d2;
+  color: #66aff6;
 }
 
 .history-date {
@@ -473,8 +479,8 @@ function toggleTheme() {
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 24px rgba(33, 150, 243, 0.18);
-  padding: 2rem 2.5rem;
-  min-width: 320px;
+  padding: 1.2rem 1.5rem;
+  min-width: 260px;
   max-width: 90vw;
 }
 
@@ -484,7 +490,7 @@ function toggleTheme() {
 }
 
 .modal-footer button {
-  background: #1976d2;
+  background: #66aff6;
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -521,12 +527,16 @@ function toggleTheme() {
 
 
 .dark-theme .dashboard {
-  background: #121212;
+  background: linear-gradient(60deg, #15010b 0%, #340530 50%, #040225 100%);
+  background-size: 300% 300%;
+  animation: gradientFlow 8s ease infinite;
 }
 
-/* 移除布局相关属性，只保留颜色相关 */
-.dark-theme .main-layout {
-  background: #121212;
+
+@keyframes gradientFlow {
+  0% { background-position: 0 0; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0 0; }
 }
 
 .dark-theme .welcome-text {
@@ -534,16 +544,16 @@ function toggleTheme() {
 }
 
 .dark-theme .action-card {
-  background: #230172;
+  background: #6816cc;
   color: #fff;
 }
 
 .dark-theme .action-card:hover {
   background: #6200ea;
 }
-.dark-theme .progress-section {
-  background: #1c1b1b;
-}
+
+
+
 .dark-theme .progress-card {
   background: #2c2c2c;
 }
@@ -557,7 +567,7 @@ function toggleTheme() {
 }
 
 .dark-theme .progress-bar {
-  background: #82b1ff;
+  background: linear-gradient(120deg, #930651 0%,  #82b1ff 100%);
 }
 
 .dark-theme .message-section {
@@ -595,5 +605,19 @@ function toggleTheme() {
 
 .dark-theme .modal-footer button:hover {
   background: #3700b3;
+}
+
+.dark-theme .main-left {
+  background: #232323;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  color: #e0e0e0;
+}
+
+.dark-theme .main-right {
+  background: #232323;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  color: #e0e0e0;
 }
 </style>

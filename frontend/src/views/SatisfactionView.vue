@@ -71,10 +71,6 @@ onBeforeUnmount(() => {
 
 // —— 获取数据（与能源统计风格相同） —— //
 const fetchData = async () => {
-  if (!factory.value || !year.value) {
-    resetFormData()
-    return
-  }
   isLoading.value = true
   try {
     const resp = await apiClient.get('/quantitative/satisfaction', {
@@ -103,34 +99,30 @@ const setArray = (reactiveArr, sourceArr) => {
   for (let i = 0; i < 12; i++) reactiveArr[i] = toNum(sourceArr?.[i] ?? 0)
 }
 
-// —— 重置（与能源一致的重置思路） —— //
 const resetFormData = () => {
   setArray(formData.satisfaction, Array(12).fill(0))
 }
 
-// —— 提交编辑（保持原字段，不改动内容，只改样式） —— //
-const submitEdit = async () => {
-  if (!factory.value) {
-    alert('请选择工厂名称')
-    return
-  }
+const submitEdit = async (ifSubmit) => {
   try {
     const payload = {
       factory: factory.value,
       year: Number(year.value),
+      month: month.value,
       satisfaction: [...formData.satisfaction],
-      annualAverage: annualAverage.value
+      annualAverage: annualAverage.value,
+      isSubmitted: ifSubmit
     }
-
-    const resp = await apiClient.post('/quantitative/satisfaction', payload)
-    if (resp.data?.status === 'success') {
-      alert('满意度数据提交成功!')
+    const response = await apiClient.post('/quantitative/satisfaction', payload)
+    if (response.data.status === 'success') {
+      alert('数据提交成功!')
+    }else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (err) {
     console.error('提交失败:', err)
     alert(`提交失败: ${err.response?.data?.detail || err.message}`)
   } finally {
-    // 与能源一致：提交后退出编辑并刷新
     isEditing.value = false
     await fetchData()
   }

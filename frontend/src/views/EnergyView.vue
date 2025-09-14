@@ -233,10 +233,6 @@ onBeforeUnmount(() => {
 
 // 获取数据方法
 const fetchData = async () => {
-  if (!factory.value || !year.value) {
-    resetFormData();
-    return;
-  }
   isLoading.value = true;
   try {
     const response = await apiClient.get(`/quantitative/energy`, {
@@ -287,12 +283,12 @@ const resetFormData = () => {
 };
 
 // 提交编辑方法
-const submitEdit = async () => {
+const submitEdit = async (ifSubmit) => {
   try {
-    // 准备提交的数据，确保字段名与后端一致
     const payload = {
       factory: factory.value,
       year: year.value,
+      month: month.value,
       purchasedPower: formData.value.purchasedPower,
       renewableEnergyPower: formData.value.renewableEnergyPower,
       gasoline: formData.value.gasoline,
@@ -303,11 +299,14 @@ const submitEdit = async () => {
       coal: formData.value.coal,
       totalEnergyConsumption: totalEnergyConsumption.value,
       turnover: formData.value.turnover,
-      energyConsumptionIntensity: energyConsumptionIntensity.value
+      energyConsumptionIntensity: energyConsumptionIntensity.value,
+      isSubmitted: ifSubmit
     };
     const response = await apiClient.post('/quantitative/energy', payload);
     if (response.data.status === 'success') {
-      alert('数据提交成功!');
+      alert('数据提交成功!')
+    }else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('提交失败:', error);

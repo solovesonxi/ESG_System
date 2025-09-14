@@ -7,6 +7,7 @@ from pydantic import BaseModel
 class MaterialSubmission(BaseModel):
     factory: str
     year: int
+    month: int
 
     # 按月存储的字段（12个月数据）
     renewableInput: List[float]  # 可再生进料量 (T)
@@ -27,11 +28,13 @@ class MaterialSubmission(BaseModel):
     totalOutput: float  # 出料总量 (T)
     renewableInputRatio: float  # 可再生进料占比 (%)
     renewableOutputRatio: float  # 可再生出料占比 (%)
+    isSubmitted: bool = False
 
 
 class EnergySubmission(BaseModel):
     factory: str
     year: int
+    month: int
     purchasedPower: List[float]  # 12个月外购电量
     renewableEnergyPower: List[float]  # 12个月再生能源电量
     gasoline: List[float]  # 12个月汽油用量
@@ -44,11 +47,13 @@ class EnergySubmission(BaseModel):
     totalEnergyConsumption: float
     turnover: float
     energyConsumptionIntensity: float
+    isSubmitted: bool = False
 
 
 class WaterSubmission(BaseModel):
     factory: str
     year: int
+    month: int
 
     # 月度数据
     industrial: List[float]
@@ -80,11 +85,13 @@ class WaterSubmission(BaseModel):
     totalRecycled: float
     waterIntensity: float
     waterRecycleRate: float
+    isSubmitted: bool = False
 
 
 class EmissionSubmission(BaseModel):
     factory: str
     year: int
+    month: int
 
     # 温室气体排放数据
     categoryOne: float
@@ -107,11 +114,13 @@ class EmissionSubmission(BaseModel):
     particulate: float
     nox_sox_other: float
     wasteGasTotal: float
+    isSubmitted: bool = False
 
 
 class WasteSubmission(BaseModel):
     factory: str
     year: int
+    month: int
 
     epe: List[float]
     plasticPaper: List[float]
@@ -128,11 +137,13 @@ class WasteSubmission(BaseModel):
     exceedEvents: int
     hazardousIntensity: float
     wastewaterIntensity: float
+    isSubmitted: bool = False
 
 
 class InvestmentSubmission(BaseModel):
     factory: str
     year: int
+    month: int
 
     envInvest: List[float]
     cleanTechInvest: List[float]
@@ -142,21 +153,25 @@ class InvestmentSubmission(BaseModel):
     greenIncomeRatio: float
     totalRevenue: float
     envInvestIntensity: float
+    isSubmitted: bool = False
 
 
 class ManagementSubmission(BaseModel):
     factory: str
     year: int
-    national_green_factory: List[float]  # 国家级绿色工厂（个）
-    provincial_green_factory: List[float]  # 省级绿色工厂（个）
-    environmental_penalty_intensity: List[float]  # 环境处罚强度（%）
-    environmental_penalty_amount: List[float]  # 环境处罚额（万元）
-    environmental_violation: List[int]  # 环境违规（次）
+    month: int
+    nationalGreenFactory: List[float]  # 国家级绿色工厂（个）
+    provincialGreenFactory: List[float]  # 省级绿色工厂（个）
+    environmentalPenaltyIntensity: List[float]  # 环境处罚强度（%）
+    environmentalPenaltyAmount: List[float]  # 环境处罚额（万元）
+    environmentalViolation: List[int]  # 环境违规（次）
+    isSubmitted: bool = False
 
 
 class EmploymentSubmission(BaseModel):
     factory: str
     year: int
+    month: int
 
     # 员工构成数据
     fullTime: List[int]
@@ -210,11 +225,13 @@ class EmploymentSubmission(BaseModel):
     managementTurnoverRate: float
     middleTurnoverRate: float
     generalTurnoverRate: float
+    isSubmitted: bool = False
 
 
 class TrainingSubmission(BaseModel):
     factory: str
     year: int
+    month: int
 
     # 基础数据
     total: int
@@ -238,11 +255,13 @@ class TrainingSubmission(BaseModel):
     mgmtRate: float
     middleRate: float
     generalRate: float
+    isSubmitted: bool = False
 
 
 class OHSSubmission(BaseModel):
     factory: str
     year: int
+    month: int
 
     # 月度数据
     trainingCount: List[float]
@@ -271,18 +290,22 @@ class OHSSubmission(BaseModel):
     fatalityCountTotal: int
     lostWorkdaysTotal: int
     safetyInvestmentTotal: float
+    isSubmitted: bool = False
 
 
 class SatisfactionSubmission(BaseModel):
     factory: str
     year: int
+    month: int
     satisfaction: List[float]  # 12个月份的满意度百分比
     annualAverage: float  # 年度平均满意度
+    isSubmitted: bool = False
 
 
 class SupplySubmission(BaseModel):
     factory: str
     year: int
+    month: int
 
     # 供应商分布
     east: int
@@ -307,21 +330,14 @@ class SupplySubmission(BaseModel):
     envRatio: float
     socRatio: float
     localPurchaseRatio: float
-
-
-class EnvManagementSubmission(BaseModel):
-    national_green_factory: int
-    provincial_green_factory: int
-    env_penalty_intensity: float
-    env_penalty_amount: float
-    env_violations: int
-    reason: str
+    isSubmitted: bool = False
 
 
 # 产品责任
-class ProductResponsibilitySubmission(BaseModel):
+class ResponsibilitySubmission(BaseModel):
     factory: str
     year: int
+    month: int
 
     complaints: list[int]
     handled: list[int]
@@ -338,12 +354,14 @@ class ProductResponsibilitySubmission(BaseModel):
     recallRate: float
     qualityIssuesTotal: int
     cyberIncidentsTotal: int
+    isSubmitted: bool = False
 
 
 # 知识产权
 class IPSubmission(BaseModel):
     factory: str
     year: int
+    month: int
     patents: List[int]
     invPatents: List[int]
     invApplications: List[int]
@@ -361,16 +379,19 @@ class IPSubmission(BaseModel):
     grantedPatentsTotal: int
     softwareCopyrightsTotal: int
     trademarksTotal: int
+    isSubmitted: bool = False
 
 
 # 社区参与
 class CommunitySubmission(BaseModel):
-    year: int
     factory: str
+    year: int
+    month: int
     charityDonations: List[float]
     communityInvestment: List[float]
     volunteerParticipants: List[int]
     volunteerHours: List[float]
+    isSubmitted: bool = False
 
 
 class GovernanceQualitativeItem(BaseModel):
@@ -386,3 +407,4 @@ class GovernanceQualitativeSubmission(BaseModel):
     factory: str
     year: int
     data: Dict[str, Dict[str, GovernanceQualitativeItem]]
+    isSubmitted: bool = False

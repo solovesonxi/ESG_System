@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.dependencies import indicators
-from core.models import EnvQualData
-from core.permissions import require_access, require_factory, get_current_user
+from core.models import EnvQualData, YearInfo
+from core.permissions import require_access, require_factory, get_current_user, check_factory_year
 
 router = APIRouter(prefix="/analytical/env_qualitative", tags=["分析数据-环境定性"])
 
@@ -32,12 +32,15 @@ async def get_data(factory: str, year: int, db: Session = Depends(get_db),
 
 
 @router.post("")
-async def save_data(factory: str = Body(...), year: int = Body(...),
-                    data: Dict[str, Dict[str, Dict[str, str]]] = Body(...), db: Session = Depends(get_db),
+async def save_data(factory: str = Body(..., description="工厂名称"), year: int = Body(..., description="统计年份"),
+                    data: Dict[str, Dict[str, Dict[str, str]]] = Body(...),
+                    isSubmitted: bool = Body(..., description="是否提交"), db: Session = Depends(get_db),
                     current_user: dict = Depends(get_current_user)):
     try:
         require_factory(factory, current_user)
-        existing_data = db.query(EnvQualData).filter_by(factory=factory, year=year).first()
+        check = check_factory_year(factory, year, db, isSubmitted, 1)
+        if check["status"] == "fail":
+            return check
         comparisons = {}
         reasons = {}
         indicator_data = {}
@@ -46,16 +49,12 @@ async def save_data(factory: str = Body(...), year: int = Body(...),
                 indicator_data[indicator] = group.get("currentYear", "")
                 comparisons[indicator] = group.get("comparison", "")
                 reasons[indicator] = group.get("reason", "")
-        if existing_data:
-            for key, value in indicator_data.items():
-                setattr(existing_data, key, value)
-            existing_data.comparison = comparisons
-            existing_data.reasons = reasons
-        else:
-            new_data = EnvQualData(factory=factory, year=year, **indicator_data, comparison=comparisons,
-                                   reasons=reasons)
-            db.add(new_data)
-
+        check = check_factory_year(factory, year, db, isSubmitted, 1)
+        if check["status"] == "fail":
+            return  check
+        record = EnvQualData(factory=factory, year=year, **indicator_data, comparison=comparisons,
+                               reasons=reasons)
+        db.merge(record)
         db.commit()
         return {"status": "success", "message": "数据提交成功"}
     except Exception as e:

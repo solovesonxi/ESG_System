@@ -7,7 +7,7 @@
     </main>
     <FloatingBall v-if="isDataPage"/>
     <EditControls v-if="isDataPage && authStore.isFactory" :is-editing="isEditing" @start-edit="handleStartEdit" @cancel-edit="handleCancelEdit"
-                  @submit-edit="handleSubmitEdit"/>
+                  @save-edit="handleSubmitEdit(false)"  @submit-edit="handleSubmitEdit(true)"/>
     <canvas id="starry-bg"></canvas>
 </template>
 
@@ -24,7 +24,7 @@ const navBar = ref(null)
 const isEditing = ref(false)
 const currentComponent = ref(null)
 const route = useRoute()
-const isDataPage = computed(() => route.path !== '/' && route.path !== '/login'  && route.path !== '/account')
+const isDataPage = computed(() => route.path !== '/' && route.path !== '/login'  && route.path !== '/home' && route.path !== '/account')
 
 const handleStartEdit = () => {
   console.log('currentComponent:', currentComponent.value);
@@ -47,10 +47,10 @@ const handleCancelEdit = () => {
   }
 };
 
-const handleSubmitEdit = () => {
+const handleSubmitEdit = (ifSubmit) => {
   if (currentComponent.value && currentComponent.value.submitEdit) {
     console.log('提交编辑内容');
-    currentComponent.value.submitEdit();
+    currentComponent.value.submitEdit(ifSubmit);
     isEditing.value = false;
   } else {
     console.error('当前视图不支持提交编辑功能');

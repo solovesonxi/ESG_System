@@ -35,7 +35,7 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref, watch} from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import {CATEGORY, ENV_QUANT_INDICATORS} from '@/constants/indicators.js';
 import apiClient from "@/utils/axios.js";
 import {useSelectionStore} from "@/stores/selectionStore.js";
@@ -89,16 +89,20 @@ onMounted(() => {
   fetchData()
 })
 
-const submitEdit = async () => {
+const submitEdit = async (ifSubmit) => {
   try {
     const playLoad = {
       factory: factory.value,
       year: parseInt(year.value),
-      data: tempReasons.value
+      data: tempReasons.value,
+      isSubmitted: ifSubmit
     }
+    console.log(playLoad)
     const response = await apiClient.post(`/analytical/env_quantitative`, playLoad);
     if (response.data.status === 'success') {
-      alert('排放数据提交成功!')
+      alert('数据提交成功!')
+    }else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('提交原因分析失败:', error);

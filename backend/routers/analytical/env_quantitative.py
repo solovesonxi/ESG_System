@@ -3,9 +3,9 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 
-from core.dependencies import get_db, indicators
+from core.dependencies import get_db, indicators, logger
 from core.models import MaterialData, EnergyData, WaterData, EmissionData, WasteData, InvestmentData, ManagementData
-from core.permissions import get_current_user, require_access, require_factory
+from core.permissions import get_current_user, require_access, require_factory, check_factory_year
 
 router = APIRouter(prefix="/analytical/env_quantitative", tags=["分析数据-环境定量"])
 
@@ -57,7 +57,7 @@ async def get_data(factory: str = Query(..., description="工厂名称"), year: 
         result["investment"] = fetch_and_process_data(db, InvestmentData, factory, year,
                                                       envquant_indicators["investment"])
         result["management"] = fetch_and_process_data(db, ManagementData, factory, year,
-                                                      envquant_indicators["management"],  [0, 1, 2])
+                                                      envquant_indicators["management"], [0, 1, 2])
         if not any(result.values()):
             raise HTTPException(status_code=404, detail="未找到环境定量数据")
         return result
@@ -67,20 +67,23 @@ async def get_data(factory: str = Query(..., description="工厂名称"), year: 
 
 @router.post("")
 async def save_reasons(factory: str = Body(..., description="工厂名称"), year: int = Body(..., description="统计年份"),
-                       data: Dict[str, Dict[str, str]] = Body(...), db: Session = Depends(get_db),
-                       current_user: dict = Depends(get_current_user)):
+                       data: Dict[str, Dict[str, str]] = Body(...), isSubmitted: bool = Body(..., description="是否提交"),
+                       db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
         require_factory(factory, current_user)
+        check = check_factory_year(factory, year, db, isSubmitted, 0)
+        if check["status"] == "fail":
+            return check
         reason_mapping = {"materialReasons": (MaterialData, data["material"]),
-                          "energyReasons": (EnergyData, data["energy"]),
-                          "waterReasons": (WaterData, data["water"]),
+                          "energyReasons": (EnergyData, data["energy"]), "waterReasons": (WaterData, data["water"]),
                           "emissionReasons": (EmissionData, data["emission"]),
                           "wasteReasons": (WasteData, data["waste"]),
                           "investmentReasons": (InvestmentData, data["investment"]),
                           "managementReasons": (ManagementData, data["management"])}
         for model_class, reasons in reason_mapping.values():
-            if data := db.query(model_class).filter_by(factory=factory, year=year).first():
-                data.reasons = [v for (k, v) in reasons.items()]
+            if existing_data := db.query(model_class).filter_by(factory=factory, year=year).first():
+                existing_data.reasons = [v for (k, v) in reasons.items()]
+                logger.info(f"更新环境定量原因分析: {factory}, {year}, {model_class}, {reasons}")
         db.commit()
         return {"status": "success", "message": "原因分析提交成功"}
     except Exception as e:

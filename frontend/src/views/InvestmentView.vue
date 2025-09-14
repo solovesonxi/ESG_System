@@ -166,10 +166,6 @@ onBeforeUnmount(() => {
 
 // —— 获取数据（与能源统计风格相同） —— //
 const fetchData = async () => {
-  if (!factory.value || !year.value) {
-    resetFormData()
-    return
-  }
   isLoading.value = true
   try {
     const resp = await apiClient.get('/quantitative/investment', {
@@ -217,11 +213,12 @@ const resetFormData = () => {
 }
 
 // —— 提交编辑（保持原字段，不改动内容，只改样式） —— //
-const submitEdit = async () => {
+const submitEdit = async (ifSubmit) => {
   try {
     const payload = {
       factory: factory.value,
       year: Number(year.value),
+      month: month.value,
       envInvest: [...envInvest],
       cleanTechInvest: [...cleanTechInvest],
       climateInvest: [...climateInvest],
@@ -229,12 +226,14 @@ const submitEdit = async () => {
       totalInvestment: totalInvestment.value,
       totalRevenue: total_revenue.value,
       envInvestIntensity: envInvestIntensity.value,
-      greenIncomeRatio: greenIncomeRatio.value
+      greenIncomeRatio: greenIncomeRatio.value,
+      isSubmitted: ifSubmit
     }
-
-    const resp = await apiClient.post('/quantitative/investment', payload)
-    if (resp.data?.status === 'success') {
-      alert('资金投入数据提交成功!')
+    const response = await apiClient.post('/quantitative/investment', payload)
+    if (response.data.status === 'success') {
+      alert('数据提交成功!')
+    }else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (err) {
     console.error('提交失败:', err)

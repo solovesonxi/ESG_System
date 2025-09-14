@@ -16,7 +16,12 @@
             </router-link>
           </template>
           <template v-else>
-            <div class="dropdown-trigger" @mouseenter="handleDropdownEnter(route.name)" @mouseleave="handleDropdownLeave">
+            <div
+              class="dropdown-trigger"
+              :class="{ 'router-link-active': isDropdownActive(route) }"
+              @mouseenter="handleDropdownEnter(route.name)"
+              @mouseleave="handleDropdownLeave"
+            >
               <span class="link-text">{{ route.label }}</span>
               <i class="arrow-down"></i>
               <div class="link-hover-effect"></div>
@@ -91,28 +96,24 @@ const handleScroll = () => {
   lastScrollY.value = currentScrollY;
 };
 
+// 新增：右上角区域检测逻辑
+function handleMouseMove(e) {
+  const { clientX, clientY } = e;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  showLogout.value = clientX > w * 0.7 && clientY < h * 0.3;
+}
+
 onMounted(() => {
   window.addEventListener('scroll', handleScroll, { passive: true });
+  window.addEventListener('mousemove', handleMouseMove);
 });
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
+  window.removeEventListener('mousemove', handleMouseMove);
 });
 
-const handleNavbarEnter = () => {
-  clearTimeout(hideTimeout);
-  showLogout.value = true;
-};
-
-const handleNavbarLeave = () => {
-  hideTimeout = setTimeout(() => {
-    if (!document.querySelector('.logout-dropdown:hover')) {
-      showLogout.value = false;
-    }
-  }, 150);
-};
-
-// 修复下拉菜单逻辑，参考登出按钮的丝滑交互
 const handleDropdownEnter = (dropdownName = null) => {
   clearTimeout(dropdownTimeout);
   clearTimeout(hideTimeout);
@@ -127,7 +128,7 @@ const handleDropdownLeave = () => {
       showLogout.value = false;
       activeDropdown.value = null;
     }
-  }, 150);
+  }, 100);
 };
 
 // 下拉菜单容器的鼠标事件
@@ -138,7 +139,7 @@ const handleMenuEnter = () => {
 const handleMenuLeave = () => {
   dropdownTimeout = setTimeout(() => {
     activeDropdown.value = null;
-  }, 150);
+  }, 100);
 };
 
 const handleLogout = () => {
@@ -188,7 +189,8 @@ const dataModeItems = [
     children: [
       {name: 'supply', path: '/supply', label: '供应链'},
       {name: 'responsibility', path: '/responsibility', label: '产品责任'},
-      {name: 'ip', path: '/ip', label: '知识产权'}
+      {name: 'ip', path: '/ip', label: '知识产权'},
+      {name: 'community', path: '/community', label: '社区参与与志愿活动'}
     ]
   },
   {name: 'account', path: '/account', label: '账号管理'}
@@ -213,6 +215,12 @@ watch(() => route.path, (newPath) => {
   localStorage.setItem(`lastPath_${currentMode}`, newPath);
   console.log("路由变化，更新lastPath_" + currentMode + "由" + route.path + "变为" + newPath)
 });
+
+// 新增方法：判断下拉父项是否激活
+const isDropdownActive = (route) => {
+  if (!route.children) return false;
+  return route.children.some(child => isActive(child.path));
+};
 </script>
 
 <style scoped>
@@ -356,7 +364,7 @@ watch(() => route.path, (newPath) => {
   top: 100%;
   left: 50%;
   transform: translateX(-50%) translateY(-10px) scale(0.95);
-  background: linear-gradient(145deg, #1e1e3f 0%, #3f1e36 100%);
+  background: linear-gradient(145deg, #2b2b85 0%, #4b052f 100%);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   opacity: 0;
   visibility: hidden;
@@ -428,7 +436,6 @@ watch(() => route.path, (newPath) => {
 .dropdown-menu a:hover {
   color: #fff;
   background: linear-gradient(90deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.2));
-  /* 移除transform和padding-left变化，保持完整宽度 */
   padding: 14px 0;
 }
 
@@ -451,24 +458,24 @@ watch(() => route.path, (newPath) => {
 .dropdown-menu a .link-text {
   display: inline-block;
   width: 100%;
-  padding: 0 20px; /* 在link-text上添加左右内边距 */
+  padding-left: 10px;
   box-sizing: border-box;
   position: relative;
   z-index: 1;
+  word-break: break-all;
 }
 
 .dropdown-menu a:hover .link-text {
-  padding-left: 24px; /* 悬停时给紫色条让出空间 */
-  padding-right: 20px;
+  padding-left: 20px;
 }
 
 .link-text {
   color: inherit;
   text-shadow: none;
   transition: all 0.3s ease;
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-all;
+  white-space: normal
 }
 
 .nav-list a.router-link-active .link-text {
@@ -499,7 +506,7 @@ watch(() => route.path, (newPath) => {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
   transform: translateX(-100%);
   opacity: 0;
-  transition: all 0.5s ease;
+  transition: all 0.2s ease;
 }
 
 .nav-list a:hover .link-hover-effect,
@@ -511,8 +518,8 @@ watch(() => route.path, (newPath) => {
 /* 登出下拉菜单 */
 .logout-dropdown {
   position: fixed;
-  top: 80px;
-  right: 20px;
+  top: 65px;
+  right: 5px;
   background: linear-gradient(145deg, #1e1e3f 0%, #2a2a5a 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -524,14 +531,14 @@ watch(() => route.path, (newPath) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   min-width: 160px;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .dropdown-enter-active,
 .dropdown-leave-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dropdown-enter-from,
@@ -573,7 +580,7 @@ watch(() => route.path, (newPath) => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
   font-weight: 600;
   box-shadow: 0 8px 25px rgba(238, 90, 82, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.1);

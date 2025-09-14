@@ -5,6 +5,7 @@ from core.dependencies import get_db
 from core.models import SupplyData
 from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import SupplySubmission
+from core.utils import submit_data
 
 router = APIRouter(prefix="/quantitative/supply", tags=["定量数据-供应链"])
 
@@ -27,23 +28,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
 
 
 @router.post("")
-async def submit_data(data: SupplySubmission, db: Session = Depends(get_db),
+async def submit_supply_data(data: SupplySubmission, db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
-    try:
-        require_factory(data.factory, current_user)
-        db_record = SupplyData(factory=data.factory, year=data.year, east=data.east, south=data.south, other=data.other,
-                               total_suppliers=data.totalSuppliers, env_screened=data.envScreened,
-                               soc_screened=data.socScreened, local_amount=data.localAmount,
-                               total_amount=data.totalAmount, env_penalty_count=data.envPenaltyCount,
-                               env_penalty_amount=data.envPenaltyAmount, cyber_incidents=data.cyberIncidents,
-                               env_ratio=data.envRatio, soc_ratio=data.socRatio,
-                               local_purchase_ratio=data.localPurchaseRatio)
-        merged_record = db.merge(db_record)
-        db.commit()
-        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"供应链数据提交失败: {str(e)}")
+    return await submit_data(db, SupplyData, data, current_user, "supply")
 
 
 @router.get("/{factory}/{year}")

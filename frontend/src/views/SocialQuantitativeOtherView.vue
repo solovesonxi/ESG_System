@@ -137,18 +137,23 @@ const cancelEditing = () => {
   tempReasons.value = {}
 }
 
-const submitEdit = async () => {
+const submitEdit = async (ifSubmit) => {
   try {
     const reasonsMap = {}
     Object.entries(tempReasons.value).forEach(([indicator, reason]) => {
       if (reason && reason.trim() !== '') reasonsMap[indicator] = reason
     })
-    await apiClient.post('/analytical/social_quantitative_other', {
+    const response = await apiClient.post('/analytical/social_quantitative_other', {
       factory: factory.value,
       year: parseInt(year.value),
-      reasons: reasonsMap
+      reasons: reasonsMap,
+      isSubmitted: ifSubmit
     })
-    alert('原因提交成功！')
+    if (response.data.status === 'success') {
+      alert('数据提交成功!')
+    } else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+    }
   } catch (e) {
     console.error(e)
     alert(`提交原因失败: ${e.response?.data?.detail || e.message}`)

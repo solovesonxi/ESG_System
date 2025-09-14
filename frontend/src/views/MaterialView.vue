@@ -171,14 +171,9 @@ onBeforeUnmount(() => {
 
 // 获取数据方法
 const fetchData = async () => {
-  if (!factory.value || !year.value) {
-    resetFormData()
-    return
-  }
   isLoading.value = true
   try {
     const response = await apiClient.get(`/quantitative/material`, {params: {factory: factory.value, year: year.value}})
-    console.log(response.data)
     if (response.data && response.data.data) {
       const data = response.data.data;
       formData.value = {
@@ -224,23 +219,26 @@ const resetFormData = () => {
 }
 
 // 提交编辑方法
-const submitEdit = async () => {
+const submitEdit = async (ifSubmit) => {
   try {
     const payload = {
       factory: factory.value,
       year: year.value,
-      month: month.value, // 添加当前月份
+      month: month.value,
       ...formData.value,
       packagingIntensity: packagingIntensity.value,
       paperIntensity: paperIntensity.value,
       totalInput: totalInput.value,
       totalOutput: totalOutput.value,
       renewableInputRatio: renewableInputRatio.value,
-      renewableOutputRatio: renewableOutputRatio.value
+      renewableOutputRatio: renewableOutputRatio.value,
+      isSubmitted: ifSubmit
     }
     const response = await apiClient.post('/quantitative/material', payload);
     if (response.data.status === 'success') {
       alert('数据提交成功!')
+    }else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('提交失败:', error)

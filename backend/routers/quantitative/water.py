@@ -5,6 +5,7 @@ from core.dependencies import get_db
 from core.models import WaterData
 from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import WaterSubmission
+from core.utils import submit_data
 
 router = APIRouter(prefix="/quantitative/water", tags=["定量数据-水资源"])
 
@@ -34,29 +35,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
 
 
 @router.post("")
-async def submit_data(data: WaterSubmission, db: Session = Depends(get_db),
+async def submit_water_data(data: WaterSubmission, db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
-    try:
-        require_factory(data.factory, current_user)
-        db_record = WaterData(factory=data.factory, year=data.year, industrial=data.industrial, domestic=data.domestic,
-                              reclaimed=data.reclaimed, total=data.total, industrial_total=data.industrialTotal,
-                              industrial_drainage=data.industrialDrainage,
-                              industrial_consumption=data.industrialConsumption,
-                              industrial_recycled=data.industrialRecycled, domestic_total=data.domesticTotal,
-                              domestic_drainage=data.domesticDrainage, domestic_consumption=data.domesticConsumption,
-                              domestic_recycled=data.domesticRecycled, reclaimed_total=data.reclaimedTotal,
-                              total_revenue=data.totalRevenue, reclaimed_intensity=data.reclaimedIntensity,
-                              total_intake=data.totalIntake, total_drainage=data.totalDrainage,
-                              total_consumption=data.totalConsumption, total_recycled=data.totalRecycled,
-                              water_intensity=data.waterIntensity, water_recycle_rate=data.waterRecycleRate)
-
-        merged_record = db.merge(db_record)
-        db.commit()
-        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"数据提交失败: {str(e)}")
-    finally:
-        db.close()
+    return await submit_data(db, WaterData, data, current_user, "water")
 
 
 @router.get("/{factory}/{year}")

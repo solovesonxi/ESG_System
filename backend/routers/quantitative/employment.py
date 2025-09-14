@@ -5,6 +5,7 @@ from core.dependencies import get_db
 from core.models import EmploymentData
 from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import EmploymentSubmission
+from core.utils import submit_data
 
 router = APIRouter(prefix="/quantitative/employment", tags=["定量数据-雇佣"])
 
@@ -33,40 +34,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
 
 
 @router.post("")
-async def submit_data(data: EmploymentSubmission, db: Session = Depends(get_db),
+async def submit_employment_data(data: EmploymentSubmission, db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
-    try:
-        require_factory(data.factory, current_user)
-        db_record = EmploymentData(factory=data.factory, year=data.year, full_time=data.fullTime,
-                                   part_time=data.partTime, male=data.male, female=data.female,
-                                   management=data.management, management_female=data.managementFemale,
-                                   middle=data.middle, general=data.general, mainland=data.mainland,
-                                   overseas=data.overseas, edu_phd=data.eduPhd, edu_master=data.eduMaster,
-                                   edu_bachelor=data.eduBachelor, edu_junior=data.eduJunior,
-                                   avg_social_fund=data.avgSocialFund, inc_social_fund=data.incSocialFund,
-                                   age18_30=data.age18_30, age31_45=data.age31_45, age46_60=data.age46_60,
-                                   new_hires=data.newHires, quit_male=data.quitMale, quit_female=data.quitFemale,
-                                   quit_mainland=data.quitMainland, quit_overseas=data.quitOverseas,
-                                   quit18_30=data.quit18_30, quit31_45=data.quit31_45, quit46_60=data.quit46_60,
-                                   quit_management=data.quitManagement, quit_middle=data.quitMiddle,
-                                   quit_general=data.quitGeneral, total_employees=data.totalEmployees,
-                                   quit_total=data.quitTotal, turnover_rate=data.turnoverRate,
-                                   male_turnover_rate=data.maleTurnoverRate,
-                                   female_turnover_rate=data.femaleTurnoverRate,
-                                   mainland_turnover_rate=data.mainlandTurnoverRate,
-                                   overseas_turnover_rate=data.overseasTurnoverRate,
-                                   age18_30_turnover_rate=data.age18_30TurnoverRate,
-                                   age31_45_turnover_rate=data.age31_45TurnoverRate,
-                                   age46_60_turnover_rate=data.age46_60TurnoverRate,
-                                   management_turnover_rate=data.managementTurnoverRate,
-                                   middle_turnover_rate=data.middleTurnoverRate,
-                                   general_turnover_rate=data.generalTurnoverRate)
-        merged_record = db.merge(db_record)
-        db.commit()
-        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"雇佣数据提交失败: {str(e)}")
+    return await submit_data(db, EmploymentData, data, current_user, "employment")
 
 
 @router.get("/{factory}/{year}")

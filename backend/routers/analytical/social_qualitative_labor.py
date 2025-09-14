@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import LaborQualitative
-from core.permissions import require_access, get_current_user, require_factory
+from core.permissions import require_access, get_current_user, require_factory, check_factory_year
 
 router = APIRouter(prefix="/analytical/social_qualitative_labor", tags=["分析数据-社会定性-劳工"])
 
@@ -48,12 +48,16 @@ async def get_labor_qualitative(factory: str = Query(...), year: int = Query(...
 
 
 @router.post("")
-async def save_labor_qualitative(factory: str = Body(...), year: int = Body(...),
+async def save_labor_qualitative(factory: str = Body(..., description="工厂名称"),
+                                 year: int = Body(..., description="统计年份"),
+                                 isSubmitted: bool = Body(..., description="是否提交"),
                                  data: Dict[str, Dict[str, Dict[str, str]]] = Body(...), db: Session = Depends(get_db),
                                  current_user: dict = Depends(get_current_user)):
     try:
         require_factory(factory, current_user)
-        # data: {类别: { 指标: {currentText, lastText, comparisonText, reason} }}
+        check = check_factory_year(factory, year, db, isSubmitted, 3)
+        if check["status"] == "fail":
+            return check
         for category, indicators in data.items():
             for indicator, payload in indicators.items():
                 r = db.query(LaborQualitative).filter(LaborQualitative.factory == factory,

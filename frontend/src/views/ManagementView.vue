@@ -102,10 +102,6 @@ onBeforeUnmount(() => {
 
 // 获取数据方法
 const fetchData = async () => {
-  if (!factory.value || !year.value) {
-    resetFormData();
-    return;
-  }
   isLoading.value = true;
   try {
     const response = await apiClient.get(`/quantitative/management`, {
@@ -147,20 +143,24 @@ const resetFormData = () => {
 };
 
 // 提交编辑方法
-const submitEdit = async () => {
+const submitEdit = async (ifSubmit) => {
   try {
     const payload = {
       factory: factory.value,
       year: year.value,
-      national_green_factory: formData.value.nationalGreenFactory,
-      provincial_green_factory: formData.value.provincialGreenFactory,
-      environmental_penalty_intensity: formData.value.environmentalPenaltyIntensity,
-      environmental_penalty_amount: formData.value.environmentalPenaltyAmount,
-      environmental_violation: formData.value.environmentalViolation
+      month: month.value,
+      nationalGreenFactory: formData.value.nationalGreenFactory,
+      provincialGreenFactory: formData.value.provincialGreenFactory,
+      environmentalPenaltyIntensity: formData.value.environmentalPenaltyIntensity,
+      environmentalPenaltyAmount: formData.value.environmentalPenaltyAmount,
+      environmentalViolation: formData.value.environmentalViolation,
+      isSubmitted: ifSubmit
     };
     const response = await apiClient.post('/quantitative/management', payload);
     if (response.data.status === 'success') {
-      alert('数据提交成功!');
+      alert('数据提交成功!')
+    }else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('提交失败:', error);

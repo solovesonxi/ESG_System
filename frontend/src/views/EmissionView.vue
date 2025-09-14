@@ -185,10 +185,6 @@ const resetFormData = () => {
 };
 
 const fetchData = async () => {
-  if (!factory.value || !year.value) {
-    resetFormData();
-    return;
-  }
   try {
     const response = await apiClient.get(`/quantitative/emission`, {
       params: {factory: factory.value, year: year.value}
@@ -207,6 +203,8 @@ const fetchData = async () => {
       wasteGasData.benzene = data.benzene || 0;
       wasteGasData.particulate = data.particulate || 0;
       wasteGasData.nox_sox_other = data.nox_sox_other || 0;
+    }else {
+      resetFormData();
     }
   } catch (error) {
     console.error('获取数据失败:', error);
@@ -214,21 +212,25 @@ const fetchData = async () => {
   }
 };
 
-async function submitEdit() {
+async function submitEdit(ifSubmit) {
   try {
     const payload = {
       factory: factory.value,
       year: year.value,
+      month: month.value,
       ...emissionData,
       categoryThreeTotal: categoryThreeTotal.value,
       totalEmission: totalEmission.value,
       emissionIntensity: emissionIntensity.value,
       ...wasteGasData,
-      wasteGasTotal: wasteGasTotal.value
+      wasteGasTotal: wasteGasTotal.value,
+      isSubmitted: ifSubmit
     }
     const response = await apiClient.post('/quantitative/emission', payload)
     if (response.data.status === 'success') {
-      alert('排放数据提交成功!')
+      alert('数据提交成功!')
+    }else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('提交失败:', error)

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import GovernanceQualitative
-from core.permissions import require_access, get_current_user, require_factory
+from core.permissions import require_access, get_current_user, require_factory, check_factory_year
 from core.schemas import GovernanceQualitativeSubmission
 
 router = APIRouter(prefix="/analytical/governance", tags=["分析数据-管治定性"])
@@ -41,6 +41,9 @@ async def submit_data(data: GovernanceQualitativeSubmission, db: Session = Depen
                       current_user: dict = Depends(get_current_user)):
     try:
         require_factory(data.factory, current_user)
+        check = check_factory_year(data.factory, data.year, db, data.isSubmitted, 6)
+        if check["status"] == "fail":
+            return check
         # Delete existing records for the factory and year to avoid duplicates
         db.query(GovernanceQualitative).filter(GovernanceQualitative.factory == data.factory,
                                                GovernanceQualitative.year == data.year).delete()

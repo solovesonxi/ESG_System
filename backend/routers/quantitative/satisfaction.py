@@ -5,6 +5,7 @@ from core.dependencies import get_db
 from core.models import SatisfactionData
 from core.permissions import get_current_user, require_access, require_factory
 from core.schemas import SatisfactionSubmission
+from core.utils import submit_data
 
 router = APIRouter(prefix="/quantitative/satisfaction", tags=["定量数据-员工满意度"])
 
@@ -25,18 +26,9 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
 
 
 @router.post("")
-async def submit_data(data: SatisfactionSubmission, db: Session = Depends(get_db),
+async def submit_satisfaction_data(data: SatisfactionSubmission, db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
-    try:
-        require_factory(data.factory, current_user)
-        db_record = SatisfactionData(factory=data.factory, year=data.year, satisfaction=data.satisfaction,
-                                     annual_average=data.annualAverage)
-        merged_record = db.merge(db_record)
-        db.commit()
-        return {"status": "success", "factory": merged_record.factory, "year": merged_record.year}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"满意度数据提交失败: {str(e)}")
+    return await submit_data(db,SatisfactionData, data, current_user, "satisfaction")
 
 
 @router.get("/{factory}/{year}")

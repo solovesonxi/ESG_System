@@ -245,10 +245,6 @@ onBeforeUnmount(() => {
 
 // —— 获取数据（与能源统计风格相同） —— //
 const fetchData = async () => {
-  if (!factory.value || !year.value) {
-    resetFormData()
-    return
-  }
   isLoading.value = true
   try {
     const resp = await apiClient.get('/quantitative/waste', {
@@ -302,12 +298,12 @@ const resetFormData = () => {
   exceedEvents.value = 0
 }
 
-// —— 提交编辑（保持原字段，不改动内容，只改样式） —— //
-const submitEdit = async () => {
+const submitEdit = async (ifSubmit) => {
   try {
     const payload = {
       factory: factory.value,
       year: Number(year.value),
+      month: month.value,
       epe: [...epe],
       plasticPaper: [...plasticPaper],
       domesticIndustrial: [...domesticIndustrial],
@@ -322,12 +318,14 @@ const submitEdit = async () => {
       protectiveReuseRate: protectiveReuseRate.value,
       exceedEvents: exceedEvents.value,
       hazardousIntensity: hazardousIntensity.value,
-      wastewaterIntensity: wastewaterIntensity.value
+      wastewaterIntensity: wastewaterIntensity.value,
+      isSubmitted: ifSubmit
     }
-
-    const resp = await apiClient.post('/quantitative/waste', payload)
-    if (resp.data?.status === 'success') {
-      alert('废弃物数据提交成功!')
+    const response = await apiClient.post('/quantitative/waste', payload)
+    if (response.data.status === 'success') {
+      alert('数据提交成功!')
+    }else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (err) {
     console.error('提交失败:', err)

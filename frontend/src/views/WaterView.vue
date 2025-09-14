@@ -260,10 +260,6 @@ const reclaimedIntensity = computed(() => {
 
 // 获取数据方法
 const fetchData = async () => {
-  if (!factory.value || !year.value) {
-    resetFormData();
-    return;
-  }
   isLoading.value = true
   try {
     const response = await apiClient.get(`/quantitative/water`, {
@@ -311,12 +307,12 @@ const resetFormData = () => {
   waterData.totalRevenue = 0;
 };
 
-// 提交表单
-async function submitEdit() {
+async function submitEdit(ifSubmit) {
   try {
     const payload = {
       factory: factory.value,
       year: year.value,
+      month: month.value,
       // 月度数据
       industrial: [...monthlyWater.industrial],
       domestic: [...monthlyWater.domestic],
@@ -343,11 +339,14 @@ async function submitEdit() {
       totalConsumption: totalConsumption.value,
       totalRecycled: totalRecycled.value,
       waterIntensity: waterIntensity.value,
-      waterRecycleRate: waterRecycleRate.value
+      waterRecycleRate: waterRecycleRate.value,
+      isSubmitted: ifSubmit
     };
     const response = await apiClient.post('/quantitative/water', payload);
     if (response.data.status === 'success') {
-      alert('水资源数据提交成功!');
+      alert('数据提交成功!')
+    }else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('提交失败:', error);
