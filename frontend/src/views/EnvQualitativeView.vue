@@ -16,7 +16,9 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="(item, key) in indicators" :key="key">
+            <tr v-for="(item, key, index) in indicators" :key="key"
+                :class="['data-row', index % 2 === 0 ? 'even' : 'odd', hoveredRow === index ? 'hovered' : '']"
+                @mouseover="hoveredRow = index" @mouseleave="hoveredRow = null">
               <td>{{ ENV_QUAL_INDICATORS[category][key] || key }}</td>
               <td>{{ item.lastYear || '' }}</td>
               <td>
@@ -55,7 +57,6 @@ const year = computed(() => selectionStore.selectedYear)
 const data = ref({});
 const isEditing = ref(false);
 const tempEdits = ref({})
-
 
 const fetchData = async () => {
   try {
@@ -131,4 +132,3 @@ defineExpose({
   fetchData
 });
 </script>
-

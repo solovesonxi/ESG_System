@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.dependencies import indicators
-from core.models import EnvQualData, YearInfo
+from core.models import EnvQualData
 from core.permissions import require_access, require_factory, get_current_user, check_factory_year
 
 router = APIRouter(prefix="/analytical/env_qualitative", tags=["分析数据-环境定性"])
@@ -41,9 +41,9 @@ async def save_data(factory: str = Body(..., description="工厂名称"), year: 
         check = check_factory_year(factory, year, db, isSubmitted, 1)
         if check["status"] == "fail":
             return check
+        indicator_data = {}
         comparisons = {}
         reasons = {}
-        indicator_data = {}
         for category, items in data.items():
             for indicator, group in items.items():
                 indicator_data[indicator] = group.get("currentYear", "")

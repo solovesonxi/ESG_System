@@ -3,14 +3,14 @@ from typing import Dict
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 
-from core.dependencies import get_db
+from core.dependencies import get_db, indicators
 from core.models import LaborQualitative
 from core.permissions import require_access, get_current_user, require_factory, check_factory_year
 
 router = APIRouter(prefix="/analytical/social_qualitative_labor", tags=["分析数据-社会定性-劳工"])
 
 # 定性：劳动
-QUAL_INDICATORS = {"雇佣": ["员工聘用及解雇", "行业员工流失率", "光大同创的员工流失率与行业流失率的对比表", "薪酬管理"],
+QUAL_INDICATORS = {"雇佣": ["员工聘用及解雇", "行业员工流失率", "光大同创的员工流失率与行业流失率", "薪酬管理"],
                    "职业健康与安全": ["职业健康安全管理体系", "安全生产政策", "保障职业健康与安全目标",
                                       "保障职业健康与安全目标措施", "危害识别、风险评估和事故调查",
                                       "职业健康安全事务：工作者的参与、意见征询和沟通", "工作者职业健康安全培训",
@@ -29,18 +29,30 @@ async def get_labor_qualitative(factory: str = Query(...), year: int = Query(...
                                 current_user: dict = Depends(get_current_user)):
     try:
         require_access(factory, current_user)
-        rows = db.query(LaborQualitative).filter(LaborQualitative.factory == factory,
-                                                 LaborQualitative.year == year).all()
-        existing = {r.indicator: r for r in rows}
+        # 获取当前年数据
+        current_rows = db.query(LaborQualitative).filter(LaborQualitative.factory == factory,
+                                                         LaborQualitative.year == year).all()
+        current_data = {r.indicator: r for r in current_rows}
 
-        # 组装结构：{类别: {indicatorKey: {currentText, lastText, comparisonText, reason}}}
+        # 获取上一年数据
+        prev_rows = db.query(LaborQualitative).filter(LaborQualitative.factory == factory,
+                                                     LaborQualitative.year == year - 1).all()
+        prev_data = {r.indicator: r for r in prev_rows}
+
+        # 组装结构：{类别: {indicatorKey: {currentText, comparisonText, reason}}}
         result = {}
-        for category, indicators in QUAL_INDICATORS.items():
+        for category, indicator in indicators["social_qual_labor"].items():
             group = {}
-            for ind in indicators:
-                r = existing.get(ind)
-                group[ind] = {"currentText": r.current_text if r else "", "lastText": r.last_text if r else "",
-                              "comparisonText": r.comparison_text if r else "", "reason": r.reason if r else ""}
+            for ind in indicator:
+                current_record = current_data.get(ind)
+                prev_record = prev_data.get(ind)
+
+                group[ind] = {
+                    "currentText": current_record.current_text if current_record else "",
+                    "lastText": prev_record.current_text if prev_record else "",
+                    "comparisonText": current_record.comparison_text if current_record else "",
+                    "reason": current_record.reason if current_record else ""
+                }
             result[category] = group
         return result
     except Exception as e:
@@ -65,13 +77,11 @@ async def save_labor_qualitative(factory: str = Body(..., description="工厂名
                                                       LaborQualitative.indicator == indicator).first()
                 if r:
                     r.current_text = payload.get('currentText', r.current_text)
-                    r.last_text = payload.get('lastText', r.last_text)
                     r.comparison_text = payload.get('comparisonText', r.comparison_text)
                     r.reason = payload.get('reason', r.reason)
                 else:
                     db.add(LaborQualitative(factory=factory, year=year, indicator=indicator,
                                             current_text=payload.get('currentText', ''),
-                                            last_text=payload.get('lastText', ''),
                                             comparison_text=payload.get('comparisonText', ''),
                                             reason=payload.get('reason', '')))
         db.commit()

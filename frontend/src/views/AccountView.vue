@@ -173,7 +173,7 @@ const uploadAvatar = async (file) => {
   const formData = new FormData();
   formData.append('avatar', file);
   try {
-    const response = await apiClient.patch('/update/avatar', formData, {
+    const response = await apiClient.patch('/user/avatar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -258,7 +258,7 @@ const sendVerificationCode = async () => {
   showNotificationMessage('已发送验证码...有效期5分钟');
   try {
     const data = currentField.value === 'phone' ? {phone: editValue.value.trim()} : {email: editValue.value.trim()}
-    await apiClient.post('/verification', data);
+    await apiClient.post('/auth/verification', data);
   } catch (error) {
     console.error('验证码发送失败：', error);
     showNotificationMessage('验证码发送失败：' + error.response.data.detail, true);
@@ -284,19 +284,19 @@ const submitEdit = async () => {
   try {
     let response;
     if (currentField.value === 'username') {
-      response = await apiClient.patch('/update/username', editValue.value.trim());
+      response = await apiClient.patch('/user/username', editValue.value.trim());
     } else {
       if (!verificationCode.value.trim()) {
         showNotificationMessage('请输入验证码', true);
         return;
       }
       if (currentField.value === 'phone') {
-        response = await apiClient.patch('/update/phone', {
+        response = await apiClient.patch('/user/phone', {
           new_phone: editValue.value.trim(),
           code: verificationCode.value.trim()
         });
       } else if (currentField.value === 'email') {
-        response = await apiClient.patch('/update/email', {
+        response = await apiClient.patch('/user/email', {
           new_email: editValue.value.trim(),
           code: verificationCode.value.trim()
         });
@@ -350,7 +350,7 @@ const submitPassword = async () => {
   }
   showNotificationMessage('正在更新密码...');
   try {
-    const response = await apiClient.post('/update/password', {
+    const response = await apiClient.post('/user/password', {
       current_password: currentPassword.value,
       new_password: newPassword.value
     });

@@ -15,9 +15,17 @@
     <div class="main-layout">
       <!-- 左侧主内容区 -->
       <div class="main-left">
-        <h2>各页面填报进度</h2>
+        <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+          <h2 style="margin: 0;">{{ isAnalytical ? '原因分析模式' : '定量填报模式' }}进度</h2>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <select v-model="selectionStore.selectedYear" class="year-selector">
+              <option v-for="year in selectionStore.years" :key="year" :value="year">{{ year }}年</option>
+            </select>
+            <input type="checkbox" v-model="isAnalytical" class="theme-switch"/>
+          </div>
+        </div>
         <div class="progress-list">
-          <div class="progress-card" v-for="item in progressData" :key="item.title">
+          <div class="progress-card" v-for="item in currentProgressData" :key="item.title">
             <div class="progress-title">{{ item.title }}</div>
             <div class="progress-bar-bg">
               <div class="progress-bar" :style="{ width: item.percent + '%' }"></div>
@@ -35,7 +43,8 @@
             <span v-if="unreadCount > 0" class="unread-badge">{{ unreadCount }}</span>
           </div>
           <div class="message-list">
-            <div v-for="msg in messages" :key="msg.id" class="message-card" :class="{ unread: !msg.read }" @click="openMessage(msg)">
+            <div v-for="msg in messages" :key="msg.id" class="message-card" :class="{ unread: !msg.read }"
+                 @click="openMessage(msg)">
               <span class="message-title">{{ msg.title }}</span>
               <span v-if="!msg.read" class="red-dot"></span>
               <span class="message-date">{{ msg.date }}</span>
@@ -80,13 +89,16 @@
 <script setup>
 import {useAuthStore} from '@/stores/authStore';
 import {useRouter} from 'vue-router';
-import {computed, ref} from 'vue';
+import {computed, onMounted, ref, watch} from 'vue';
+import axios from '@/utils/axios';
+import {useSelectionStore} from "@/stores/selectionStore.js";
 
 const authStore = useAuthStore();
+const selectionStore = useSelectionStore();
 const router = useRouter();
 
 const quickActions = ref([
-  {label: '定量数据填报', path: '/material'},
+  {label: '月度填报', path: '/material'},
   {label: '年度分析', path: '/env-quantitative'},
   {label: '账号管理', path: '/account'},
 ]);
@@ -105,15 +117,24 @@ const messages = ref([
 
 const unreadCount = computed(() => messages.value.filter(m => !m.read).length);
 
-const progressData = ref([
-  {title: '环境定量', percent: 80},
-  {title: '环境定性', percent: 90},
-  {title: '社会定量-劳工', percent: 60},
-  {title: '社会定性-劳工', percent: 70},
-  {title: '社会定量-其他', percent: 20},
-  {title: '社会定性-其他', percent: 40},
-  {title: '治理定性', percent: 15},
+const isAnalytical = ref(false);
+const analyticalProgressData = ref([
+  {title: '环境定量', percent: 0},
+  {title: '环境定性', percent: 0},
+  {title: '社会定量-劳工', percent: 0},
+  {title: '社会定性-劳工', percent: 0},
+  {title: '社会定量-其他', percent: 0},
+  {title: '社会定性-其他', percent: 0},
+  {title: '治理定性', percent: 0},
 ]);
+const quantitativeProgressData = ref([
+  {title: '环境', percent: 0},
+  {title: '社会-劳工', percent: 0},
+  {title: '社会-其他', percent: 0},
+]);
+const currentProgressData = computed(() =>
+    isAnalytical.value ? analyticalProgressData.value : quantitativeProgressData.value
+);
 
 const historyRecords = ref([
   {id: 1, title: '提交环境定量数据', content: '你刚刚提交了环境定量数据，数据已保存。', date: '2025-09-13 09:20'},
@@ -154,6 +175,47 @@ function toggleTheme() {
   isDark.value = !isDark.value;
   document.body.classList.toggle('dark-theme', isDark.value);
 }
+
+// 获取定量进度数据
+const fetchQuantitativeProgress = async () => {
+  try {
+    const factory = selectionStore.selectedFactory;
+    const year = selectionStore.selectedYear;
+    const response1 = await axios.get(`/progress/quantitative?factory=${factory}&year=${year}`);
+    const response2 = await axios.get(`/progress/analytical?factory=${factory}&year=${year}`);
+    const data1 = response1.data;
+    const data2 = response2.data;
+    console.log("data1: ", data1);
+    console.log("data2: ", data2);
+    quantitativeProgressData.value = [
+      {title: '环境', percent: data1.environment || 0},
+      {title: '社会-劳工', percent: data1.social_labor || 0},
+      {title: '社会-其他', percent: data1.social_other || 0},
+    ];
+    analyticalProgressData.value = [
+      {title: '环境定量', percent: data2.env_quant || 0},
+      {title: '环境定性', percent: data2.env_qual || 0},
+      {title: '社会定量-劳工', percent: data2.social_quant_labor || 0},
+      {title: '社会定性-劳工', percent: data2.social_qual_labor || 0},
+      {title: '社会定量-其他', percent: data2.social_quant_other || 0},
+      {title: '社会定性-其他', percent: data2.social_qual_other || 0},
+      {title: '治理定性', percent: data2.governance || 0},
+    ];
+  } catch (error) {
+    console.error('获取进度数据失败:', error);
+  }
+};
+
+onMounted(() => {
+  fetchQuantitativeProgress();
+});
+
+// 监听年份变化，更新进度数据
+watch(() => selectionStore.selectedYear, (newYear, oldYear) => {
+  if (newYear !== oldYear) {
+    fetchQuantitativeProgress();
+  }
+});
 </script>
 
 <style scoped>
@@ -288,7 +350,6 @@ function toggleTheme() {
 .action-label {
   letter-spacing: 1px;
 }
-
 
 
 .progress-section h2 {
@@ -534,9 +595,15 @@ function toggleTheme() {
 
 
 @keyframes gradientFlow {
-  0% { background-position: 0 0; }
-  50% { background-position: 100% 100%; }
-  100% { background-position: 0 0; }
+  0% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0 0;
+  }
 }
 
 .dark-theme .welcome-text {
@@ -553,7 +620,6 @@ function toggleTheme() {
 }
 
 
-
 .dark-theme .progress-card {
   background: #2c2c2c;
 }
@@ -567,7 +633,7 @@ function toggleTheme() {
 }
 
 .dark-theme .progress-bar {
-  background: linear-gradient(120deg, #930651 0%,  #82b1ff 100%);
+  background: linear-gradient(120deg, #930651 0%, #82b1ff 100%);
 }
 
 .dark-theme .message-section {
@@ -610,14 +676,74 @@ function toggleTheme() {
 .dark-theme .main-left {
   background: #232323;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
   color: #e0e0e0;
 }
 
 .dark-theme .main-right {
   background: #232323;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  color: #e0e0e0;
+}
+
+.year-selector {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 2px solid #e3f2fd;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+  color: #333;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 175, 246, 0.1);
+  min-width: 100px;
+  outline: none;
+}
+
+.year-selector:hover {
+  border-color: #66aff6;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+  box-shadow: 0 4px 15px rgba(102, 175, 246, 0.2);
+  transform: translateY(-1px);
+}
+
+.year-selector:focus {
+  border-color: #1565c0;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(102, 175, 246, 0.15), 0 4px 15px rgba(102, 175, 246, 0.2);
+}
+
+.year-selector option {
+  padding: 0.5rem;
+  background: #ffffff;
+  color: #333;
+}
+
+/* Dark theme styles for year selector */
+.dark-theme .year-selector {
+  background: linear-gradient(135deg, #3a3a3a 0%, #2c2c2c 100%);
+  color: #e0e0e0;
+  border: 2px solid #555;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .year-selector:hover {
+  border-color: #bb86fc;
+  background: linear-gradient(135deg, #404040 0%, #323232 100%);
+  box-shadow: 0 4px 15px rgba(187, 134, 252, 0.2);
+  transform: translateY(-1px);
+}
+
+.dark-theme .year-selector:focus {
+  border-color: #6200ea;
+  background: linear-gradient(135deg, #424242 0%, #353535 100%);
+  box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.15), 0 4px 15px rgba(187, 134, 252, 0.2);
+}
+
+.dark-theme .year-selector option {
+  background: #2c2c2c;
   color: #e0e0e0;
 }
 </style>

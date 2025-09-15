@@ -69,35 +69,3 @@ onMounted(() => {
   fetchData()
 })
 </script>
-
-<style scoped>
-.shared-form {
-  padding: 20px;
-}
-
-.form-row {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.summary-fieldset {
-  margin-top: 20px;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.data-table th,
-.data-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-.data-table th {
-  background-color: #f2f2f2;
-}
-</style>

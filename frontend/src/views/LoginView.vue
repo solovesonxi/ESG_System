@@ -253,7 +253,7 @@ export default {
         password: this.loginForm.password
       }
       try {
-        const response = await apiClient.post('/login', payload);
+        const response = await apiClient.post('/auth/login', payload);
         const {token, user} = response.data;
         useAuthStore().initAuth(token, user);
         await router.push('/home');
@@ -325,7 +325,7 @@ export default {
         email: this.registerForm.email,
         verificationCode: this.registerForm.verificationCode
       }
-      const response = await apiClient.post('/register', payload)
+      const response = await apiClient.post('/auth/register', payload)
       if (response.data.status === 'success') {
         alert('注册成功!', response.data.username)
         this.showRegister = false;
@@ -361,7 +361,7 @@ export default {
         this.registerForm.phone = '';
       }
       try {
-        const response = await apiClient.post('/verification', {
+        const response = await apiClient.post('/auth/verification', {
           phone: this.registerForm.phone,
           email: this.registerForm.email
         });

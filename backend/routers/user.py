@@ -11,7 +11,7 @@ from core.dependencies import get_db, get_redis, SECRET_KEY, ALGORITHM, logger, 
 from core.models import User
 from core.permissions import get_current_user
 
-router = APIRouter(prefix="/update", tags=["更改信息"])
+router = APIRouter(prefix="/user", tags=["用户信息"])
 
 AVATAR_DIR = "static/avatars"
 os.makedirs(AVATAR_DIR, exist_ok=True)

@@ -473,7 +473,6 @@ class LaborQualitative(Base):
     indicator = Column(String(200), primary_key=True)
 
     current_text = Column(String(4000), nullable=True)
-    last_text = Column(String(4000), nullable=True)
     comparison_text = Column(String(1000), nullable=True)
     reason = Column(String(2000), nullable=True)
 
@@ -485,7 +484,6 @@ class OtherQualitative(Base):
     indicator = Column(String(200), primary_key=True)
 
     current_text = Column(String(4000), nullable=True)
-    last_text = Column(String(4000), nullable=True)
     comparison_text = Column(String(1000), nullable=True)
     reason = Column(String(2000), nullable=True)
 
