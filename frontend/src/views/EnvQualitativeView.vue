@@ -16,9 +16,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="(item, key, index) in indicators" :key="key"
-                :class="['data-row', index % 2 === 0 ? 'even' : 'odd', hoveredRow === index ? 'hovered' : '']"
-                @mouseover="hoveredRow = index" @mouseleave="hoveredRow = null">
+            <tr v-for="(item, key) in indicators" :key="key">
               <td>{{ ENV_QUAL_INDICATORS[category][key] || key }}</td>
               <td>{{ item.lastYear || '' }}</td>
               <td>

@@ -399,7 +399,15 @@ button {
     border-color: #444;
     background: #1a1a1a;
 }
-
+.dark-theme .data-table tbody tr:nth-child(even) {
+    background: #129be0;
+}
+.dark-theme .data-table tbody tr:nth-child(odd) {
+    background: #d90e0e;
+}
+.dark-theme .data-table tbody tr:hover {
+    background: #4d2828 !important;
+}
 
 .dark-theme .reason-input {
     background: #232323;
@@ -408,17 +416,4 @@ button {
     box-shadow: 0 0 8px #2cb67d80;
     width: 100%;
     height: 100%;
-}
-
-/* 极简暗黑风格深色主题 - data-row 行样式 */
-.dark-theme .data-row.even {
-    background: #232526;
-}
-.dark-theme .data-row.odd {
-    background: #181a1b;
-}
-.dark-theme .data-row.hovered {
-    background: #2a2a2a !important;
-    box-shadow: 0 2px 8px #0003;
-    transition: background 0.2s, box-shadow 0.2s;
 }
