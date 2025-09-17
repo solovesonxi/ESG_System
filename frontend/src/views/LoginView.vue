@@ -169,9 +169,11 @@
                 required
                 :class="{'input-error': registrationErrors.verificationCode}"
             >
-            <span class="verification-code" @click="sendVerificationCode">
+            <span class="verification-code"
+                  :class="{ 'disabled': registerForm.countdown > 0 }"
+                  @click="sendVerificationCode">
               {{ registerForm.countdown > 0 ? `重新发送(${registerForm.countdown}s)` : '发送验证码' }}
-                </span>
+            </span>
           </div>
         </div>
         <div v-if="registrationErrors.verificationCode" class="error-message">
@@ -339,6 +341,9 @@ export default {
     },
 
     async sendVerificationCode() {
+      if (this.registerForm.countdown > 0) {
+        return;
+      }
       const input = this.registerForm.contact;
       if (!input) {
         this.registrationErrors.contact = '请输入手机号或邮箱';
@@ -573,8 +578,14 @@ input:focus, select:focus {
   background: #388E3C;
 }
 
-.verification-code span {
-  display: inline-block;
+.verification-code.disabled {
+  background: #999;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.verification-code.disabled:hover {
+  background: #999;
 }
 
 .btn {

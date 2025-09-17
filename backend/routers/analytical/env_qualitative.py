@@ -1,4 +1,5 @@
 from typing import Dict
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
@@ -6,15 +7,15 @@ from sqlalchemy.orm import Session
 from core.dependencies import get_db
 from core.dependencies import indicators
 from core.models import EnvQualData
-from core.permissions import require_access, require_factory, get_current_user, check_factory_year
-
+from core.permissions import require_view, require_edit, get_current_user, check_factory_year
+from core.utils import send_yearly_message
 router = APIRouter(prefix="/analytical/env_qualitative", tags=["分析数据-环境定性"])
 
 
 @router.get("")
 async def get_data(factory: str, year: int, db: Session = Depends(get_db),
                    current_user: dict = Depends(get_current_user)):
-    require_access(factory, current_user)
+    require_view(factory, current_user)
     current_data = db.query(EnvQualData).filter_by(factory=factory, year=year).first()
     last_year_data = db.query(EnvQualData).filter_by(factory=factory, year=year - 1).first()
     response_data = {}
@@ -37,7 +38,7 @@ async def save_data(factory: str = Body(..., description="工厂名称"), year: 
                     isSubmitted: bool = Body(..., description="是否提交"), db: Session = Depends(get_db),
                     current_user: dict = Depends(get_current_user)):
     try:
-        require_factory(factory, current_user)
+        require_edit(factory, current_user)
         check = check_factory_year(factory, year, db, isSubmitted, 1)
         if check["status"] == "fail":
             return check
@@ -56,6 +57,7 @@ async def save_data(factory: str = Body(..., description="工厂名称"), year: 
                                reasons=reasons)
         db.merge(record)
         db.commit()
+        send_yearly_message(db, current_user, factory, year, isSubmitted, "环境定性数据")
         return {"status": "success", "message": "数据提交成功"}
     except Exception as e:
         db.rollback()

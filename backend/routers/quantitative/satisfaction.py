@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import SatisfactionData
-from core.permissions import get_current_user, require_access, require_factory
+from core.permissions import get_current_user, require_view
 from core.schemas import SatisfactionSubmission
 from core.utils import submit_data
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/quantitative/satisfaction", tags=["定量数据-员�
 async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                      current_user: dict = Depends(get_current_user)):
     try:
-        require_access(factory, current_user)
+        require_view(factory, current_user)
         data = db.query(SatisfactionData).filter(SatisfactionData.factory == factory,
                                                  SatisfactionData.year == year).first()
         if not data:

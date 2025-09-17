@@ -393,18 +393,3 @@ class CommunitySubmission(BaseModel):
     volunteerHours: List[float]
     isSubmitted: bool = False
 
-
-class GovernanceQualitativeItem(BaseModel):
-    explanation: Optional[str] = None
-    source: Optional[str] = None
-    current_text: Optional[str] = None
-    last_text: Optional[str] = None
-    comparison_text: Optional[str] = None
-    reason: Optional[str] = None
-
-
-class GovernanceQualitativeSubmission(BaseModel):
-    factory: str
-    year: int
-    data: Dict[str, Dict[str, GovernanceQualitativeItem]]
-    isSubmitted: bool = False

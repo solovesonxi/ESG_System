@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Float, JSON, Text, Boolean
+from sqlalchemy import Column, Integer, String, Float, JSON, Text, Boolean, DateTime
+from datetime import datetime, timezone
 
 from core.dependencies import Base
 
@@ -8,7 +9,7 @@ class User(Base):
     username = Column(String(50), primary_key=True)
     hashed_password = Column(String(100), nullable=False)
     factory = Column(String(100), nullable=False)
-    account_type = Column(String(20), nullable=False, default='factory')  # 'headquarters' 或 'factory'
+    role = Column(String(20), nullable=False, default='factory')  # 'headquarter' 或 'factory' 或 'admin'
     phone = Column(String(20), nullable=True)
     email = Column(String(50), nullable=True)
     avatar = Column(String(60), nullable=True)
@@ -44,7 +45,6 @@ class MaterialData(Base):
     renewable_input_ratio = Column(Float, nullable=False)  # 可再生进料占比 (%)
     renewable_output_ratio = Column(Float, nullable=False)  # 可再生出料占比 (%)
 
-    reasons = Column(JSON, nullable=True)  # 原因说明
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
 
 
@@ -67,7 +67,6 @@ class EnergyData(Base):
     total_energy_consumption = Column(Float)  # Tce
     turnover = Column(Float)  # 万元
     energy_consumption_intensity = Column(Float)
-    reasons = Column(JSON, nullable=True)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
 
 
@@ -101,7 +100,6 @@ class WaterData(Base):
     total_recycled = Column(Float, nullable=False)
     water_intensity = Column(Float, nullable=False)
     water_recycle_rate = Column(Float, nullable=False)
-    reasons = Column(JSON, nullable=True)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
 
 
@@ -131,7 +129,6 @@ class EmissionData(Base):
     particulate = Column(Float, nullable=False)
     nox_sox_other = Column(Float, nullable=False)
     waste_gas_total = Column(Float, nullable=False)
-    reasons = Column(JSON, nullable=True)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
 
 
@@ -162,7 +159,6 @@ class WasteData(Base):
     # 强度指标
     hazardous_intensity = Column(Float, nullable=False)
     wastewater_intensity = Column(Float, nullable=False)
-    reasons = Column(JSON, nullable=True)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
 
 
@@ -182,7 +178,6 @@ class InvestmentData(Base):
     green_income_ratio = Column(Float, nullable=False)
     total_revenue = Column(Float, nullable=False)
     env_invest_intensity = Column(Float, nullable=False)
-    reasons = Column(JSON, nullable=True)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
 
 
@@ -196,7 +191,6 @@ class ManagementData(Base):
     environmental_penalty_intensity = Column(JSON, nullable=False)
     environmental_penalty_amount = Column(JSON, nullable=False)
     environmental_violation = Column(JSON, nullable=False)
-    reasons = Column(JSON, nullable=True)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
 
 
@@ -258,7 +252,6 @@ class EmploymentData(Base):
     middle_turnover_rate = Column(Float, default=0.0)
     general_turnover_rate = Column(Float, default=0.0)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-
 
 
 class TrainingData(Base):
@@ -368,6 +361,74 @@ class SupplyData(Base):
     env_assessment_count = Column(Integer, default=0)  # 开展环境影响评估的供应商数量
     soc_assessment_count = Column(Integer, default=0)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+
+
+class ResponsibilityData(Base):
+    __tablename__ = "responsibility"
+    factory = Column(String(100), primary_key=True)
+    year = Column(Integer, primary_key=True)
+
+    complaints = Column(JSON, nullable=False)  # 客户投诉总数
+    handled = Column(JSON, nullable=False)  # 有效处理件数
+    quality_issues = Column(JSON, nullable=False)  # 产品质量问题数
+    recalls = Column(JSON, nullable=False)  # 发生产品召回的次数
+    shipments = Column(JSON, nullable=False)  # 产品出货量
+    customer_satisfaction = Column(JSON, nullable=False)  # 客户满意度结果
+    cyber_incidents = Column(JSON, nullable=False)  # 网络数据安全事件
+    complaints_total = Column(Integer, default=0)  # 客户投诉总数
+    handled_total = Column(Integer, default=0)  # 有效处理件数
+    handled_rate = Column(Float, default=0.0)  # 客户投诉有效处理率
+    customer_satisfaction_average = Column(Float, default=0.0)  # 客户满意度结果
+    recall_total = Column(Integer, default=0)  # 发生产品召回的次数
+    recall_rate = Column(Float, default=0.0)  # 产品召回百分比
+    quality_issues_total = Column(Integer, default=0)  # 产品安全质量问题
+    cyber_incidents_total = Column(Integer, default=0)  # 网络数据安全事件
+    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+
+
+class IPData(Base):
+    __tablename__ = "ip"
+    factory = Column(String(100), primary_key=True)
+    year = Column(Integer, primary_key=True)
+
+    patents = Column(JSON, nullable=False)
+    inv_patents = Column(JSON, nullable=False)
+    inv_applications = Column(JSON, nullable=False)
+    utility_patents = Column(JSON, nullable=False)
+    design_patents = Column(JSON, nullable=False)
+    granted_patents = Column(JSON, nullable=False)
+    software_copyrights = Column(JSON, nullable=False)
+    trademarks = Column(JSON, nullable=False)
+    new_patents = Column(Integer, default=0)
+    patents_total = Column(Integer, default=0)  # 累计获得专利数量
+    inv_patents_total = Column(Integer, default=0)  # 累计发明专利数量
+    inv_applications_total = Column(Integer, default=0)  # 发明专利申请数量
+    utility_patents_total = Column(Integer, default=0)  # 累计实用新型专利数量
+    design_patents_total = Column(Integer, default=0)  # 累计外观设计专利数量
+    granted_patents_total = Column(Integer, default=0)  # 累计被授权专利数
+    software_copyrights_total = Column(Integer, default=0)  # 累计软件著作权数量
+    trademarks_total = Column(Integer, default=0)  # 累计商标注册数量
+    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+
+
+class CommunityData(Base):
+    __tablename__ = "community"
+    factory = Column(String(100), primary_key=True)
+    year = Column(Integer, primary_key=True)
+
+    charity_donations = Column(JSON, default=0.0)  # 公益慈善捐赠总额
+    community_investment = Column(JSON, default=0.0)  # 社区发展投入金额
+    volunteer_participants = Column(JSON, default=0)  # 志愿者活动参与人次
+    volunteer_hours = Column(JSON, default=0.0)  # 志愿者服务总时长
+    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+
+
+class EnvQuantData(Base):
+    __tablename__ = "env_quant"
+    factory = Column(String(100), primary_key=True)
+    year = Column(Integer, primary_key=True)
+    indicator = Column(String(200), primary_key=True)
+    reason = Column(String(2000), nullable=True)
 
 
 class EnvQualData(Base):
@@ -488,76 +549,26 @@ class OtherQualitative(Base):
     reason = Column(String(2000), nullable=True)
 
 
-class ResponsibilityData(Base):
-    __tablename__ = "responsibility"
-    factory = Column(String(100), primary_key=True)
-    year = Column(Integer, primary_key=True)
-
-    complaints = Column(JSON, nullable=False)  # 客户投诉总数
-    handled = Column(JSON, nullable=False)  # 有效处理件数
-    quality_issues = Column(JSON, nullable=False)  # 产品质量问题数
-    recalls = Column(JSON, nullable=False)  # 发生产品召回的次数
-    shipments = Column(JSON, nullable=False)  # 产品出货量
-    customer_satisfaction = Column(JSON, nullable=False)  # 客户满意度结果
-    cyber_incidents = Column(JSON, nullable=False)  # 网络数据安全事件
-    complaints_total = Column(Integer, default=0)  # 客户投诉总数
-    handled_total = Column(Integer, default=0)  # 有效处理件数
-    handled_rate = Column(Float, default=0.0)  # 客户投诉有效处理率
-    customer_satisfaction_average = Column(Float, default=0.0)  # 客户满意度结果
-    recall_total = Column(Integer, default=0)  # 发生产品召回的次数
-    recall_rate = Column(Float, default=0.0)  # 产品召回百分比
-    quality_issues_total = Column(Integer, default=0)  # 产品安全质量问题
-    cyber_incidents_total = Column(Integer, default=0)  # 网络数据安全事件
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-
-
-class IPData(Base):
-    __tablename__ = "ip"
-    factory = Column(String(100), primary_key=True)
-    year = Column(Integer, primary_key=True)
-
-    patents = Column(JSON, nullable=False)
-    inv_patents = Column(JSON, nullable=False)
-    inv_applications = Column(JSON, nullable=False)
-    utility_patents = Column(JSON, nullable=False)
-    design_patents = Column(JSON, nullable=False)
-    granted_patents = Column(JSON, nullable=False)
-    software_copyrights = Column(JSON, nullable=False)
-    trademarks = Column(JSON, nullable=False)
-    new_patents = Column(Integer, default=0)
-    patents_total = Column(Integer, default=0)  # 累计获得专利数量
-    inv_patents_total = Column(Integer, default=0)  # 累计发明专利数量
-    inv_applications_total = Column(Integer, default=0)  # 发明专利申请数量
-    utility_patents_total = Column(Integer, default=0)  # 累计实用新型专利数量
-    design_patents_total = Column(Integer, default=0)  # 累计外观设计专利数量
-    granted_patents_total = Column(Integer, default=0)  # 累计被授权专利数
-    software_copyrights_total = Column(Integer, default=0)  # 累计软件著作权数量
-    trademarks_total = Column(Integer, default=0)  # 累计商标注册数量
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-
-
-class CommunityData(Base):
-    __tablename__ = "community"
-    factory = Column(String(100), primary_key=True)
-    year = Column(Integer, primary_key=True)
-
-    charity_donations = Column(JSON, default=0.0)  # 公益慈善捐赠总额
-    community_investment = Column(JSON, default=0.0)  # 社区发展投入金额
-    volunteer_participants = Column(JSON, default=0)  # 志愿者活动参与人次
-    volunteer_hours = Column(JSON, default=0.0)  # 志愿者服务总时长
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-
-
-
-class GovernanceQualitative(Base):
-    __tablename__ = "governance_qualitative"
+class Governance(Base):
+    __tablename__ = "governance"
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
     indicator = Column(String(200), primary_key=True)
 
-    explanation = Column(Text)
-    source = Column(Text)
-    last_text = Column(Text)
     current_text = Column(Text)
     comparison_text = Column(Text)
     reason = Column(Text)
+
+
+class Message(Base):
+    __tablename__ = 'messages'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    type = Column(String(30), nullable=False)  # 消息类型
+    title = Column(String(30), nullable=False)  # 消息标题
+    content = Column(Text, nullable=True)  # 消息内容
+    sender_role = Column(String(20), nullable=False)  # 发送方角色
+    sender_factory = Column(String(100), nullable=True)  # 发送方工厂
+    receiver_role = Column(String(20), nullable=False)  # 接收方角色
+    receiver_factory = Column(String(100), nullable=True)  # 接收方工厂
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))  # 发送时间
+    is_read = Column(Boolean, nullable=False, default=False)  # 是否已读

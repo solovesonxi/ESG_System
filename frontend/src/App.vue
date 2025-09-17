@@ -1,14 +1,15 @@
 <template>
-    <NavBar v-if="isDataPage || route.path === '/account' || route.path === '/home'" ref="navBar"/>
-    <main>
-      <router-view v-slot="{ Component }">
-        <component :is="Component" ref="currentComponent"/>
-      </router-view>
-    </main>
-    <FloatingBall v-if="isDataPage"/>
-    <EditControls v-if="isDataPage && authStore.isFactory" :is-editing="isEditing" @start-edit="handleStartEdit" @cancel-edit="handleCancelEdit"
-                  @save-edit="handleSubmitEdit(false)"  @submit-edit="handleSubmitEdit(true)"/>
-    <canvas id="starry-bg"></canvas>
+  <NavBar v-if="isAuthedPage || route.path === '/account' || route.path === '/home'" ref="navBar"/>
+  <main>
+    <router-view v-slot="{ Component }">
+      <component :is="Component" ref="currentComponent"/>
+    </router-view>
+  </main>
+  <FloatingBall v-if="isAuthedPage"/>
+  <EditControls v-if="isEditPage && (authStore.isFactory || authStore.isHeadquarter)" :is-editing="isEditing" @start-edit="handleStartEdit"
+                @cancel-edit="handleCancelEdit"
+                @save-edit="handleSubmitEdit(false)" @submit-edit="handleSubmitEdit(true)"/>
+  <canvas id="starry-bg"></canvas>
 </template>
 
 <script setup>
@@ -17,14 +18,15 @@ import NavBar from '@/components/NavBar.vue'
 import FloatingBall from '@/components/FloatingBall.vue'
 import EditControls from '@/components/EditControls.vue'
 import {computed, onMounted, ref, watch} from 'vue'
-import { useAuthStore } from '@/stores/authStore';
+import {useAuthStore} from '@/stores/authStore';
 
 const authStore = useAuthStore();
 const navBar = ref(null)
 const isEditing = ref(false)
 const currentComponent = ref(null)
 const route = useRoute()
-const isDataPage = computed(() => route.path !== '/' && route.path !== '/login'  && route.path !== '/home' && route.path !== '/account')
+const isAuthedPage = computed(() => route.path !== '/' && route.path !== '/login')
+const isEditPage = computed(() => isAuthedPage.value && route.path !== '/home' && route.path !== '/account')
 
 const handleStartEdit = () => {
   console.log('currentComponent:', currentComponent.value);
@@ -57,15 +59,25 @@ const handleSubmitEdit = (ifSubmit) => {
   }
 };
 
-watch(() => route.path, () => {
+watch(() => route.path, (newPath, oldPath) => {
   isEditing.value = false;
   setTimeout(() => {
     if (currentComponent.value) {
-      currentComponent.value.fetchData();
-      console.log('切换到新路由：', route.path);
+      if (typeof currentComponent.value.fetchData === 'function') {
+        try {
+          currentComponent.value.fetchData();
+          console.log('切换到新路由：', newPath, '- fetchData 已调用');
+        } catch (error) {
+          console.error('调用 fetchData 时出错：', error);
+        }
+      } else {
+        console.log('切换到新路由：', newPath, '- 组件没有 fetchData 方法');
+      }
+    } else {
+      console.log('切换到新路由：', newPath, '- 当前组件不存在');
     }
   }, 10);
-});
+}, { immediate: false });
 
 // 动态星空背景（保持不变）
 onMounted(() => {

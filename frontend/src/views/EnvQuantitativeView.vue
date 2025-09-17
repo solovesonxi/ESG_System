@@ -23,7 +23,7 @@
               <td>{{ item.comparison || '' }}</td>
               <td>
                 <span v-if="!isEditing">{{ item.reason || '' }}</span>
-                <textarea v-else v-model="tempReasons[category][key]" class="reason-input"></textarea>
+                <textarea v-else v-model="tempReasons[key]" class="reason-input"></textarea>
               </td>
             </tr>
             </tbody>
@@ -54,12 +54,9 @@ const tempReasons = ref({})
 const startEditing = () => {
   isEditing.value = true;
   tempReasons.value = {};
-  Object.entries(data.value).forEach(([category, group]) => {
-    if (!tempReasons.value[category]) {
-      tempReasons.value[category] = {};
-    }
+  Object.values(data.value).forEach(group => {
     Object.entries(group).forEach(([key, item]) => {
-      tempReasons.value[category][key] = item?.reason || '';
+      tempReasons.value[key] = item?.reason || ''
     })
   })
 };
@@ -91,14 +88,16 @@ onMounted(() => {
 
 const submitEdit = async (ifSubmit) => {
   try {
-    const playLoad = {
+    const reasonsMap = {}
+    Object.entries(tempReasons.value).forEach(([indicator, reason]) => {
+      if (reason && reason.trim() !== '') reasonsMap[indicator] = reason
+    })
+    const response = await apiClient.post(`/analytical/env_quantitative`, {
       factory: factory.value,
       year: parseInt(year.value),
-      data: tempReasons.value,
+      reasons: tempReasons.value,
       isSubmitted: ifSubmit
-    }
-    console.log(playLoad)
-    const response = await apiClient.post(`/analytical/env_quantitative`, playLoad);
+    });
     if (response.data.status === 'success') {
       alert('数据提交成功!')
     }else {

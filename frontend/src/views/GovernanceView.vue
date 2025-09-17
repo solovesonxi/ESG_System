@@ -1,36 +1,40 @@
 <template>
-  <div class="shared-form">
+  <div class="shared-form" @selection-changed="fetchData">
     <form>
       <BaseInfoSelector @selection-changed="fetchData"/>
-      <fieldset class="summary-fieldset">
-        <legend>治理定性</legend>
+      <fieldset class="summary-fieldset" v-for="(indicators, category) in qualData" :key="category">
+        <legend>{{ category }}</legend>
         <div class="form-row">
           <table class="data-table">
             <thead>
             <tr>
-              <th>大类</th>
               <th>指标</th>
-              <th>指标释义</th>
-              <th>来源</th>
-              <th>今年的方针、政策、文件、记录等</th>
               <th>去年的方针、政策、文件、记录等</th>
+              <th>今年的方针、政策、文件、记录等</th>
               <th>对比去年</th>
               <th>原因分析</th>
             </tr>
             </thead>
             <tbody>
-            <template v-for="(indicators, category) in qualData" :key="category">
-              <tr v-for="(item, key, index) in indicators" :key="key">
-                <td v-if="index === 0" :rowspan="Object.keys(indicators).length">{{ category }}</td>
-                <td>{{ key }}</td>
-                <td>{{ item.explanation || '' }}</td>
-                <td>{{ item.source || '' }}</td>
-                <td>{{ item.currentText || '' }}</td>
-                <td>{{ item.lastText || '' }}</td>
-                <td>{{ item.comparisonText || '' }}</td>
-                <td>{{ item.reason || '' }}</td>
-              </tr>
-            </template>
+            <tr v-for="(item, key) in indicators" :key="key">
+              <td>{{ key }}</td>
+              <td>{{ item.lastText || '' }}</td>
+              <td>
+                <div v-if="!isEditing">{{ item.currentText || '' }}</div>
+                <textarea v-else v-model="tempEdits[category][key].currentText" class="reason-input"
+                          :placeholder="item.currentText || ''"></textarea>
+              </td>
+              <td>
+                <div v-if="!isEditing">{{ item.comparisonText || '' }}</div>
+                <textarea v-else v-model="tempEdits[category][key].comparisonText" class="reason-input"
+                          :placeholder="item.comparisonText || ''"></textarea>
+              </td>
+              <td>
+                <div v-if="!isEditing">{{ item.reason || '' }}</div>
+                <textarea v-else v-model="tempEdits[category][key].reason" class="reason-input"
+                          :placeholder="item.reason || ''"></textarea>
+              </td>
+            </tr>
             </tbody>
           </table>
         </div>
@@ -42,8 +46,7 @@
 <script setup>
 import {computed, onMounted, ref} from 'vue'
 import apiClient from '@/utils/axios';
-
-import {useSelectionStore} from '@/stores/selectionStore.js'
+import {useSelectionStore} from "@/stores/selectionStore.js"
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 
 const selectionStore = useSelectionStore()
@@ -51,21 +54,89 @@ const factory = computed(() => selectionStore.selectedFactory)
 const year = computed(() => selectionStore.selectedYear)
 
 const qualData = ref({})
+const isEditing = ref(false)
+const tempEdits = ref({})
 
 const fetchData = async () => {
   try {
     const res = await apiClient.get('/analytical/governance', {
       params: {factory: factory.value, year: year.value}
     })
-    qualData.value = res.data || {}
+    qualData.value = res.data
   } catch (e) {
     console.error(e)
-    alert(`获取治理定性数据失败: ${e.response?.data?.detail || e.message}`)
+    alert(`获取劳动定性数据失败: ${e.response?.data?.detail || e.message}`)
   }
 }
 
 onMounted(() => {
   document.addEventListener('click', selectionStore.handleClickOutside)
-  fetchData()
 })
+
+
+const startEditing = () => {
+  isEditing.value = true
+  // 深拷贝结构并初始化
+  const draft = {}
+  Object.entries(qualData.value).forEach(([category, indicators]) => {
+    draft[category] = {}
+    Object.entries(indicators).forEach(([key, item]) => {
+      draft[category][key] = {
+        currentText: item.currentText || '',
+        lastText: item.lastText || '',
+        comparisonText: item.comparisonText || '',
+        reason: item.reason || ''
+      }
+    })
+  })
+  tempEdits.value = draft
+}
+
+const cancelEditing = () => {
+  isEditing.value = false
+  tempEdits.value = {}
+}
+
+const submitEdit = async (ifSubmit) => {
+  // 深层过滤 tempEdits，移除所有 currentText、comparisonText、reason 都为空的字段
+  const filteredData = {};
+  Object.entries(tempEdits.value).forEach(([category, indicators]) => {
+    const filteredIndicators = {};
+    Object.entries(indicators).forEach(([key, item]) => {
+      const hasValue = [item.currentText, item.comparisonText, item.reason].some(v => v && v.trim() !== '');
+      if (hasValue) {
+        filteredIndicators[key] = item;
+      }
+    });
+    if (Object.keys(filteredIndicators).length > 0) {
+      filteredData[category] = filteredIndicators;
+    }
+  });
+  try {
+    const response = await apiClient.post('/analytical/governance', {
+      factory: factory.value,
+      year: parseInt(year.value),
+      data: filteredData,
+      isSubmitted: ifSubmit
+    })
+    if (response.data.status === 'success') {
+      alert('数据提交成功!')
+    } else {
+      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+    }
+  } catch (e) {
+    console.error(e)
+    alert(`保存失败: ${e.response?.data?.detail || e.message}`)
+  } finally {
+    console.log('提交完成，即将刷新');
+    isEditing.value = false;
+    await fetchData();
+  }
+}
+defineExpose({
+  startEditing,
+  cancelEditing,
+  submitEdit,
+  fetchData
+});
 </script>

@@ -1,6 +1,7 @@
 <template>
   <div class="navbar-wrapper">
-    <nav class="navbar" :class="{ 'navbar-hidden': isNavbarHidden }" @mouseenter="handleNavbarEnter" @mouseleave="handleNavbarLeave">
+    <nav class="navbar" :class="{ 'navbar-hidden': isNavbarHidden }" @mouseenter="handleNavbarEnter"
+         @mouseleave="handleNavbarLeave">
       <div class="esg-logo" @click="navigateToDashboard">
         ESG
       </div>
@@ -17,10 +18,10 @@
           </template>
           <template v-else>
             <div
-              class="dropdown-trigger"
-              :class="{ 'router-link-active': isDropdownActive(route) }"
-              @mouseenter="handleDropdownEnter(route.name)"
-              @mouseleave="handleDropdownLeave"
+                class="dropdown-trigger"
+                :class="{ 'router-link-active': isDropdownActive(route) }"
+                @mouseenter="handleDropdownEnter(route.name)"
+                @mouseleave="handleDropdownLeave"
             >
               <span class="link-text">{{ route.label }}</span>
               <i class="arrow-down"></i>
@@ -48,15 +49,12 @@
       <div class="logout-dropdown" v-if="showLogout" @mouseenter="handleDropdownEnter"
            @mouseleave="handleDropdownLeave">
         <div class="user-avatar">
-          <img v-if="authStore.user?.avatar" :src="authStore.user.avatar" alt="用户头像" class="avatar-image" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%;"/>
-          <svg v-else viewBox="0 0 100 100" style="width: 80px; height: 80px;">
-            <circle cx="50" cy="40" r="25" fill="#fff"/>
-            <circle cx="50" cy="100" r="40" fill="#fff"/>
-          </svg>
+          <img :src="authStore.user.avatar" alt="用户头像" class="avatar-image"
+               style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%;"/>
         </div>
         <span class="welcome-text">你好, {{ authStore.user?.username }}</span>
         <button class="logout-btn" @click="handleLogout">
-          <span>登出</span>
+          <span>退出登录</span>
           <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path
                 d="M17 7L21 12M21 12L17 17M21 12H9M13 16V17C13 18.6569 11.6569 20 10 20H7C5.34315 20 4 18.6569 4 17V7C4 5.34315 5.34315 4 7 4H10C11.6569 4 13 5.34315 13 7V8"
@@ -70,7 +68,7 @@
 
 <script setup>
 import {useRoute, useRouter} from 'vue-router'
-import {computed, ref, watch, onMounted, onUnmounted} from 'vue';
+import {computed, onMounted, onUnmounted, ref, watch} from 'vue';
 import {useAuthStore} from '@/stores/authStore';
 
 const authStore = useAuthStore();
@@ -98,14 +96,14 @@ const handleScroll = () => {
 
 // 新增：右上角区域检测逻辑
 function handleMouseMove(e) {
-  const { clientX, clientY } = e;
+  const {clientX, clientY} = e;
   const w = window.innerWidth;
   const h = window.innerHeight;
   showLogout.value = clientX > w * 0.7 && clientY < h * 0.3;
 }
 
 onMounted(() => {
-  window.addEventListener('scroll', handleScroll, { passive: true });
+  window.addEventListener('scroll', handleScroll, {passive: true});
   window.addEventListener('mousemove', handleMouseMove);
 });
 
@@ -198,22 +196,31 @@ const dataModeItems = [
 
 const analyzeModeItems = [
   {name: 'home', path: '/home', label: '首页'},
-  {name: 'env-quantitative', path: '/env-quantitative', label: '环境定量'},
-  {name: 'env-qualitative', path: '/env-qualitative', label: '环境定性'},
-  {name: 'social-quantitative-labor', path: '/social-quantitative-labor', label: '社会定量-劳工'},
-  {name: 'social-qualitative-labor', path: '/social-qualitative-labor', label: '社会定性-劳工'},
-  {name: 'social-quantitative-other', path: '/social-quantitative-other', label: '社会定量-其他'},
-  {name: 'social-qualitative-other', path: '/social-qualitative-other', label: '社会定性-其他'},
+  {
+    name: 'env', label: '环境', children: [{name: 'env-quantitative', path: '/env-quantitative', label: '定量'},
+      {name: 'env-qualitative', path: '/env-qualitative', label: '定性'},
+    ]
+  },
+  {
+    name: 'social', label: '社会',
+    children: [{name: 'social-quantitative-labor', path: '/social-quantitative-labor', label: '定量-劳工'},
+      {name: 'social-qualitative-labor', path: '/social-qualitative-labor', label: '定性-劳工'},
+      {name: 'social-quantitative-other', path: '/social-quantitative-other', label: '定量-其他'},
+      {name: 'social-qualitative-other', path: '/social-qualitative-other', label: '定性-其他'},
+    ]
+  },
   {name: 'governance', path: '/governance', label: '治理'},
   {name: 'account', path: '/account', label: '账号管理'}
 ]
 
 // 监听路由变化并更新 localStorage
-watch(() => route.path, (newPath) => {
+watch(() => route.path, (newPath, oldPath) => {
   authStore.checkTokenValid()
   const currentMode = authStore.isDataMode ? 'data' : 'analyze';
-  localStorage.setItem(`lastPath_${currentMode}`, newPath);
-  console.log("路由变化，更新lastPath_" + currentMode + "由" + route.path + "变为" + newPath)
+  if (newPath !== '/login' && newPath !== '/home' && newPath !== '/account') {
+    localStorage.setItem(`lastPath_${currentMode}`, newPath);
+    console.log("路由变化，更新lastPath_" + currentMode + "由" + (oldPath || '未知') + "变为" + newPath)
+  }
 });
 
 // 新增方法：判断下拉父项是否激活
@@ -526,7 +533,7 @@ const isDropdownActive = (route) => {
   padding: 1rem;
   border-radius: 12px;
   box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3),
-              0 0 0 1px rgba(255, 255, 255, 0.1);
+  0 0 0 1px rgba(255, 255, 255, 0.1);
   z-index: 1001;
   display: flex;
   flex-direction: column;
@@ -572,24 +579,20 @@ const isDropdownActive = (route) => {
 }
 
 .logout-btn {
-  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  background: linear-gradient(135deg, #fd8383, #e53a30);
   color: white;
   padding: 0.75rem 1.5rem;
   border-radius: 30px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
   transition: all 0.5s ease;
-  font-weight: 600;
   box-shadow: 0 8px 25px rgba(238, 90, 82, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .logout-btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(238, 90, 82, 0.5);
-  background: linear-gradient(135deg, #ff5252, #d32f2f);
+  background: linear-gradient(135deg, #f5dc8a, #c5065c);
 }
 
 .logout-btn:active {
@@ -625,6 +628,7 @@ const isDropdownActive = (route) => {
     padding: 10px 15px;
     font-size: 0.8rem;
   }
+
   .welcome-text {
     font-size: 0.85rem;
   }

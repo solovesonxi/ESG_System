@@ -31,25 +31,24 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     user = db.query(User).filter(User.username == username).first()
     if user is None:
         raise credentials_exception
-    return {"user": user, "account_type": payload.get("account_type"), "factory": payload.get("factory")}
+    return {"user": user, "role": payload.get("role"), "factory": payload.get("factory")}
 
 
-def require_access(factory: str, current_user: dict = Depends(get_current_user)):
-    if current_user["account_type"] == "headquarters" or current_user["user"].factory == factory:
+def require_view(factory: str, current_user: dict = Depends(get_current_user)):
+    if current_user["role"] == "headquarter" or current_user["role"] == "admin" or current_user["user"].factory == factory:
         return
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权访问其他工厂数据")
 
 
-def require_factory(factory: str, current_user: dict = Depends(get_current_user)):
-    if current_user["account_type"] == "headquarters":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="总部账号无权提交数据")
-    elif current_user["factory"] != factory:
+def require_edit(factory: str, current_user: dict = Depends(get_current_user)):
+    if current_user["role"] == "admin":
+        raise  HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="管理员账号无权提交数据")
+    elif current_user["role"] != "headquarter" and current_user["factory"] != factory:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权提交其他工厂数据")
 
 
 def check_factory_year(factory: str, year: int, db: Session, isSubmitted: bool, index: int):
     year_info = db.query(YearInfo).filter_by(factory=factory, year=year).first()
-    logger.info(f"factory: {factory}, year: {year}, isSubmitted: {isSubmitted}, index: {index} year_info: {year_info}")
     if year_info:
         if year_info.is_submitted[index]:
             logger.info(f"已经提交了的值: {year_info.is_submitted[index]} {year_info.is_submitted} {index}")
@@ -64,5 +63,4 @@ def check_factory_year(factory: str, year: int, db: Session, isSubmitted: bool, 
         is_submitted[index] = isSubmitted
         year_info = YearInfo(factory=factory, year=year, is_submitted=is_submitted)
         db.add(year_info)
-    logger.info(f"结束检查的year_info.is_submitted: {year_info.is_submitted}")
     return {"status": "success"}

@@ -40,14 +40,16 @@ def get_db():
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 REDIS_DB = 0
-
+redis_pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True,
+                                  max_connections=20, retry_on_timeout=True, socket_connect_timeout=5, socket_timeout=5,
+                                  health_check_interval=30)
 
 def get_redis():
-    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True)
+    redis_client = redis.Redis(connection_pool=redis_pool)
     try:
         yield redis_client
     finally:
-        redis_client.close()
+        pass
 
 
 # JWT 和密码哈希配置

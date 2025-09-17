@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
@@ -5,8 +6,8 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import OtherReason, SupplyData, ResponsibilityData, IPData, CommunityData
-from core.permissions import require_access, get_current_user, require_factory, check_factory_year
-from core.utils import _calc_comparison
+from core.permissions import require_view, get_current_user, require_edit, check_factory_year
+from core.utils import _calc_comparison, send_yearly_message
 
 router = APIRouter(prefix="/analytical/social_quantitative_other", tags=["分析数据-社会定量-其他"])
 
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/analytical/social_quantitative_other", tags=["分析
 async def get_data(factory: str = Query(...), year: int = Query(...), db: Session = Depends(get_db),
                    current_user: dict = Depends(get_current_user)):
     try:
-        require_access(factory, current_user)
+        require_view(factory, current_user)
         supply_cur = db.query(SupplyData).filter(SupplyData.factory == factory, SupplyData.year == year).first()
         supply_prev = db.query(SupplyData).filter(SupplyData.factory == factory, SupplyData.year == year - 1).first()
 
@@ -78,7 +79,7 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
                                                              gv(community_prev, key))
         return data
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"获取其他定量数据失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"获取社会定量-其他数据失败: {str(e)}")
 
 
 @router.post("")
@@ -86,7 +87,7 @@ async def save_reasons(factory: str = Body(..., description="工厂名称"), yea
                        reasons: Dict[str, str] = Body(...), isSubmitted: bool = Body(..., description="是否提交"),
                        db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
-        require_factory(factory, current_user)
+        require_edit(factory, current_user)
         check = check_factory_year(factory, year, db, isSubmitted, 4)
         if check["status"] == "fail":
             return check
@@ -98,7 +99,8 @@ async def save_reasons(factory: str = Body(..., description="工厂名称"), yea
             else:
                 db.add(OtherReason(factory=factory, year=year, indicator=indicator, reason=reason))
         db.commit()
-        return {"status": "success", "message": "其他定量原因说明已保存"}
+        send_yearly_message(db, current_user, factory, year, isSubmitted, "社会定量-其他数据")
+        return {"status": "success", "message": "社会定量-其他原因说明已保存"}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"保存其他原因失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"保存社会定量-其他原因失败: {str(e)}")

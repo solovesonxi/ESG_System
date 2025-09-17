@@ -10,8 +10,9 @@ export const useAuthStore = defineStore('auth', () => {
     const isAuthenticated = computed(() => !!accessToken.value)
 
     // 权限相关计算属性
-    const isHeadquarters = computed(() => user.value?.account_type === 'headquarters')
-    const isFactory = computed(() => user.value?.account_type === 'factory')
+    const isFactory = computed(() => user.value?.role === 'factory')
+    const isHeadquarter = computed(() => user.value?.role === 'headquarter')
+    const isAdmin = computed(() => user.value?.role === 'admin')
     const factory = computed(() => user.value?.factory)
     const isDataMode = ref(true);
     const selectionStore = useSelectionStore();
@@ -20,11 +21,12 @@ export const useAuthStore = defineStore('auth', () => {
     const initAuth = (token, userData) => {
         accessToken.value = token
         user.value = userData
-        user.value.avatar = apiClient.defaults.baseURL + userData.avatar;
+        user.value.avatar = (apiClient.defaults.baseURL + (userData.avatar ? userData.avatar : '/static/avatars/default-avatar.jpg'));
+        console.log(user.value.avatar);
         isDataMode.value = isFactory.value;
         localStorage.setItem('access_token', token)
         localStorage.setItem('user', JSON.stringify(userData))
-        localStorage.setItem('lastPath_data', '/material');
+        localStorage.removeItem('lastPath_data');
         localStorage.removeItem('lastPath_analyze');
         selectionStore.initSelection();
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
@@ -93,7 +95,8 @@ export const useAuthStore = defineStore('auth', () => {
         accessToken,
         user,
         isAuthenticated,
-        isHeadquarters,
+        isHeadquarter,
+        isAdmin,
         isFactory,
         isDataMode,
         factory,

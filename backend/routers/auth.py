@@ -39,10 +39,10 @@ def login(username: str = Body(..., description="用户名"), password: str = Bo
     if not user or not pwd_context.verify(password, str(user.hashed_password)):
         raise HTTPException(status_code=400, detail="用户名或密码错误")
     # 在token中包含权限信息
-    token_data = {"username": user.username, "account_type": user.account_type, "factory": user.factory}
+    token_data = {"username": user.username, "role": user.role, "factory": user.factory}
     access_token = create_access_token(data=token_data, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"token": access_token,
-            "user": {"username": user.username, "factory": user.factory, "account_type": user.account_type,
+            "user": {"username": user.username, "factory": user.factory, "role": user.role,
                      "phone": user.phone, "email": user.email, "avatar": user.avatar}}
 
 
@@ -58,7 +58,7 @@ async def refresh_token(input_data: dict = Body(...), db: Session = Depends(get_
         token_exp = datetime.fromtimestamp(payload["exp"], timezone.utc)
         if datetime.now(timezone.utc) - token_exp > timedelta(minutes=5):
             raise HTTPException(status_code=401, detail="Token 过期时间过长，请重新登录")
-        new_payload = {"username": user.username, "account_type": user.account_type}
+        new_payload = {"username": user.username, "role": user.role}
         new_token = create_access_token(new_payload)
         return {"new_token": new_token}
     except jwt.InvalidTokenError:
@@ -70,6 +70,10 @@ def register(username: str = Body(..., description="用户名"), password: str =
              factory: str = Body(..., description="工厂名称"), phone: str = Body(..., description="电话号码"),
              email: str = Body(..., description="电子邮箱"), verificationCode: str = Body(..., description="验证码"),
              db: Session = Depends(get_db), redis_client: redis.Redis = Depends(get_redis)):
+    import time
+    start_time = time.time()
+    logger.info(f"注册开始时间: {start_time}")
+
     try:
         contact = phone or email
         stored_code = redis_client.get(f"verification_code:{contact}")
@@ -79,7 +83,7 @@ def register(username: str = Body(..., description="用户名"), password: str =
         if existing_user:
             raise HTTPException(status_code=400, detail="用户名已存在")
         hashed_password = pwd_context.hash(password)
-        new_user = User(username=username, hashed_password=hashed_password, factory=factory, account_type="factory",
+        new_user = User(username=username, hashed_password=hashed_password, factory=factory, role="factory",
                         phone=phone, email=email)
         db.add(new_user)
         db.commit()
@@ -87,7 +91,9 @@ def register(username: str = Body(..., description="用户名"), password: str =
         return {"status": "success", "username": new_user.username}
     except Exception as e:
         db.rollback()
+        logger.error(f"注册失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 def send_sms(phone: str, code: str):
@@ -111,8 +117,8 @@ def send_sms(phone: str, code: str):
 def send_email(to_email: str, code: str):
     smtp_server = "smtp.qq.com"  # QQ 邮箱 SMTP 服务器
     smtp_port = 465
-    sender = "2172449563@qq.com"  # 你的 QQ 邮箱
-    email_password = "ghukttjbejahdhfi"  # 替换为 QQ 邮箱生成的授权码
+    sender = "chensy_1213@qq.com"  # 你的 QQ 邮箱
+    email_password = "afkydblqtgxjdiai"  # 替换为 QQ 邮箱生成的授权码
 
     subject = "验证码通知"
     content = f"您的ESG账号验证码是：{code}，有效期5分钟。"

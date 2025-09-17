@@ -3,7 +3,7 @@
     <div class="account-left">
       <h1 class="account-title">账号管理</h1>
       <div class="account-avatar" @click="openAvatarPicker" @mouseenter="showAvatarTip = true" @mouseleave="showAvatarTip = false">
-        <img :src="authStore.user?.avatar || '/default-avatar.png'" alt="用户头像" class="avatar-image-large"/>
+        <img :src="authStore.user?.avatar" alt="用户头像" class="avatar-image-large"/>
         <div v-if="showAvatarTip" class="avatar-tip">更换头像</div>
       </div>
       <button class="change-password-btn" @click="openPasswordModal">
@@ -103,7 +103,7 @@
           >
         </div>
         <div class="modal-actions">
-          <button class="cancel-btn" @click="closePasswordModal">
+          <button class="action-btn" @click="closePasswordModal">
             <i class="fas fa-times"></i>
             <span>取消</span>
           </button>
@@ -140,10 +140,10 @@ function toggleTheme() {
 const user = ref({
   username: authStore.user?.username || '未设置',
   factory: authStore.user?.factory || '未设置',
-  type: authStore.user?.account_type === "factory" ? '工厂账号' : '总部账号',
+  type: authStore.user?.role === "factory" ? '工厂账号' :(authStore.user?.role === "headquarter" ? '总部账号' : '管理员账号'),
   phone: authStore.user?.phone || '未设置',
   email: authStore.user?.email || '未设置',
-  avatar: authStore.user?.avatar || '/default-avatar.png'
+  avatar: authStore.user?.avatar || '/default-avatar.jpg'
 });
 
 const infoItems = [
@@ -705,7 +705,7 @@ const showNotificationMessage = (message, isError = false, duration = 3000) => {
   margin-top: 2rem;
 }
 
-.cancel-btn, .submit-btn {
+.submit-btn {
   padding: 0.8rem 1.5rem;
   border-radius: 8px;
   font-weight: 500;

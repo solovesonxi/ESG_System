@@ -68,10 +68,7 @@ router.beforeEach((to, from, next) => {
     if (!authStore.isAuthenticated) {
         return next('/login');
     }
-    const lastPath = localStorage.getItem(`lastPath_${authStore.isDataMode ? 'data' : 'analyze'}`);
-    if (!lastPath && to.path !== '/material' && to.path !== '/env-quantitative' && to.path !== '/home') {
-        return next(authStore.isDataMode ? '/material' : '/env-quantitative');
-    }
+
     next();
 })
 

@@ -74,11 +74,11 @@ def update_username(new_username: str = Body(..., description="新用户名"), d
         user.username = new_username
         db.commit()
         # 生成新 token
-        payload = {"username": new_username, "account_type": current_user["account_type"],
+        payload = {"username": new_username, "role": current_user["role"],
                    "factory": current_user["factory"], "exp": datetime.now(timezone.utc) + timedelta(minutes=15)}
         new_token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
         return {"status": "success", "new_token": new_token,
-                "user": {"username": new_username, "factory": user.factory, "account_type": user.account_type,
+                "user": {"username": new_username, "factory": user.factory, "role": user.role,
                          "phone": user.phone, "email": user.email}}
     except Exception as e:
         db.rollback()

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import WasteData
-from core.permissions import get_current_user, require_access, require_factory
+from core.permissions import get_current_user, require_view
 from core.schemas import WasteSubmission
 from core.utils import submit_data
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/quantitative/waste", tags=["定量数据-废弃物"]
 async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                      current_user: dict = Depends(get_current_user)):
     try:
-        require_access(factory, current_user)
+        require_view(factory, current_user)
         data = db.query(WasteData).filter(WasteData.factory == factory, WasteData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}

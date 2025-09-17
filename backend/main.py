@@ -8,7 +8,7 @@ from starlette.staticfiles import StaticFiles
 
 from core.dependencies import engine
 from core.models import Base
-from routers import auth, user, progress
+from routers import auth, user, progress, message
 from routers.analytical import env_quantitative, env_qualitative, social_qualitative_other, social_quantitative_labor, \
     social_qualitative_labor, social_quantitative_other, governance
 from routers.quantitative import material, energy, water, emission, waste, investment, management, employment, training, \
@@ -55,3 +55,4 @@ app.include_router(social_quantitative_other.router)
 app.include_router(social_qualitative_labor.router)
 app.include_router(social_qualitative_other.router)
 app.include_router(governance.router)
+app.include_router(message.router)
