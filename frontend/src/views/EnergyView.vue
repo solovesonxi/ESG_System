@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" form-type="energy" @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
         <legend>{{ year }}年{{ month }}月能源数据统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
@@ -164,11 +164,12 @@
 </template>
 
 <script setup>
-import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
 import apiClient from '@/utils/axios';
 
 import {useSelectionStore} from "@/stores/selectionStore.js";
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
+import {showError, showInfo, showSuccess, handleError} from "@/utils/toast.js";
 
 const selectionStore = useSelectionStore();
 const factory = computed(() => selectionStore.selectedFactory);
@@ -176,6 +177,7 @@ const year = computed(() => selectionStore.selectedYear);
 const month = computed(() => selectionStore.selectedMonth);
 const isEditing = ref(false);
 const isLoading = ref(false);
+const review = ref({});
 
 
 // 表单数据结构
@@ -198,7 +200,7 @@ const totalGasoline = computed(() => formData.value.gasoline.reduce((sum, amount
 const totalDiesel = computed(() => formData.value.diesel.reduce((sum, amount) => sum + amount, 0));
 const totalNaturalGas = computed(() => formData.value.naturalGas.reduce((sum, amount) => sum + amount, 0));
 const totalOtherEnergy = computed(() => formData.value.otherEnergy.reduce((sum, amount) => sum + amount, 0));
-const  totalWater = computed(() => formData.value.water.reduce((sum, amount) => sum + amount, 0));
+const totalWater = computed(() => formData.value.water.reduce((sum, amount) => sum + amount, 0));
 const totalCoal = computed(() => formData.value.coal.reduce((sum, amount) => sum + amount, 0));
 // 计算各种能源的消耗量 (Tce)
 const powerConsumption = computed(() => Number(((totalPurchasedPower.value + totalRenewablePower.value) * 0.1229 / 1000).toFixed(2)));
@@ -252,16 +254,14 @@ const fetchData = async () => {
         coal: data.coal || 0,
         turnover: data.turnover || 0
       };
+      review.value = response.data.review;
     } else {
       resetFormData();
+      showInfo("未找到数据");
     }
   } catch (error) {
-    if (error.response?.status === 404) {
+      handleError(error);
       resetFormData();
-    } else {
-      console.error('获取数据失败:', error);
-      resetFormData();
-    }
   } finally {
     isLoading.value = false;
   }
@@ -280,6 +280,7 @@ const resetFormData = () => {
     coal: Array(12).fill(0),
     turnover: 0
   };
+  review.value = {status: Array(12).fill("pending"), comment: Array(12).fill('')};
 };
 
 // 提交编辑方法
@@ -304,13 +305,13 @@ const submitEdit = async (ifSubmit) => {
     };
     const response = await apiClient.post('/quantitative/energy', payload);
     if (response.data.status === 'success') {
-      alert('数据提交成功!')
-    }else {
-      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+      showSuccess('数据提交成功!')
+    } else {
+      showError(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('提交失败:', error);
-    alert(`提交失败: ${error.response?.data?.detail || error.message}`);
+    handleError(error);
   } finally {
     console.log('提交完成，即将刷新');
     isEditing.value = false;

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
-from core.models import EmploymentData, TrainingData, OHSData, SatisfactionData, LaborReason
+from core.models import EmploymentData, TrainingData, OHSData, SatisfactionData, LaborReason, YearInfo
 from core.permissions import require_view, get_current_user, require_edit, check_factory_year
 from core.utils import _calc_comparison, send_yearly_message
 
@@ -242,7 +242,10 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
                                                                   gv(sat_cur, 'annual_average'),
                                                                   gv(sat_prev, 'annual_average'))
 
-        return data
+        year_info = db.query(YearInfo).with_entities(YearInfo.review_status, YearInfo.review_comment).filter_by(
+            factory=factory, year=year).first()
+        return {"data": data,
+                "review": {"status": year_info.review_status[2], "comment": year_info.review_comment[2]}}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取社会定量-劳工数据失败: {str(e)}")
 
@@ -264,7 +267,7 @@ async def save_reasons(factory: str = Body(..., description="工厂名称"), yea
             else:
                 db.add(LaborReason(factory=factory, year=year, indicator=indicator, reason=reason))
         db.commit()
-        send_yearly_message(db, current_user, factory, year, isSubmitted, "社会定量-劳工数据")
+        send_yearly_message(db, current_user, factory, year, isSubmitted, "social_quant_labor")
         return {"status": "success", "message": "社会定量-劳工原因说明已保存"}
     except Exception as e:
         db.rollback()

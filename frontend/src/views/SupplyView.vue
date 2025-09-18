@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" form-type="supply" @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
         <legend>{{ year }}年{{ month }}月供应商统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
@@ -90,6 +90,7 @@ import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {useSelectionStore} from '@/stores/selectionStore'
 import apiClient from '@/utils/axios'
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
+import {showError, showInfo, showSuccess, handleError} from "@/utils/toast.js";
 
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
@@ -99,6 +100,7 @@ const month = computed(() => selectionStore.selectedMonth);
 
 const isEditing = ref(false)
 const isLoading = ref(false)
+const review = ref({});
 
 // —— 供应链数据 —— //
 const formData = reactive({
@@ -145,10 +147,10 @@ onBeforeUnmount(() => {
 const fetchData = async () => {
   isLoading.value = true
   try {
-    const resp = await apiClient.get('/quantitative/supply', {
+    const response = await apiClient.get('/quantitative/supply', {
       params: {factory: factory.value, year: year.value}
     })
-    const data = resp?.data?.data
+    const data = response?.data?.data
     if (data) {
       // 兼容后端下划线/驼峰
       formData.east = toNum(data.east || data.east_region)
@@ -161,16 +163,14 @@ const fetchData = async () => {
       formData.envPenaltyCount = toNum(data.envPenaltyCount || data.env_penalty_count)
       formData.envPenaltyAmount = toNum(data.envPenaltyAmount || data.env_penalty_amount)
       formData.cyberIncidents = toNum(data.cyberIncidents || data.cyber_incidents)
+      review.value = response.data.review;
     } else {
       resetFormData()
+      showInfo('未找到数据')
     }
-  } catch (err) {
-    if (err.response?.status === 404) {
+  } catch (error) {
+      handleError(error);
       resetFormData()
-    } else {
-      console.error('获取供应链数据失败:', err)
-      resetFormData()
-    }
   } finally {
     isLoading.value = false
   }
@@ -188,6 +188,7 @@ const resetFormData = () => {
   formData.envPenaltyCount = 0
   formData.envPenaltyAmount = 0
   formData.cyberIncidents = 0
+  review.value = {status: Array(12).fill("pending"), comment: Array(12).fill('')};
 }
 
 
@@ -215,15 +216,14 @@ const submitEdit = async (ifSubmit) => {
     }
     const response = await apiClient.post('/quantitative/supply', payload)
     if (response.data.status === 'success') {
-      alert('数据提交成功!')
+      showSuccess('数据提交成功!')
     }else {
-      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+      showError(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
-  } catch (err) {
-    console.error('提交失败:', err)
-    alert(`提交失败: ${err.response?.data?.detail || err.message}`)
+  } catch (error) {
+    console.error('提交失败:', error)
+    handleError(error);
   } finally {
-    // 与能源一致：提交后退出编辑并刷新
     isEditing.value = false
     await fetchData()
   }

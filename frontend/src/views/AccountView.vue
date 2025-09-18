@@ -131,10 +131,6 @@ const authStore = useAuthStore();
 
 // 主题切换相关
 const isDark = ref(true);
-function toggleTheme() {
-  isDark.value = !isDark.value;
-  document.body.classList.toggle('dark-theme', isDark.value);
-}
 
 // 账号信息相关
 const user = ref({

@@ -9,6 +9,7 @@
   <EditControls v-if="isEditPage && (authStore.isFactory || authStore.isHeadquarter)" :is-editing="isEditing" @start-edit="handleStartEdit"
                 @cancel-edit="handleCancelEdit"
                 @save-edit="handleSubmitEdit(false)" @submit-edit="handleSubmitEdit(true)"/>
+  <ToastContainer />
   <canvas id="starry-bg"></canvas>
 </template>
 
@@ -17,6 +18,7 @@ import {RouterView, useRoute} from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
 import FloatingBall from '@/components/FloatingBall.vue'
 import EditControls from '@/components/EditControls.vue'
+import ToastContainer from '@/components/ToastContainer.vue'
 import {computed, onMounted, ref, watch} from 'vue'
 import {useAuthStore} from '@/stores/authStore';
 

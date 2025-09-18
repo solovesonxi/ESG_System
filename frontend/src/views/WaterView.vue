@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" form-type="water" @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
         <legend>{{ year }}年{{ month }}月用水量统计 - 工业用水 (T)</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
@@ -160,14 +160,15 @@ import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue'
 import apiClient from '@/utils/axios';
 import {useSelectionStore} from '@/stores/selectionStore'
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
+import {handleError, showError, showInfo, showSuccess} from "@/utils/toast.js";
 
 const selectionStore = useSelectionStore();
 const factory = computed(() => selectionStore.selectedFactory);
 const year = computed(() => selectionStore.selectedYear);
 const month = computed(() => selectionStore.selectedMonth);
 const isEditing = ref(false);
-
 const isLoading = ref(false)
+const review = ref({});
 
 // 初始化数据
 const monthlyWater = reactive({
@@ -278,15 +279,14 @@ const fetchData = async () => {
       waterData.domesticConsumption = data.domesticConsumption || 0;
       waterData.domesticRecycled = data.domesticRecycled || 0;
       waterData.totalRevenue = data.totalRevenue || 0;
+      review.value = response.data.review;
     } else {
       resetFormData();
+      showInfo('未找到数据')
     }
   } catch (error) {
-    if (error.response?.status === 404) {
-      resetFormData();
-    } else {
-      console.error('获取数据失败:', error);
-    }
+    console.error('获取数据失败:', error);
+    handleError(error);
   } finally {
     isLoading.value = false;
   }
@@ -305,6 +305,7 @@ const resetFormData = () => {
   waterData.domesticConsumption = 0;
   waterData.domesticRecycled = 0;
   waterData.totalRevenue = 0;
+  review.value = {status: Array(12).fill("pending"), comment: Array(12).fill('')};
 };
 
 async function submitEdit(ifSubmit) {
@@ -344,13 +345,13 @@ async function submitEdit(ifSubmit) {
     };
     const response = await apiClient.post('/quantitative/water', payload);
     if (response.data.status === 'success') {
-      alert('数据提交成功!')
-    }else {
-      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+      showSuccess('数据提交成功!')
+    } else {
+      showError(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('提交失败:', error);
-    alert(`提交失败: ${error.response?.data?.detail || error.message}`);
+    handleError(error);
   } finally {
     console.log('提交完成，即将刷新');
     isEditing.value = false;

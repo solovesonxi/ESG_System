@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" form-type="material" @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
         <legend>{{ year }}年{{ month }}月物料进出统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
@@ -105,6 +105,7 @@ import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
 import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js"
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
+import {showError, showInfo, showSuccess, handleError} from "@/utils/toast.js";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory);
@@ -122,10 +123,12 @@ const formData = ref({
   materialConsumption: Array(12).fill(0),
   woodFiber: Array(12).fill(0),
   aluminum: Array(12).fill(0),
-  total_revenue: 0, // 按年存储
+  total_revenue: 0,
   packagingMaterial: Array(12).fill(0),
   paper: Array(12).fill(0),
 })
+// 审核状态数据
+const review = ref({});
 
 // 计算属性（按年计算）
 const rowSum = (arr) => arr.reduce((s, v) => s + (Number(v) || 0), 0).toFixed(2)
@@ -169,7 +172,7 @@ onBeforeUnmount(() => {
   document.removeEventListener("click", selectionStore.handleClickOutside);
 });
 
-// 获取数据方法
+// 获取数据方法 - 在现有基础上简单添加审核数据获取
 const fetchData = async () => {
   isLoading.value = true
   try {
@@ -188,19 +191,18 @@ const fetchData = async () => {
         packagingMaterial: data.packagingMaterial || Array(12).fill(0),
         paper: data.paper || Array(12).fill(0)
       }
+      review.value = response.data.review;
     } else {
       resetFormData()
+      showInfo("未找到数据")
     }
   } catch (error) {
-    if (error.response?.status === 404) {
-      resetFormData()
-    } else {
-      console.error('获取数据失败:', error)
-    }
+      handleError(error);
   } finally {
     isLoading.value = false
   }
 }
+
 
 // 重置表单数据
 const resetFormData = () => {
@@ -216,6 +218,7 @@ const resetFormData = () => {
     packagingMaterial: Array(12).fill(0),
     paper: Array(12).fill(0),
   }
+  review.value = {status: Array(12).fill("pending"), comment: Array(12).fill('')};
 }
 
 // 提交编辑方法
@@ -236,13 +239,13 @@ const submitEdit = async (ifSubmit) => {
     }
     const response = await apiClient.post('/quantitative/material', payload);
     if (response.data.status === 'success') {
-      alert('数据提交成功!')
-    }else {
-      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+      showSuccess('数据提交成功!')
+    } else {
+      showError(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('提交失败:', error)
-    alert(`提交失败: ${error.response?.data?.detail || error.message}`)
+    handleError(error);
   } finally {
     console.log('提交完成，即将刷新');
     isEditing.value = false;

@@ -19,6 +19,8 @@ class YearInfo(Base):
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False] * 7)  # 对应七个模块的提交状态
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 7)  # 对应七个模块的审核状态
+    review_comment = Column(JSON, nullable=False, default=lambda: [""] * 7)  # 对应七个模块的审核意见
 
 class MaterialData(Base):
     __tablename__ = 'material'
@@ -46,6 +48,8 @@ class MaterialData(Base):
     renewable_output_ratio = Column(Float, nullable=False)  # 可再生出料占比 (%)
 
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class EnergyData(Base):
@@ -68,6 +72,8 @@ class EnergyData(Base):
     turnover = Column(Float)  # 万元
     energy_consumption_intensity = Column(Float)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class WaterData(Base):
@@ -101,6 +107,8 @@ class WaterData(Base):
     water_intensity = Column(Float, nullable=False)
     water_recycle_rate = Column(Float, nullable=False)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class EmissionData(Base):
@@ -130,6 +138,8 @@ class EmissionData(Base):
     nox_sox_other = Column(Float, nullable=False)
     waste_gas_total = Column(Float, nullable=False)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class WasteData(Base):
@@ -160,6 +170,8 @@ class WasteData(Base):
     hazardous_intensity = Column(Float, nullable=False)
     wastewater_intensity = Column(Float, nullable=False)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class InvestmentData(Base):
@@ -179,6 +191,8 @@ class InvestmentData(Base):
     total_revenue = Column(Float, nullable=False)
     env_invest_intensity = Column(Float, nullable=False)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class ManagementData(Base):
@@ -192,6 +206,8 @@ class ManagementData(Base):
     environmental_penalty_amount = Column(JSON, nullable=False)
     environmental_violation = Column(JSON, nullable=False)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class EmploymentData(Base):
@@ -252,6 +268,8 @@ class EmploymentData(Base):
     middle_turnover_rate = Column(Float, default=0.0)
     general_turnover_rate = Column(Float, default=0.0)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class TrainingData(Base):
@@ -282,6 +300,8 @@ class TrainingData(Base):
     middle_rate = Column(Float, default=0.0)  # 中层占比
     general_rate = Column(Float, default=0.0)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class OHSData(Base):
@@ -317,6 +337,8 @@ class OHSData(Base):
     hazards_found = Column(Integer, default=0)  # 安全检查排查隐患数(个)
     occupational_checks = Column(Integer, default=0)  # 职业病体检人数(人)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class SatisfactionData(Base):
@@ -326,6 +348,8 @@ class SatisfactionData(Base):
     satisfaction = Column(JSON, nullable=False)  # 存储12个月份的满意度数据
     annual_average = Column(Float, default=0.0)  # 年度平均值
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class SupplyData(Base):
@@ -361,6 +385,8 @@ class SupplyData(Base):
     env_assessment_count = Column(Integer, default=0)  # 开展环境影响评估的供应商数量
     soc_assessment_count = Column(Integer, default=0)
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class ResponsibilityData(Base):
@@ -384,6 +410,8 @@ class ResponsibilityData(Base):
     quality_issues_total = Column(Integer, default=0)  # 产品安全质量问题
     cyber_incidents_total = Column(Integer, default=0)  # 网络数据安全事件
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class IPData(Base):
@@ -409,6 +437,8 @@ class IPData(Base):
     software_copyrights_total = Column(Integer, default=0)  # 累计软件著作权数量
     trademarks_total = Column(Integer, default=0)  # 累计商标注册数量
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class CommunityData(Base):
@@ -421,6 +451,8 @@ class CommunityData(Base):
     volunteer_participants = Column(JSON, default=0)  # 志愿者活动参与人次
     volunteer_hours = Column(JSON, default=0.0)  # 志愿者服务总时长
     is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
+    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
+    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class EnvQuantData(Base):

@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" form-type="training" @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
         <legend>{{ year }}年{{ month }}月教育与培训数据统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
@@ -117,6 +117,7 @@ import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {useSelectionStore} from '@/stores/selectionStore'
 import apiClient from '@/utils/axios'
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
+import {handleError, showError, showInfo, showSuccess} from "@/utils/toast.js";
 
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
@@ -126,6 +127,7 @@ const month = computed(() => selectionStore.selectedMonth);
 
 const isEditing = ref(false)
 const isLoading = ref(false)
+const review = ref({});
 
 // —— 教育与培训数据 —— //
 const formData = reactive({
@@ -180,10 +182,10 @@ onBeforeUnmount(() => {
 const fetchData = async () => {
   isLoading.value = true
   try {
-    const resp = await apiClient.get('/quantitative/training', {
+    const response = await apiClient.get('/quantitative/training', {
       params: {factory: factory.value, year: year.value}
     })
-    const data = resp?.data?.data
+    const data = response?.data?.data
     if (data) {
       // 兼容后端下划线/驼峰
       formData.total = toNum(data.total)
@@ -199,16 +201,14 @@ const fetchData = async () => {
       formData.hoursMgmt = toNum(data.hoursMgmt || data.hours_management)
       formData.hoursMiddle = toNum(data.hoursMiddle || data.hours_middle)
       formData.hoursGeneral = toNum(data.hoursGeneral || data.hours_general)
+      review.value = response.data.review;
     } else {
       resetFormData()
+      showInfo('未找到数据')
     }
-  } catch (err) {
-    if (err.response?.status === 404) {
+  } catch (error) {
+      handleError(error);
       resetFormData()
-    } else {
-      console.error('获取教育与培训数据失败:', err)
-      resetFormData()
-    }
   } finally {
     isLoading.value = false
   }
@@ -229,6 +229,7 @@ const resetFormData = () => {
   formData.hoursMgmt = 0
   formData.hoursMiddle = 0
   formData.hoursGeneral = 0
+  review.value = {status: Array(12).fill("pending"), comment: Array(12).fill('')};
 }
 
 const submitEdit = async (ifSubmit) => {
@@ -260,15 +261,14 @@ const submitEdit = async (ifSubmit) => {
     }
     const response = await apiClient.post('/quantitative/training', payload)
     if (response.data.status === 'success') {
-      alert('数据提交成功!')
+      showSuccess('数据提交成功!')
     }else {
-      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+      showError(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
-  } catch (err) {
-    console.error('提交失败:', err)
-    alert(`提交失败: ${err.response?.data?.detail || err.message}`)
+  } catch (error) {
+    console.error('提交失败:', error)
+    handleError(error);
   } finally {
-    // 与能源一致：提交后退出编辑并刷新
     isEditing.value = false
     await fetchData()
   }

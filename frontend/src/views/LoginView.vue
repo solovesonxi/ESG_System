@@ -203,6 +203,7 @@
 import router from "@/router/index.js";
 import {useAuthStore} from '@/stores/authStore';
 import apiClient from "@/utils/axios.js";
+import {handleError, showError, showInfo, showSuccess} from "@/utils/toast.js";
 
 export default {
   name: 'LoginView',
@@ -303,7 +304,7 @@ export default {
           if (isPhone) {
             this.registerForm.phone = input;
             this.registerForm.email = '';
-            alert('抱歉，目前暂不支持手机号注册，请使用邮箱注册。');
+            showInfo('抱歉，目前暂不支持手机号注册，请使用邮箱注册。');
             return;
           } else {
             this.registerForm.email = input;
@@ -329,15 +330,15 @@ export default {
       }
       const response = await apiClient.post('/auth/register', payload)
       if (response.data.status === 'success') {
-        alert('注册成功!', response.data.username)
+        showSuccess('注册成功!', response.data.username)
         this.showRegister = false;
       } else {
-        alert(response.data.message || '注册失败，请稍后重试。')
+        showError(response.data.message || '注册失败，请稍后重试。')
       }
     },
 
     forgetPassword() {
-      alert('请联系管理员重置密码。');
+      showInfo('请联系管理员重置密码。');
     },
 
     async sendVerificationCode() {
@@ -359,7 +360,7 @@ export default {
       if (isPhone) {
         this.registerForm.phone = input;
         this.registerForm.email = '';
-        alert('抱歉，目前暂不支持手机号注册，请使用邮箱注册。');
+        showError('抱歉，目前暂不支持手机号注册，请使用邮箱注册。');
         return;
       } else {
         this.registerForm.email = input;
@@ -372,8 +373,7 @@ export default {
         });
 
         if (response.data.success) {
-          alert(`验证码已发送至您的${isPhone ? '手机' : '邮箱'}，请注意查收！`);
-          // 开始60秒倒计时
+          showInfo(`验证码已发送至您的${isPhone ? '手机' : '邮箱'}，请注意查收！`);
           this.registerForm.countdown = 60;
           const timer = setInterval(() => {
             this.registerForm.countdown--;
@@ -382,11 +382,11 @@ export default {
             }
           }, 1000);
         } else {
-          alert(response.data.message || '发送验证码失败，请稍后重试。');
+          showError(response.data.message || '发送验证码失败，请稍后重试。');
         }
       } catch (error) {
         console.error('发送验证码失败:', error);
-        alert('发送验证码失败，请稍后重试。');
+        handleError(error);
       }
     }
   }

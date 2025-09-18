@@ -3,6 +3,15 @@ from typing import List, Dict, Optional
 from pydantic import BaseModel
 
 
+class ReviewUpdateRequest(BaseModel):
+    factory: str
+    year: int
+    month: Optional[int] = None
+    formType: str
+    status: str
+    comment: str
+
+
 # 请求数据模型 - 匹配前端提交结构
 class MaterialSubmission(BaseModel):
     factory: str
@@ -392,4 +401,3 @@ class CommunitySubmission(BaseModel):
     volunteerParticipants: List[int]
     volunteerHours: List[float]
     isSubmitted: bool = False
-

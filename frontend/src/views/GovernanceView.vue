@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form" @selection-changed="fetchData">
     <form>
-      <BaseInfoSelector @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" form-type="governance" @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset" v-for="(indicators, category) in qualData" :key="category">
         <legend>{{ category }}</legend>
         <div class="form-row">
@@ -48,6 +48,7 @@ import {computed, onMounted, ref} from 'vue'
 import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js"
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
+import {showError, showInfo, showSuccess, handleError} from "@/utils/toast.js";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
@@ -56,16 +57,23 @@ const year = computed(() => selectionStore.selectedYear)
 const qualData = ref({})
 const isEditing = ref(false)
 const tempEdits = ref({})
+const review = ref({});
 
 const fetchData = async () => {
   try {
-    const res = await apiClient.get('/analytical/governance', {
+    const response = await apiClient.get('/analytical/governance', {
       params: {factory: factory.value, year: year.value}
     })
-    qualData.value = res.data
-  } catch (e) {
-    console.error(e)
-    alert(`获取劳动定性数据失败: ${e.response?.data?.detail || e.message}`)
+    if (response.data && response.data.data){
+      qualData.value = response.data.data;
+      review.value = response.data.review;
+    }else {
+      review.value = {status: 'pending', comment: ''};
+      showInfo('未找到数据')
+    }
+  } catch (error) {
+    console.error(error)
+    handleError(error);
   }
 }
 
@@ -120,13 +128,13 @@ const submitEdit = async (ifSubmit) => {
       isSubmitted: ifSubmit
     })
     if (response.data.status === 'success') {
-      alert('数据提交成功!')
+      showSuccess('数据提交成功!')
     } else {
-      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+      showError(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
-  } catch (e) {
-    console.error(e)
-    alert(`保存失败: ${e.response?.data?.detail || e.message}`)
+  } catch (error) {
+    console.error(error)
+    handleError(error);
   } finally {
     console.log('提交完成，即将刷新');
     isEditing.value = false;

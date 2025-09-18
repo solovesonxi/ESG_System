@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db, indicators
 from core.models import (EnvQuantData, MaterialData, EnergyData, WaterData, EmissionData, WasteData, InvestmentData,
-                         ManagementData)
+                         ManagementData, YearInfo)
 from core.permissions import get_current_user, require_view, require_edit, check_factory_year
 from core.utils import send_yearly_message, _calc_comparison
 
@@ -65,7 +65,10 @@ async def get_data(factory: str = Query(..., description="工厂名称"), year: 
             InvestmentData, reasons_map)
         result["management"] = process_category_data(db, factory, year, "management", envquant_indicators["management"],
             ManagementData, reasons_map, [0, 1, 2])
-        return result
+        year_info = db.query(YearInfo).with_entities(YearInfo.review_status, YearInfo.review_comment).filter_by(
+            factory=factory, year=year).first()
+        return {"data": result,
+                "review": {"status": year_info.review_status[0], "comment": year_info.review_comment[0]}}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取环境定量数据失败: {str(e)}")
 
@@ -86,9 +89,8 @@ async def save_reasons(factory: str = Body(..., description="工厂名称"), yea
             else:
                 db.add(EnvQuantData(factory=factory, year=year, indicator=indicator, reason=reason))
         db.commit()
-        send_yearly_message(db, current_user, factory, year, isSubmitted, "环境定量数据")
+        send_yearly_message(db, current_user, factory, year, isSubmitted, "env_quant")
         return {"status": "success", "message": "环境定量数据原因分析已保存"}
-
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"保存环境定量数据原因失败: {str(e)}")

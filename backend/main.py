@@ -8,7 +8,7 @@ from starlette.staticfiles import StaticFiles
 
 from core.dependencies import engine
 from core.models import Base
-from routers import auth, user, progress, message
+from routers import auth, user, progress, message, review
 from routers.analytical import env_quantitative, env_qualitative, social_qualitative_other, social_quantitative_labor, \
     social_qualitative_labor, social_quantitative_other, governance
 from routers.quantitative import material, energy, water, emission, waste, investment, management, employment, training, \
@@ -33,6 +33,8 @@ async def health_check():
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(progress.router)
+app.include_router(message.router)
+app.include_router(review.router)
 app.include_router(material.router)
 app.include_router(energy.router)
 app.include_router(water.router)
@@ -55,4 +57,3 @@ app.include_router(social_quantitative_other.router)
 app.include_router(social_qualitative_labor.router)
 app.include_router(social_qualitative_other.router)
 app.include_router(governance.router)
-app.include_router(message.router)

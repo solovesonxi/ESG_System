@@ -6,12 +6,6 @@
       <label class="theme-label">🌙</label>
     </div>
     <h1 class="welcome-text">欢迎回来, {{ authStore.user?.username }}!</h1>
-    <!-- 快速跳转区 -->
-    <div class="quick-actions">
-      <div v-for="action in quickActions" :key="action.label" class="action-card" @click="navigateTo(action.path)">
-        <span class="action-label">{{ action.label }}</span>
-      </div>
-    </div>
     <div class="main-layout">
       <!-- 左侧主内容区 -->
       <div class="main-half">
@@ -92,7 +86,7 @@
           </div>
           <div class="message-preview">
             <div v-if="operations.length === 0" class="empty-message">暂无操作记录</div>
-            <div v-for="record in previewHistory" :key="record.id" class="message-card" :class="{ unread: true }">
+            <div v-for="record in previewHistory" :key="record.id" class="message-card" :class="{ unread: false }">
               <span class="message-title">{{ record.title }}</span>
               <span class="message-date">{{ record.date }}</span>
             </div>
@@ -272,19 +266,13 @@ const authStore = useAuthStore();
 const selectionStore = useSelectionStore();
 const router = useRouter();
 
-const quickActions = ref([
-  {label: '月度填报', path: '/material'},
-  {label: '年度分析', path: '/env-quantitative'},
-  {label: '账号管理', path: '/account'},
-]);
-
 // 系统通知相关
 const notifications = ref([]);
 const operations = ref([]);
 const unreadCount = computed(() => notifications.value.filter(m => !m.is_read).length);
 const readMessagesCount = computed(() => notifications.value.filter(m => m.is_read).length);
-const previewMessages = computed(() => notifications.value.slice(0, 3));
-const previewHistory = computed(() => operations.value.slice(0, 3));
+const previewMessages = computed(() => notifications.value.slice(0, 4));
+const previewHistory = computed(() => operations.value.slice(0, 4));
 
 // 批量选择相关
 const selectedNotifications = ref(new Set());
@@ -319,16 +307,16 @@ const quantitativeProgressData = ref([
   {title: '水资源', percent: 0},
   {title: '排放', percent: 0},
   {title: '废弃物', percent: 0},
-  {title: '投资', percent: 0},
+  {title: '资金投入', percent: 0},
   {title: '环境管理', percent: 0},
-  {title: '就业', percent: 0},
-  {title: '培训', percent: 0},
-  {title: '职业健康安全', percent: 0},
-  {title: '满意度', percent: 0},
+  {title: '雇佣', percent: 0},
+  {title: '教育与培训', percent: 0},
+  {title: '职健与安全', percent: 0},
+  {title: '员工满意度', percent: 0},
   {title: '供应链', percent: 0},
-  {title: '责任', percent: 0},
+  {title: '产品责任', percent: 0},
   {title: '知识产权', percent: 0},
-  {title: '社区', percent: 0},
+  {title: '社区参与与志愿活动', percent: 0},
 ]);
 const currentProgressData = computed(() =>
     authStore.isDataMode ? quantitativeProgressData.value : analyticalProgressData.value
@@ -582,16 +570,16 @@ const fetchQuantitativeProgress = async () => {
       {title: '水资源', percent: data1.water || 0},
       {title: '排放', percent: data1.emission || 0},
       {title: '废弃物', percent: data1.waste || 0},
-      {title: '投资', percent: data1.investment || 0},
+      {title: '资金投入', percent: data1.investment || 0},
       {title: '环境管理', percent: data1.management || 0},
-      {title: '就业', percent: data1.employment || 0},
-      {title: '培训', percent: data1.training || 0},
-      {title: '职业健康安全', percent: data1.ohs || 0},
-      {title: '满意度', percent: data1.satisfaction || 0},
+      {title: '雇佣', percent: data1.employment || 0},
+      {title: '教育与培训', percent: data1.training || 0},
+      {title: '职健与安全', percent: data1.ohs || 0},
+      {title: '员工满意度', percent: data1.satisfaction || 0},
       {title: '供应链', percent: data1.supply || 0},
-      {title: '责任', percent: data1.responsibility || 0},
+      {title: '产品责任', percent: data1.responsibility || 0},
       {title: '知识产权', percent: data1.ip || 0},
-      {title: '社区', percent: data1.community || 0},
+      {title: '社区参与与志愿活动', percent: data1.community || 0},
     ];
     analyticalProgressData.value = [
       {title: '环境定量', percent: data2.env_quant || 0},
@@ -716,38 +704,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   font-size: 2rem;
   margin-bottom: 1.5rem;
   color: #1565c0;
-}
-
-.quick-actions {
-  display: flex;
-  gap: 1.5rem;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-}
-
-.action-card {
-  background: #66aff6;
-  color: #fff;
-  border-radius: 10px;
-  padding: 0.8rem 1.2rem;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.08);
-  transition: background 0.2s, transform 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0.2rem 0;
-}
-
-.action-card:hover {
-  background: #1565c0;
-  transform: translateY(-2px);
-}
-
-.action-label {
-  letter-spacing: 1px;
 }
 
 .progress-section h2 {
@@ -890,17 +846,31 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
 }
 
 .message-card.unread {
-  background: #e3f2fd;
+  background: linear-gradient(120deg, #d0e7f8 0%, #b7b2fd 100%);
+}
+
+.message-card:hover  {
+  background: #bebdbd;
+}
+
+.message-card.unread:hover  {
+  background: linear-gradient(120deg, #b5cada 0%, #9994de 100%);
 }
 
 .dark-theme .message-card {
-  background: #656565;
+  background: #2a2a2a;
   color: #fff;
 }
-
 .dark-theme .message-card.unread {
-  background: #3192b0;
+  background: linear-gradient(120deg, #3d082a 0%, #0c0633 100%);
 }
+.dark-theme .message-card:hover  {
+  background: #414141;
+}
+.dark-theme .message-card.unread:hover  {
+  background: linear-gradient(120deg, #59103f 0%, #180d5e 100%);
+}
+
 
 .message-title {
   flex: 1;
@@ -1113,15 +1083,10 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
 }
 
 .list-item:hover {
-  background: #f3f4f6;
+  background: #f3f3ca;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
-
-.list-item.unread:hover {
-  background: #dbeafe;
-}
-
 
 .list-item.select-mode {
   padding-left: 0.8rem;
@@ -1138,8 +1103,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   align-items: center;
   width: 100%;
 }
-
-/* ���色模式样式 */
 
 .item-header {
   margin-right: 1rem;
@@ -1339,16 +1302,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   color: #bb86fc;
 }
 
-.dark-theme .action-card {
-  background: #6816cc;
-  color: #fff;
-}
-
-.dark-theme .action-card:hover {
-  background: #6200ea;
-}
-
-
 .dark-theme .progress-card {
   background: #2c2c2c;
 }
@@ -1410,13 +1363,13 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
 
 
 .dark-theme .list-item.unread {
-  background: #280f2f;
+  background: linear-gradient(60deg, #3d082a 0%, #0c0633 100%);
   border-left-color: #60a5fa;
 }
 
 
 .dark-theme .list-item.selected {
-  background-color: #2c070e;
+  background: linear-gradient(60deg, #650c20 0%, #230009 100%);
   border-left-color: #fa6060;
 }
 

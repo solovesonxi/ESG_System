@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" form-type="responsibility" @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
         <legend>产品责任数据统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
@@ -95,6 +95,7 @@ import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {useSelectionStore} from '@/stores/selectionStore'
 import apiClient from '@/utils/axios'
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
+import {showError, showInfo, showSuccess, handleError} from "@/utils/toast.js";
 
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
@@ -104,6 +105,7 @@ const month = computed(() => selectionStore.selectedMonth);
 
 const isEditing = ref(false)
 const isLoading = ref(false)
+const review = ref({});
 
 // —— 产品责任数据 —— //
 const formData = reactive({
@@ -155,10 +157,10 @@ onBeforeUnmount(() => {
 const fetchData = async () => {
   isLoading.value = true
   try {
-    const resp = await apiClient.get('/quantitative/responsibility', {
+    const response = await apiClient.get('/quantitative/responsibility', {
       params: {factory: factory.value, year: year.value}
     })
-    const data = resp?.data?.data
+    const data = response?.data?.data
     if (data) {
       // 兼容后端下划线/驼峰
       setArray(formData.complaints, data.complaints || Array(12).fill(0))
@@ -168,16 +170,14 @@ const fetchData = async () => {
       setArray(formData.shipments, data.shipments || Array(12).fill(0))
       setArray(formData.customerSatisfaction, data.customerSatisfaction || Array(12).fill(0))
       setArray(formData.cyberIncidents, data.cyberIncidents || Array(12).fill(0))
+      review.value = response.data.review;
     } else {
       resetFormData()
+      showInfo('未找到数据')
     }
-  } catch (err) {
-    if (err.response?.status === 404) {
+  } catch (error) {
+      handleError(error);
       resetFormData()
-    } else {
-      console.error('获取产品责任数据失败:', err)
-      resetFormData()
-    }
   } finally {
     isLoading.value = false
   }
@@ -196,6 +196,7 @@ const resetFormData = () => {
   setArray(formData.shipments, Array(12).fill(0))
   setArray(formData.customerSatisfaction, Array(12).fill(0))
   setArray(formData.cyberIncidents, Array(12).fill(0))
+  review.value = {status: Array(12).fill("pending"), comment: Array(12).fill('')};
 }
 
 
@@ -224,15 +225,14 @@ const submitEdit = async (ifSubmit) => {
     }
     const response = await apiClient.post('/quantitative/responsibility', payload)
     if (response.data.status === 'success') {
-      alert('数据提交成功!')
+      showSuccess('数据提交成功!')
     }else {
-      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+      showError(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
-  } catch (err) {
-    console.error('提交失败:', err)
-    alert(`提交失败: ${err.response?.data?.detail || err.message}`)
+  } catch (error) {
+    console.error('提交失败:', error)
+    handleError(error);
   } finally {
-    // 与能源一致：提交后退出编辑并刷新
     isEditing.value = false
     await fetchData()
   }

@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" form-type="social_quant_other" @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset" v-for="(indicators, category) in otherData" :key="category">
         <legend>{{ category }}</legend>
         <div class="form-row">
@@ -41,6 +41,7 @@ import {computed, onMounted, ref} from 'vue'
 import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js"
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
+import {showError, showInfo, showSuccess, handleError} from "@/utils/toast.js";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
@@ -49,6 +50,7 @@ const year = computed(() => selectionStore.selectedYear)
 const otherData = ref({})
 const isEditing = ref(false)
 const tempReasons = ref({})
+const review = ref({});
 
 const indicatorNames = {
   // 供应链管理
@@ -96,14 +98,19 @@ const indicatorNames = {
 
 const fetchData = async () => {
   try {
-    const res = await apiClient.get('/analytical/social_quantitative_other', {
+    const response = await apiClient.get('/analytical/social_quantitative_other', {
       params: {factory: factory.value, year: year.value}
     })
-    otherData.value = res.data
-    console.log(otherData.value)
-  } catch (e) {
-    console.error(e)
-    alert(`获取社会定量-其他数据失败: ${e.response?.data?.detail || e.message}`)
+    if (response.data && response.data.data) {
+      otherData.value = response.data.data;
+      review.value = response.data.review;
+    }else {
+      review.value = {status: 'pending', comment: ''};
+      showInfo('未找到数据')
+    }
+  } catch (error) {
+    console.error(error)
+    handleError(error);
   }
 }
 
@@ -150,13 +157,13 @@ const submitEdit = async (ifSubmit) => {
       isSubmitted: ifSubmit
     })
     if (response.data.status === 'success') {
-      alert('数据提交成功!')
+      showSuccess('数据提交成功!')
     } else {
-      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+      showError(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
-  } catch (e) {
-    console.error(e)
-    alert(`提交原因失败: ${e.response?.data?.detail || e.message}`)
+  } catch (error) {
+    console.error(error)
+    handleError(error);
   } finally {
     console.log('提交完成，即将刷新');
     isEditing.value = false;

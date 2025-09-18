@@ -22,14 +22,15 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                      "mgmt": data.mgmt, "middle": data.middle, "general": data.general, "hoursTotal": data.hours_total,
                      "hoursMale": data.hours_male, "hoursFemale": data.hours_female, "hoursMgmt": data.hours_mgmt,
                      "hoursMiddle": data.hours_middle, "hoursGeneral": data.hours_general}
-        return {"status": "success", "data": data_dict}
+        return {"status": "success", "data": data_dict,
+                "review": {"status": data.review_status, "comment": data.review_comment}}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("")
 async def submit_training_data(data: TrainingSubmission, db: Session = Depends(get_db),
-                      current_user: dict = Depends(get_current_user)):
+                               current_user: dict = Depends(get_current_user)):
     return await submit_data(db, TrainingData, data, current_user, "training")
 
 

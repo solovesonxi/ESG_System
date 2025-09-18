@@ -23,7 +23,8 @@ async def fetch_emission_data(factory: str, year: int, db: Session = Depends(get
                      "category_five": data.category_five, "category_six": data.category_six,
                      "total_revenue": data.total_revenue, "voc": data.voc, "nmhc": data.nmhc, "benzene": data.benzene,
                      "particulate": data.particulate, "nox_sox_other": data.nox_sox_other, }
-        return {"status": "success", "data": data_dict}
+        return {"status": "success", "data": data_dict,
+                "review": {"status": data.review_status, "comment": data.review_comment}}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

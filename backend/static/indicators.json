@@ -14,7 +14,14 @@
     "supply": "供应链",
     "responsibility": "产品责任",
     "ip": "知识产权",
-    "community": "社区参与与志愿活动"
+    "community": "社区参与与志愿活动",
+    "env_quant": "环境定量",
+    "env_qual": "环境定性",
+    "social_quant_labor": "社会定量-劳工",
+    "social_qual_labor": "社会定性-劳工",
+    "social_quant_other": "社会定量-其他",
+    "social_qual_other": "社会定性-其他",
+    "governance": "治理"
   },
   "community": {
     "submit": {
@@ -134,6 +141,7 @@
       "year": "year",
       "patents": "patents",
       "invPatents": "inv_patents",
+      "invApplications": "inv_applications",
       "utilityPatents": "utility_patents",
       "designPatents": "design_patents",
       "grantedPatents": "granted_patents",

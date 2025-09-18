@@ -29,7 +29,8 @@ async def fetch_material_data(factory: str, year: int, db: Session = Depends(get
                      "renewableInputRatio": data.renewable_input_ratio,
                      "renewableOutputRatio": data.renewable_output_ratio}
 
-        return {"status": "success", "data": data_dict}
+        return {"status": "success", "data": data_dict,
+                "review": {"status": data.review_status, "comment": data.review_comment}}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -38,6 +39,7 @@ async def fetch_material_data(factory: str, year: int, db: Session = Depends(get
 async def submit_material_data(data: MaterialSubmission, db: Session = Depends(get_db),
                                current_user: dict = Depends(get_current_user)):
     return await submit_data(db, MaterialData, data, current_user, "material")
+
 
 @router.get("/{factory}/{year}")
 async def get_material_data(factory: str, year: int, db: Session = Depends(get_db)):

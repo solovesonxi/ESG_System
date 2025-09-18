@@ -48,19 +48,22 @@ def require_edit(factory: str, current_user: dict = Depends(get_current_user)):
 
 
 def check_factory_year(factory: str, year: int, db: Session, isSubmitted: bool, index: int):
-    year_info = db.query(YearInfo).filter_by(factory=factory, year=year).first()
-    if year_info:
-        if year_info.is_submitted[index]:
-            logger.info(f"已经提交了的值: {year_info.is_submitted[index]} {year_info.is_submitted} {index}")
-            return {"status": "fail", "message": "数据已提交过，若需修改请联系管理员"}
+    try:
+        year_info = db.query(YearInfo).filter_by(factory=factory, year=year).first()
+        if year_info:
+            if year_info.is_submitted[index]:
+                return {"status": "fail", "message": "数据已提交过，请等待管理员或总部审核"}
+            else:
+                submitted=year_info.is_submitted.copy()
+                submitted[index]=isSubmitted
+                year_info.is_submitted=submitted
+                flag_modified(year_info, "is_submitted")
         else:
-            year_info.is_submitted[index] = isSubmitted
-            flag_modified(year_info, "is_submitted")
-            db.commit()
-    else:
-        logger.info("没有创建此年year_info: None")
-        is_submitted = [False] * 7
-        is_submitted[index] = isSubmitted
-        year_info = YearInfo(factory=factory, year=year, is_submitted=is_submitted)
-        db.add(year_info)
-    return {"status": "success"}
+            is_submitted = [False] * 7
+            is_submitted[index] = isSubmitted
+            year_info = YearInfo(factory=factory, year=year, is_submitted=is_submitted)
+            db.add(year_info)
+        return {"status": "success"}
+    except Exception as e:
+        logger.error(f"check_factory_year error: {str(e)}")
+        raise e

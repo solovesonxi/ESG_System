@@ -7,8 +7,19 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from core.dependencies import indicators
-from core.models import Message
+from core.models import MaterialData, EnergyData, WaterData, EmissionData, WasteData, InvestmentData, ManagementData, \
+    EmploymentData, TrainingData, OHSData, SatisfactionData, SupplyData, ResponsibilityData, IPData, CommunityData, \
+    LaborQualitative, OtherReason, OtherQualitative, Governance, EnvQuantData, EnvQualData, Message, LaborReason
 from core.permissions import require_view, require_edit
+
+QUANT_MODEL_MAP = {"material": MaterialData, "energy": EnergyData, "water": WaterData, "emission": EmissionData,
+                   "waste": WasteData, "investment": InvestmentData, "management": ManagementData,
+                   "employment": EmploymentData, "training": TrainingData, "ohs": OHSData,
+                   "satisfaction": SatisfactionData, "supply": SupplyData, "responsibility": ResponsibilityData,
+                   "ip": IPData, "community": CommunityData, }
+ANALY_MODEL_MAP = {"env_quant": EnvQuantData, "env_qual": EnvQualData, "social_quant_labor": LaborReason,
+                  "social_quant_other": OtherReason, "social_qual_labor": LaborQualitative,
+                  "social_qual_other": OtherQualitative, "governance": Governance}
 
 
 def _calc_comparison(current_value, last_value):
@@ -43,7 +54,7 @@ async def submit_data(db: Session, model: Type[Any], data: Any, current_user: di
         if existing:
             is_submitted = getattr(existing, "is_submitted").copy()
             if is_submitted[data.month - 1]:
-                return {"status": "fail", "message": "数据已提交过，若需修改请联系管理员"}
+                return {"status": "fail", "message": "数据已提交过，请等待管理员或总部审核"}
         else:
             is_submitted = [False] * 12
         is_submitted[data.month - 1] = data.isSubmitted
@@ -77,7 +88,7 @@ def send_yearly_message(db, current_user: dict, factory, year, is_submitted, dat
                         msg_title=None):
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     if not msg_title:
-        msg_title = f"{"提交" if is_submitted else "保存"}了{factory}工厂{year}年{data_type}"
+        msg_title = f"{"提交" if is_submitted else "保存"}了{factory}工厂{year}年的{indicators["categories"][data_type]}数据"
     msg_content = f"{current_user["user"].username}于{now_str}{msg_title}，请管理员和总部及时审核。"
     send_message(db, msg_type, msg_title, msg_content, sender_factory=factory)
     send_message(db, msg_type, msg_title, msg_content, sender_factory=factory, receiver_role='headquarter')

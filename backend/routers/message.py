@@ -8,7 +8,7 @@ from core.models import Message
 from core.permissions import get_current_user
 from core.utils import send_message
 
-router = APIRouter(prefix="/messages", tags=["messages"])
+router = APIRouter(prefix="/messages", tags=["消息"])
 
 
 @router.post("/send")
@@ -46,6 +46,7 @@ async def get_messages(db: Session = Depends(get_db), current_user: dict = Depen
 async def mark_as_read(message_id: int = Body(..., description="消息ID"), db: Session = Depends(get_db),
                        current_user: dict = Depends(get_current_user)):
     try:
+        role = current_user["role"]
         msg = db.query(Message).filter(Message.id == message_id,
                                        Message.receiver_role == role if role != "factory" else Message.receiver_factory ==
                                                                                                current_user[

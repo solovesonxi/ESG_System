@@ -22,7 +22,8 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                      "socScreened": data.soc_screened, "localAmount": data.local_amount,
                      "totalAmount": data.total_amount, "envPenaltyCount": data.env_penalty_count,
                      "envPenaltyAmount": data.env_penalty_amount, "cyberIncidents": data.cyber_incidents}
-        return {"status": "success", "data": data_dict}
+        return {"status": "success", "data": data_dict,
+                "review": {"status": data.review_status, "comment": data.review_comment}}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

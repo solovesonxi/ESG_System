@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" form-type="emission" @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
         <legend>{{ year }}年{{ month }}月温室气体盘查统计 (吨CO2e)</legend>
         <div class="form-row">
@@ -100,6 +100,7 @@ import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {useSelectionStore} from "@/stores/selectionStore.js";
 import apiClient from "@/utils/axios.js";
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
+import {handleError, showError, showInfo, showSuccess} from "@/utils/toast.js";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory)
@@ -107,6 +108,8 @@ const year = computed(() => selectionStore.selectedYear)
 const month = computed(() => selectionStore.selectedMonth)
 const isEditing = ref(false)
 
+// 审核状态数据
+const review = ref({});
 
 // 温室气体排放数据结构
 const emissionData = reactive({
@@ -182,6 +185,7 @@ const resetFormData = () => {
   wasteGasData.benzene = 0;
   wasteGasData.particulate = 0;
   wasteGasData.nox_sox_other = 0;
+  review.value = {status: Array(12).fill("pending"), comment: Array(12).fill('')};
 };
 
 const fetchData = async () => {
@@ -203,12 +207,14 @@ const fetchData = async () => {
       wasteGasData.benzene = data.benzene || 0;
       wasteGasData.particulate = data.particulate || 0;
       wasteGasData.nox_sox_other = data.nox_sox_other || 0;
+      review.value = response.data.review;
     }else {
       resetFormData();
+      showInfo(`未找到数据`)
     }
   } catch (error) {
     console.error('获取数据失败:', error);
-    alert(`获取数据失败: ${error.response?.data?.detail || error.message}`);
+    handleError(error);
   }
 };
 
@@ -228,13 +234,13 @@ async function submitEdit(ifSubmit) {
     }
     const response = await apiClient.post('/quantitative/emission', payload)
     if (response.data.status === 'success') {
-      alert('数据提交成功!')
+      showSuccess('数据提交成功!')
     }else {
-      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+      showError(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('提交失败:', error)
-    alert(`提交失败: ${error.response?.data?.detail || error.message}`)
+    handleError(error);
   } finally {
     console.log('提交完成，即将刷新');
     isEditing.value = false;

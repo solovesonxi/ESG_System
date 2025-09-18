@@ -1,18 +1,18 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" form-type="community" @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
         <legend>{{ year }}年{{ month }}月社区参与与志愿活动数据统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
         <div v-else class="form-row">
           <div class="form-group">
-            <label>慈善捐款 (元)</label>
+            <label>慈善捐款 (万元)</label>
             <input type="number" v-model.number="formData.charityDonations[month-1]" min="0" step="0.01"
                    :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
           <div class="form-group">
-            <label>社区发展投入 (元)</label>
+            <label>社区发展投入 (万元)</label>
             <input type="number" v-model.number="formData.communityInvestment[month-1]" min="0" step="0.01"
                    :readonly="!isEditing" :class="{ 'editable-field': isEditing }" required>
           </div>
@@ -58,6 +58,7 @@ import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {useSelectionStore} from '@/stores/selectionStore'
 import apiClient from '@/utils/axios'
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
+import {handleError, showError, showSuccess} from "@/utils/toast.js";
 
 // —— 与能源统计保持一致的状态 —— //
 const selectionStore = useSelectionStore()
@@ -68,6 +69,8 @@ const month = computed(() => selectionStore.selectedMonth);
 const isEditing = ref(false)
 const isLoading = ref(false)
 
+// 审核状态数据
+const review = ref({});
 
 // —— 社区参与数据 —— //
 const formData = reactive({
@@ -104,16 +107,17 @@ onBeforeUnmount(() => {
 const fetchData = async () => {
   isLoading.value = true
   try {
-    const resp = await apiClient.get('/quantitative/community', {
+    const response = await apiClient.get('/quantitative/community', {
       params: {factory: factory.value, year: year.value}
     })
-    const data = resp?.data?.data
+    const data = response?.data?.data
     if (data) {
       // 兼容后端下划线/驼峰
       setArray(formData.charityDonations, data.charityDonations || data.charity_donations || Array(12).fill(0))
       setArray(formData.communityInvestment, data.communityInvestment || data.community_investment || Array(12).fill(0))
       setArray(formData.volunteerParticipants, data.volunteerParticipants || data.volunteer_participants || Array(12).fill(0))
       setArray(formData.volunteerHours, data.volunteerHours || data.volunteer_hours || Array(12).fill(0))
+      review.value = response.data.review;
     } else {
       resetFormData()
     }
@@ -139,6 +143,7 @@ const resetFormData = () => {
   setArray(formData.communityInvestment, Array(12).fill(0))
   setArray(formData.volunteerParticipants, Array(12).fill(0))
   setArray(formData.volunteerHours, Array(12).fill(0))
+  review.value = {status: Array(12).fill("pending"), comment: Array(12).fill('')};
 }
 
 // —— 提交编辑（保持原字段，不改动内容，只改样式） —— //
@@ -160,13 +165,13 @@ const submitEdit = async (ifSubmit) => {
     }
     const response = await apiClient.post('/quantitative/community', payload)
     if (response.data.status === 'success') {
-      alert('数据提交成功!')
-    }else {
-      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+      showSuccess('数据提交成功!')
+    } else {
+      showError(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
-  } catch (err) {
-    console.error('提交失败:', err)
-    alert(`提交失败: ${err.response?.data?.detail || err.message}`)
+  } catch (error) {
+    console.error('提交失败:', error)
+    handleError(error);
   } finally {
     isEditing.value = false
     await fetchData()
@@ -184,4 +189,3 @@ defineExpose({
   fetchData
 })
 </script>
-```

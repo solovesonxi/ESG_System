@@ -23,7 +23,7 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = userData
         user.value.avatar = (apiClient.defaults.baseURL + (userData.avatar ? userData.avatar : '/static/avatars/default-avatar.jpg'));
         console.log(user.value.avatar);
-        isDataMode.value = isFactory.value;
+        isDataMode.value = isFactory.value|| isAdmin.value ;
         localStorage.setItem('access_token', token)
         localStorage.setItem('user', JSON.stringify(userData))
         localStorage.removeItem('lastPath_data');

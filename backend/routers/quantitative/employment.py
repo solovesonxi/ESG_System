@@ -28,7 +28,8 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
             "quitOverseas": data.quit_overseas, "quit18_30": data.quit18_30, "quit31_45": data.quit31_45,
             "quit46_60": data.quit46_60, "quitManagement": data.quit_management, "quitMiddle": data.quit_middle,
             "quitGeneral": data.quit_general}
-        return {"status": "success", "data": data_dict}
+        return {"status": "success", "data": data_dict,
+                "review": {"status": data.review_status, "comment": data.review_comment}}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

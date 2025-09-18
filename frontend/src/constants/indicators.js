@@ -5,7 +5,7 @@ export const CATEGORY = {
     "water": "水资源",
     "emission": "排放",
     "waste": "废弃物",
-    "investment": "投资",
+    "investment": "资金投入",
     "management": "环境管理",
     "climate_change": "气候变化",
     "env_opportunities": "环境机遇",

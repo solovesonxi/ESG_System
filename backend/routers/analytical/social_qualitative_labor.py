@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db, indicators
-from core.models import LaborQualitative
+from core.models import LaborQualitative, YearInfo
 from core.permissions import require_view, get_current_user, require_edit, check_factory_year
 from core.utils import send_yearly_message
 
@@ -40,7 +40,10 @@ async def get_labor_qualitative(factory: str = Query(...), year: int = Query(...
                     "comparisonText": current_record.comparison_text if current_record else "",
                     "reason": current_record.reason if current_record else ""}
             result[category] = group
-        return result
+        year_info = db.query(YearInfo).with_entities(YearInfo.review_status, YearInfo.review_comment).filter_by(
+            factory=factory, year=year).first()
+        return {"data": result,
+                "review": {"status": year_info.review_status[3], "comment": year_info.review_comment[3]}}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取劳动定性数据失败: {str(e)}")
 
@@ -71,7 +74,7 @@ async def save_labor_qualitative(factory: str = Body(..., description="工厂名
                                             comparison_text=payload.get('comparisonText', ''),
                                             reason=payload.get('reason', '')))
         db.commit()
-        send_yearly_message(db, current_user, factory, year, isSubmitted, "社会定性-劳工数据")
+        send_yearly_message(db, current_user, factory, year, isSubmitted, "social_qual_labor")
         return {"status": "success", "message": "社会定性-劳工内容已保存"}
     except Exception as e:
         db.rollback()

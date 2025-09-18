@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" form-type="management" @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset">
         <legend>{{ year }}年{{ month }}月管理数据统计</legend>
         <div class="loading" v-if="isLoading">数据加载中...</div>
@@ -73,10 +73,11 @@
 </template>
 
 <script setup>
-import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
 import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js"
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
+import {handleError, showError, showInfo, showSuccess} from "@/utils/toast.js";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory);
@@ -84,6 +85,7 @@ const year = computed(() => selectionStore.selectedYear);
 const month = computed(() => selectionStore.selectedMonth);
 const isEditing = ref(false)
 const isLoading = ref(false)
+const review = ref({});
 
 // 表单数据结构（按月存储，1~12月）
 const formData = ref({
@@ -116,16 +118,14 @@ const fetchData = async () => {
         environmentalPenaltyAmount: data.environmental_penalty_amount || Array(12).fill(0),
         environmentalViolation: data.environmental_violation || Array(12).fill(0),
       };
+      review.value = response.data.review;
     } else {
       resetFormData();
+      showInfo('未找到数据')
     }
   } catch (error) {
-    if (error.response?.status === 404) {
-      resetFormData();
-    } else {
-      console.error('获取数据失败:', error);
-      resetFormData();
-    }
+    handleError(error);
+    resetFormData();
   } finally {
     isLoading.value = false;
   }
@@ -140,6 +140,7 @@ const resetFormData = () => {
     environmentalPenaltyAmount: Array(12).fill(0),
     environmentalViolation: Array(12).fill(0),
   };
+  review.value = {status: Array(12).fill("pending"), comment: Array(12).fill('')};
 };
 
 // 提交编辑方法
@@ -158,13 +159,13 @@ const submitEdit = async (ifSubmit) => {
     };
     const response = await apiClient.post('/quantitative/management', payload);
     if (response.data.status === 'success') {
-      alert('数据提交成功!')
-    }else {
-      alert(`数据提交失败: ${response.data.message || '未知错误'}`)
+      showSuccess('数据提交成功!')
+    } else {
+      showError(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('提交失败:', error);
-    alert(`提交失败: ${error.response?.data?.detail || error.message}`);
+    handleError(error);
   } finally {
     isEditing.value = false;
     await fetchData();

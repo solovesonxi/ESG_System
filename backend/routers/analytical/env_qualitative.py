@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.dependencies import indicators
-from core.models import EnvQualData
+from core.models import EnvQualData, YearInfo
 from core.permissions import require_view, require_edit, get_current_user, check_factory_year
 from core.utils import send_yearly_message
 router = APIRouter(prefix="/analytical/env_qualitative", tags=["分析数据-环境定性"])
@@ -29,7 +29,9 @@ async def get_data(factory: str, year: int, db: Session = Depends(get_db),
             reason = current_data.reasons.get(key, "") if current_data and current_data.reasons else ""
             response_data[category][key] = {"lastYear": last_year_value, "currentYear": current_value,
                                             "comparison": comparison, "reason": reason}
-    return response_data
+    year_info = db.query(YearInfo).with_entities(YearInfo.review_status, YearInfo.review_comment).filter_by(factory=factory, year=year).first()
+    return {"data":response_data,
+                "review": {"status": year_info.review_status[1], "comment": year_info.review_comment[1]}}
 
 
 @router.post("")
@@ -57,7 +59,7 @@ async def save_data(factory: str = Body(..., description="工厂名称"), year: 
                                reasons=reasons)
         db.merge(record)
         db.commit()
-        send_yearly_message(db, current_user, factory, year, isSubmitted, "环境定性数据")
+        send_yearly_message(db, current_user, factory, year, isSubmitted, "env_qual")
         return {"status": "success", "message": "数据提交成功"}
     except Exception as e:
         db.rollback()
