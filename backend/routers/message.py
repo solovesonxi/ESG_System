@@ -17,9 +17,10 @@ async def send_messages(msg_type: str = Body(..., description="消息类型"),
                         content: str = Body(..., description="消息内容"),
                         receiver_role: str = Body(..., description="接收方角色"),
                         receiver_factory: Optional[str] = Body(None, description="接收方工厂"),
+                        receiver_department: Optional[str] = Body(None, description="接收方部门"),
                         db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    send_message(db, msg_type, title, content, current_user["role"], current_user["factory"], receiver_role,
-                 receiver_factory)
+    send_message(db, msg_type, title, content, current_user["role"], current_user["factory"],
+                 current_user["department"], receiver_role, receiver_factory, receiver_department)
     return {"status": "success", "message": "消息已发送"}
 
 
@@ -27,16 +28,27 @@ async def send_messages(msg_type: str = Body(..., description="消息类型"),
 async def get_messages(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     role = current_user["role"]
     factory = current_user["factory"]
-    messages = db.query(Message).filter(
-        Message.receiver_role == role if role != "factory" else Message.receiver_factory == factory).order_by(
-        Message.created_at.desc()).all()
+    departments = current_user["departments"]
+    if role == "headquarter" or role == "admin":
+        messages = db.query(Message).filter(Message.receiver_role == role).order_by(Message.created_at.desc()).all()
+    elif role == "factory":
+        messages = db.query(Message).filter(Message.receiver_role == role,
+                                            Message.receiver_factory == factory).order_by(
+            Message.created_at.desc()).all()
+    elif role == "department":
+        messages = db.query(Message).filter(Message.receiver_role == role, Message.receiver_factory == factory,
+                                            Message.receiver_department.in_(departments)).order_by(
+            Message.created_at.desc()).all()
+    else:
+        raise HTTPException(status_code=400, detail="未知角色")
     notifications = [msg for msg in messages if msg.type != "最近操作"]
     operations = [msg for msg in messages if msg.type == "最近操作"]
 
     def to_dict(msg):
         return {"id": msg.id, "type": msg.type, "title": msg.title, "content": msg.content,
                 "sender_role": msg.sender_role, "sender_factory": msg.sender_factory,
-                "receiver_role": msg.receiver_role, "receiver_factory": msg.receiver_factory,
+                "sender_department": msg.sender_department, "receiver_role": msg.receiver_role,
+                "receiver_factory": msg.receiver_factory, "receiver_department": msg.receiver_department,
                 "created_at": msg.created_at, "is_read": msg.is_read}
 
     return {"notifications": [to_dict(m) for m in notifications], "operations": [to_dict(m) for m in operations]}

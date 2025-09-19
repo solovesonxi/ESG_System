@@ -105,7 +105,7 @@ import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
 import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js"
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
-import {showError, showInfo, showSuccess, handleError} from "@/utils/toast.js";
+import {handleError, showError, showInfo, showSuccess} from "@/utils/toast.js";
 
 const selectionStore = useSelectionStore()
 const factory = computed(() => selectionStore.selectedFactory);
@@ -197,7 +197,7 @@ const fetchData = async () => {
       showInfo("未找到数据")
     }
   } catch (error) {
-      handleError(error);
+    handleError(error);
   } finally {
     isLoading.value = false
   }
@@ -218,7 +218,10 @@ const resetFormData = () => {
     packagingMaterial: Array(12).fill(0),
     paper: Array(12).fill(0),
   }
-  review.value = {status: Array(12).fill("pending"), comment: Array(12).fill('')};
+  review.value = {
+    id: Array(12).fill(-1), is_submitted: Array(12).fill(false), status1: Array(12).fill("pending"), comment1: Array(12).fill(''),
+    status2: Array(12).fill("pending"), comment22: Array(12).fill('')
+  };
 }
 
 // 提交编辑方法

@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import ResponsibilityData
-from core.permissions import get_current_user, require_view
+from core.permissions import get_current_user
 from core.schemas import ResponsibilitySubmission
-from core.utils import submit_data
+from core.utils import submit_data, get_review_info, require_view
 
 router = APIRouter(prefix="/quantitative/responsibility", tags=["定量数据-产品责任"])
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/quantitative/responsibility", tags=["定量数据-�
 async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                      current_user: dict = Depends(get_current_user)):
     try:
-        require_view(factory, current_user)
+        require_view(factory, "responsibility", current_user)
         data = db.query(ResponsibilityData).filter(ResponsibilityData.factory == factory,
                                                           ResponsibilityData.year == year).first()
         if not data:
@@ -23,7 +23,7 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                      "recalls": data.recalls, "shipments": data.shipments,
                      "customerSatisfaction": data.customer_satisfaction, "cyberIncidents": data.cyber_incidents}
         return {"status": "success", "data": data_dict,
-                "review": {"status": data.review_status, "comment": data.review_comment}}
+                "review": get_review_info(db, factory, year, "responsibility")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

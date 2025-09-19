@@ -1,21 +1,21 @@
 from typing import Dict
-from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.dependencies import indicators
-from core.models import EnvQualData, YearInfo
-from core.permissions import require_view, require_edit, get_current_user, check_factory_year
-from core.utils import send_yearly_message
+from core.models import EnvQualData
+from core.permissions import get_current_user
+from core.utils import send_yearly_message, get_review_info, check_review_record, require_view, require_edit
+
 router = APIRouter(prefix="/analytical/env_qualitative", tags=["分析数据-环境定性"])
 
 
 @router.get("")
 async def get_data(factory: str, year: int, db: Session = Depends(get_db),
                    current_user: dict = Depends(get_current_user)):
-    require_view(factory, current_user)
+    require_view(factory, "env_qual", current_user)
     current_data = db.query(EnvQualData).filter_by(factory=factory, year=year).first()
     last_year_data = db.query(EnvQualData).filter_by(factory=factory, year=year - 1).first()
     response_data = {}
@@ -29,9 +29,7 @@ async def get_data(factory: str, year: int, db: Session = Depends(get_db),
             reason = current_data.reasons.get(key, "") if current_data and current_data.reasons else ""
             response_data[category][key] = {"lastYear": last_year_value, "currentYear": current_value,
                                             "comparison": comparison, "reason": reason}
-    year_info = db.query(YearInfo).with_entities(YearInfo.review_status, YearInfo.review_comment).filter_by(factory=factory, year=year).first()
-    return {"data":response_data,
-                "review": {"status": year_info.review_status[1], "comment": year_info.review_comment[1]}}
+    return {"data": response_data, "review": get_review_info(db, factory, year, "env_qual")}
 
 
 @router.post("")
@@ -40,8 +38,8 @@ async def save_data(factory: str = Body(..., description="工厂名称"), year: 
                     isSubmitted: bool = Body(..., description="是否提交"), db: Session = Depends(get_db),
                     current_user: dict = Depends(get_current_user)):
     try:
-        require_edit(factory, current_user)
-        check = check_factory_year(factory, year, db, isSubmitted, 1)
+        require_edit(factory, "env_qual", current_user)
+        check = check_review_record(db, factory, year, "env_qual", isSubmitted)
         if check["status"] == "fail":
             return check
         indicator_data = {}
@@ -52,11 +50,7 @@ async def save_data(factory: str = Body(..., description="工厂名称"), year: 
                 indicator_data[indicator] = group.get("currentYear", "")
                 comparisons[indicator] = group.get("comparison", "")
                 reasons[indicator] = group.get("reason", "")
-        check = check_factory_year(factory, year, db, isSubmitted, 1)
-        if check["status"] == "fail":
-            return  check
-        record = EnvQualData(factory=factory, year=year, **indicator_data, comparison=comparisons,
-                               reasons=reasons)
+        record = EnvQualData(factory=factory, year=year, **indicator_data, comparison=comparisons, reasons=reasons)
         db.merge(record)
         db.commit()
         send_yearly_message(db, current_user, factory, year, isSubmitted, "env_qual")

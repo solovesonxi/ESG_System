@@ -1,13 +1,12 @@
-from datetime import datetime
 from typing import Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db, indicators
-from core.models import OtherQualitative, YearInfo
-from core.permissions import require_view, get_current_user, require_edit, check_factory_year
-from core.utils import send_yearly_message
+from core.models import OtherQualitative
+from core.permissions import get_current_user
+from core.utils import send_yearly_message, get_review_info, check_review_record, require_view, require_edit
 
 router = APIRouter(prefix="/analytical/social_qualitative_other", tags=["分析数据-社会定性-其他"])
 
@@ -16,7 +15,7 @@ router = APIRouter(prefix="/analytical/social_qualitative_other", tags=["分析�
 async def get_other_qualitative(factory: str = Query(...), year: int = Query(...), db: Session = Depends(get_db),
                                 current_user: dict = Depends(get_current_user)):
     try:
-        require_view(factory, current_user)
+        require_view(factory, "social_qual_other", current_user)
         current_rows = db.query(OtherQualitative).filter(OtherQualitative.factory == factory,
                                                          OtherQualitative.year == year).all()
         last_year_rows = db.query(OtherQualitative).filter(OtherQualitative.factory == factory,
@@ -30,14 +29,11 @@ async def get_other_qualitative(factory: str = Query(...), year: int = Query(...
                 current = current_data.get(ind)
                 last_year = last_year_data.get(ind)
                 group[ind] = {"currentText": current.current_text if current else "",
-                    "lastText": last_year.current_text if last_year else "",
-                    "comparisonText": current.comparison_text if current else "",
-                    "reason": current.reason if current else ""}
+                              "lastText": last_year.current_text if last_year else "",
+                              "comparisonText": current.comparison_text if current else "",
+                              "reason": current.reason if current else ""}
             result[category] = group
-        year_info = db.query(YearInfo).with_entities(YearInfo.review_status, YearInfo.review_comment).filter_by(
-            factory=factory, year=year).first()
-        return {"data": result,
-                "review": {"status": year_info.review_status[5], "comment": year_info.review_comment[5]}}
+        return {"data": result, "review": get_review_info(db, factory, year, "social_qual_other")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取其他定性数据失败: {str(e)}")
 
@@ -49,8 +45,8 @@ async def save_other_qualitative(factory: str = Body(..., description="工厂名
                                  data: Dict[str, Dict[str, Dict[str, str]]] = Body(...), db: Session = Depends(get_db),
                                  current_user: dict = Depends(get_current_user)):
     try:
-        require_edit(factory, current_user)
-        check = check_factory_year(factory, year, db, isSubmitted, 5)
+        require_edit(factory, "social_qual_other", current_user)
+        check = check_review_record(db, factory, year, "social_qual_other", isSubmitted)
         if check["status"] == "fail":
             return check
         for category, indicators in data.items():

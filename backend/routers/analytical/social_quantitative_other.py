@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
-from core.models import OtherReason, SupplyData, ResponsibilityData, IPData, CommunityData, YearInfo
-from core.permissions import require_view, get_current_user, require_edit, check_factory_year
-from core.utils import _calc_comparison, send_yearly_message
+from core.models import OtherReason, SupplyData, ResponsibilityData, IPData, CommunityData
+from core.permissions import get_current_user
+from core.utils import _calc_comparison, send_yearly_message, get_review_info, check_review_record, require_view, require_edit
 
 router = APIRouter(prefix="/analytical/social_quantitative_other", tags=["分析数据-社会定量-其他"])
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/analytical/social_quantitative_other", tags=["分析
 async def get_data(factory: str = Query(...), year: int = Query(...), db: Session = Depends(get_db),
                    current_user: dict = Depends(get_current_user)):
     try:
-        require_view(factory, current_user)
+        require_view(factory, "social_quant_other", current_user)
         supply_cur = db.query(SupplyData).filter(SupplyData.factory == factory, SupplyData.year == year).first()
         supply_prev = db.query(SupplyData).filter(SupplyData.factory == factory, SupplyData.year == year - 1).first()
 
@@ -77,10 +77,8 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
         for key in ['volunteer_participants', 'volunteer_hours']:
             data["志愿活动"][f"volunteer_{key}"] = entry_sum(f"volunteer_{key}", gv(community_cur, key),
                                                              gv(community_prev, key))
-        year_info = db.query(YearInfo).with_entities(YearInfo.review_status, YearInfo.review_comment).filter_by(
-            factory=factory, year=year).first()
         return {"data": data,
-                "review": {"status": year_info.review_status[4], "comment": year_info.review_comment[4]}}
+                "review": get_review_info(db, factory, year, "social_quant_other")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取社会定量-其他数据失败: {str(e)}")
 
@@ -90,8 +88,8 @@ async def save_reasons(factory: str = Body(..., description="工厂名称"), yea
                        reasons: Dict[str, str] = Body(...), isSubmitted: bool = Body(..., description="是否提交"),
                        db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
-        require_edit(factory, current_user)
-        check = check_factory_year(factory, year, db, isSubmitted, 4)
+        require_edit(factory, "social_quant_other", current_user)
+        check = check_review_record(db, factory, year, "social_quant_other", isSubmitted)
         if check["status"] == "fail":
             return check
         for indicator, reason in reasons.items():

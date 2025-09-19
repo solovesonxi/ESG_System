@@ -1,137 +1,238 @@
 <!-- BaseInfoSelector.vue -->
 <template>
-  <fieldset class="info-fieldset">
-    <legend>基础信息</legend>
-    <div class="form-row">
-      <div class="form-group">
-        <label>工厂名称</label>
-        <div class="custom-select">
-          <div class="selected" @click="selectionStore.toggleFactoryDropdown">
-            {{ factory }}
-            <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
-          </div>
-          <div class="options" v-show="selectionStore.showFactoryDropdown"
-               :style="{ maxHeight: '200px', overflowY: 'auto' }">
-            <div
-                v-for="f in selectionStore.factories"
-                :key="f"
-                class="option"
-                :class="{ 'selected-option': f === factory }"
-                @click="selectionStore.selectFactory(f)"
-            >
-              {{ f }}
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>统计年份</label>
-        <div class="custom-select">
-          <div class="selected" @click="selectionStore.toggleYearDropdown">
-            {{ year }}年
-            <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
-          </div>
-          <div class="options" v-show="selectionStore.showYearDropdown">
-            <div
-                v-for="y in selectionStore.years"
-                :key="y"
-                class="option"
-                :class="{ 'selected-option': y === year }"
-                @click="selectionStore.selectYear(y)"
-            >
-              {{ y }}年
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="form-group" v-if="authStore.isDataMode">
-        <label>统计月份</label>
-        <div class="custom-select">
-          <div class="selected" @click="selectionStore.toggleMonthDropdown">
-            {{ month }}月
-            <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
-          </div>
-          <div class="options" v-show="selectionStore.showMonthDropdown">
-            <div
-                v-for="m in selectionStore.months"
-                :key="m"
-                class="option"
-                :class="{ 'selected-option': m === month }"
-                @click="selectionStore.selectMonth(m)"
-            >
-              {{ m }}月
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>审核状态</label>
-        <div class="custom-select">
-          <div class="selected" @click="isAuditEditable && (showAuditDropdown = !showAuditDropdown)">
-            {{ currentAuditStatusLabel }}
-            <i class="arrow" :class="{ 'up': showAuditDropdown }"></i>
-          </div>
-          <div class="options" v-show="showAuditDropdown">
-            <div
-                v-for="status in auditStatusOptions"
-                :key="status.value"
-                class="option"
-                :class="{
-                  'selected-option': status.value === currentAuditStatus,
-                  'option-disabled': !isAuditEditable
-                }"
-                @click="handleAuditStatusChange(status.value)"
-                :style="{ cursor: isAuditEditable ? 'pointer' : 'not-allowed' }"
-            >
-              {{ status.label }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-    <div class="form-comment">
-      <label>审核评论</label>
-      <div class="audit-comment" :title="currentAuditComment">
-        <span v-if="currentAuditComment" class="comment-text">{{ currentAuditComment }}</span>
-        <span v-else class="empty-comment">暂无评论</span>
-      </div>
-    </div>
-  </fieldset>
-
-  <!-- 独立的悬浮审核评论弹窗 -->
-  <teleport to="body">
-    <div v-if="showCommentModal" class="audit-modal-overlay" @click="handleOverlayClick">
-      <div class="audit-modal" @click.stop>
-        <div class="audit-modal-header">
-          <div class="header-left">
-            <div class="audit-icon">
-            </div>
-            审核状态
-            <div class="header-text">
-              <div class="status-badge" :class="getStatusClass(pendingStatus)">
-                <h2>{{ auditStatusOptions.find(opt => opt.value === pendingStatus)?.label }}</h2>
+  <div class="base-info-container">
+    <!-- 基础信息和提交状态 -->
+    <div class="info-header">
+      <div class="basic-info">
+        <h3 class="section-title">基础信息</h3>
+        <div class="info-grid">
+          <!-- 工厂名称 -->
+          <div class="info-item">
+            <label class="info-label">工厂名称</label>
+            <div class="custom-select">
+              <div class="selected" @click="selectionStore.toggleFactoryDropdown">
+                <span class="value">{{ factory }}</span>
+                <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
+              </div>
+              <div class="options" v-show="selectionStore.showFactoryDropdown">
+                <div
+                    v-for="f in selectionStore.factories"
+                    :key="f"
+                    class="option"
+                    :class="{ 'selected-option': f === factory }"
+                    @click="selectionStore.selectFactory(f)"
+                >
+                  {{ f }}
+                </div>
               </div>
             </div>
           </div>
-          <button type="button" class="close-btn" @click="cancelAudit">
-            <svg viewBox="0 0 24 24" width="18" height="18">
-              <path
-                  d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-            </svg>
-          </button>
+
+          <!-- 统计年份 -->
+          <div class="info-item">
+            <label class="info-label">统计年份</label>
+            <div class="custom-select">
+              <div class="selected" @click="selectionStore.toggleYearDropdown">
+                <span class="value">{{ year }}年</span>
+                <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
+              </div>
+              <div class="options" v-show="selectionStore.showYearDropdown">
+                <div
+                    v-for="y in selectionStore.years"
+                    :key="y"
+                    class="option"
+                    :class="{ 'selected-option': y === year }"
+                    @click="selectionStore.selectYear(y)"
+                >
+                  {{ y }}年
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 统计月份 (仅在DataMode下显示) -->
+          <div class="info-item" v-if="authStore.isDataMode">
+            <label class="info-label">统计月份</label>
+            <div class="custom-select">
+              <div class="selected" @click="selectionStore.toggleMonthDropdown">
+                <span class="value">{{ month }}月</span>
+                <i class="arrow" :class="{ 'up': selectionStore.showMonthDropdown }"></i>
+              </div>
+              <div class="options" v-show="selectionStore.showMonthDropdown">
+                <div
+                    v-for="m in selectionStore.months"
+                    :key="m"
+                    class="option"
+                    :class="{ 'selected-option': m === month }"
+                    @click="selectionStore.selectMonth(m)"
+                >
+                  {{ m }}月
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="audit-modal-body">
-          <div class="comment-section">
-            <label for="audit-comment" class="comment-label">
-              <svg viewBox="0 0 24 24" width="16" height="16">
-                <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-              </svg>
-              审核意见
-            </label>
-            <div class="textarea-wrapper">
+      </div>
+
+      <!-- 提交状态指示器 -->
+      <div class="submission-indicator">
+        <div class="status-badge" :class="submissionStatusClass">
+          <i class="fas" :class="submissionStatusIcon"></i>
+          <span class="status-text">{{ submissionStatusText }}</span>
+        </div>
+        <div class="status-detail">
+          提交状态
+        </div>
+      </div>
+    </div>
+
+    <!-- 审核信息区域 -->
+    <div class="review-section" v-if="hasReviewData">
+      <h3 class="section-title">审核信息</h3>
+
+      <!-- 月度数据审核信息 -->
+      <div v-if="isMonthlyData" class="monthly-review">
+        <div class="review-item">
+          <div class="review-header">
+            <span class="month-label">{{ month }}月审核状态</span>
+          </div>
+          <div class="review-grid">
+            <!-- 一级审核 -->
+            <div class="review-column" v-if="authStore.canViewLevel1Results">
+              <div class="review-title">
+                <i class="fas fa-check-circle"></i>
+                一级审核
+              </div>
+              <div class="status-display">
+                <span class="status-badge" :class="getStatusClass(currentLevel1Status)">
+                  {{ getStatusLabel(currentLevel1Status) }}
+                </span>
+                <!-- 编辑控制 -->
+                <div class="edit-control" v-if="canEditLevel1">
+                  <select
+                      :value="currentLevel1Status"
+                      @change="handleLevel1StatusChange($event.target.value)"
+                      class="status-select"
+                  >
+                    <option v-for="option in auditStatusOptions" :key="option.value" :value="option.value">
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="comment-display" v-if="currentLevel1Comment">
+                <div class="comment-label">审核意见</div>
+                <div class="comment-text">{{ currentLevel1Comment }}</div>
+              </div>
+            </div>
+
+            <!-- 二级审核 -->
+            <div class="review-column" v-if="authStore.canViewLevel2Results">
+              <div class="review-title">
+                <i class="fas fa-shield-alt"></i>
+                二级审核
+              </div>
+              <div class="status-display">
+                <span class="status-badge" :class="getStatusClass(currentLevel2Status)">
+                  {{ getStatusLabel(currentLevel2Status) }}
+                </span>
+                <!-- 编辑控制 -->
+                <div class="edit-control" v-if="canEditLevel2">
+                  <select
+                      :value="currentLevel2Status"
+                      @change="handleLevel2StatusChange($event.target.value)"
+                      class="status-select"
+                  >
+                    <option v-for="option in auditStatusOptions" :key="option.value" :value="option.value">
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="comment-display" v-if="currentLevel2Comment">
+                <div class="comment-label">审核意见</div>
+                <div class="comment-text">{{ currentLevel2Comment }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 年度数据审核信息 -->
+      <div v-else class="yearly-review">
+        <div class="review-grid">
+          <!-- 一级审核 -->
+          <div class="review-column" v-if="authStore.canViewLevel1Results">
+            <div class="review-title">
+              <i class="fas fa-check-circle"></i>
+              一级审核
+            </div>
+            <div class="status-display">
+              <span class="status-badge" :class="getStatusClass(currentLevel1Status)">
+                {{ getStatusLabel(currentLevel1Status) }}
+              </span>
+              <!-- 编辑控制 -->
+              <div class="edit-control" v-if="canEditLevel1">
+                <select
+                    :value="currentLevel1Status"
+                    @change="handleLevel1StatusChange($event.target.value)"
+                    class="status-select"
+                >
+                  <option v-for="option in auditStatusOptions" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="comment-display" v-if="currentLevel1Comment">
+              <div class="comment-label">审核意见</div>
+              <div class="comment-text">{{ currentLevel1Comment }}</div>
+            </div>
+          </div>
+
+          <!-- 二级审核 -->
+          <div class="review-column" v-if="authStore.canViewLevel2Results">
+            <div class="review-title">
+              <i class="fas fa-shield-alt"></i>
+              二级审核
+            </div>
+            <div class="status-display">
+              <span class="status-badge" :class="getStatusClass(currentLevel2Status)">
+                {{ getStatusLabel(currentLevel2Status) }}
+              </span>
+              <!-- 编辑控制 -->
+              <div class="edit-control" v-if="canEditLevel2">
+                <select
+                    :value="currentLevel2Status"
+                    @change="handleLevel2StatusChange($event.target.value)"
+                    class="status-select"
+                >
+                  <option v-for="option in auditStatusOptions" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="comment-display" v-if="currentLevel2Comment">
+              <div class="comment-label">审核意见</div>
+              <div class="comment-text">{{ currentLevel2Comment }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 审核评论弹窗 -->
+    <teleport to="body">
+      <div v-if="showCommentModal" class="modal-overlay" @click="handleOverlayClick">
+        <div class="modal-container" @click.stop>
+          <div class="modal-header">
+            <h3>审核评论</h3>
+          </div>
+          <div class="modal-body">
+            <div class="comment-section">
+              <label class="comment-label">审核意见</label>
               <textarea
-                  id="audit-comment"
                   v-model="newComment"
                   rows="4"
                   placeholder="请输入您的审核意见..."
@@ -141,21 +242,14 @@
               <div class="char-count">{{ newComment.length || 0 }}/500</div>
             </div>
           </div>
-        </div>
-        <div class="audit-modal-footer">
-          <button type="button" class="btn btn-cancel" @click="cancelAudit">
-            取消
-          </button>
-          <button type="button" class="btn btn-submit" @click="submitAudit">
-            <svg viewBox="0 0 24 24" width="16" height="16">
-              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-            </svg>
-            提交审核
-          </button>
+          <div class="modal-footer">
+            <button class="btn btn-cancel" @click="cancelAudit">取消</button>
+            <button class="btn btn-submit" @click="submitAudit">提交</button>
+          </div>
         </div>
       </div>
-    </div>
-  </teleport>
+    </teleport>
+  </div>
 </template>
 
 <script setup>
@@ -187,73 +281,132 @@ const factory = computed(() => selectionStore.selectedFactory);
 const year = computed(() => selectionStore.selectedYear);
 const month = computed(() => selectionStore.selectedMonth);
 
-// 审核相关
+// 审核编辑权限
+const canEditLevel1 = computed(() => authStore.canLevel1Review);
+const canEditLevel2 = computed(() => authStore.canLevel2Review);
+
+// 审核状态选项
 const auditStatusOptions = [
   {value: 'pending', label: '待审核'},
   {value: 'approved', label: '通过'},
   {value: 'rejected', label: '不通过'}
 ];
 
-const showAuditDropdown = ref(false);
+// 审核相关状态
 const showCommentModal = ref(false);
 const newComment = ref('');
-const pendingStatus = ref(''); // 添加变量存储用户选择的状态
-const isAuditEditable = computed(() => authStore.isAdmin || authStore.isHeadquarter);
+const pendingStatus = ref('');
+const pendingLevel = ref(0);
 
-// 根据当前选择的月份获取对应的审核状态和评论 - 统一使用props.review
-const currentAuditStatus = computed(() => {
-  if (authStore.isDataMode && props.review.status && Array.isArray(props.review.status)) {
-    return props.review.status[month.value - 1] || 'pending';
-  } else if (!authStore.isDataMode && props.review.status && typeof props.review.status === 'string') {
-    return props.review.status || 'pending';
+// 判断是否为月度数据
+const isMonthlyData = computed(() => {
+  return authStore.isDataMode && props.review.is_submitted && Array.isArray(props.review.is_submitted);
+});
+
+// 判断是否有审核数据
+const hasReviewData = computed(() => {
+  return props.review && Object.keys(props.review).length > 0;
+});
+
+// 提交状态相关计算属性
+const currentSubmissionStatus = computed(() => {
+  if (isMonthlyData.value && props.review.is_submitted) {
+    return props.review.is_submitted[month.value - 1] || false;
+  } else if (!isMonthlyData.value && props.review.is_submitted !== undefined) {
+    return props.review.is_submitted || false;
+  }
+  return false;
+});
+
+const submissionStatusClass = computed(() => {
+  return currentSubmissionStatus.value ? 'status-submitted' : 'status-not-submitted';
+});
+
+const submissionStatusIcon = computed(() => {
+  return currentSubmissionStatus.value ? 'fa-check-circle' : 'fa-clock';
+});
+
+const submissionStatusText = computed(() => {
+  return currentSubmissionStatus.value ? '已提交' : '未提交';
+});
+
+// 一级审核状态
+const currentLevel1Status = computed(() => {
+  if (isMonthlyData.value && props.review.status1) {
+    return props.review.status1[month.value - 1] || 'pending';
+  } else if (!isMonthlyData.value && props.review.status1) {
+    return props.review.status1 || 'pending';
   }
   return 'pending';
 });
 
-const currentAuditComment = computed(() => {
-  if (authStore.isDataMode && props.review.comment && Array.isArray(props.review.comment)) {
-    return props.review.comment[month.value - 1] || '';
-  } else if (!authStore.isDataMode && props.review.comment && typeof props.review.comment === 'string') {
-    return props.review.comment || '';
+const currentLevel1Comment = computed(() => {
+  if (isMonthlyData.value && props.review.comment1) {
+    return props.review.comment1[month.value - 1] || '';
+  } else if (!isMonthlyData.value && props.review.comment1) {
+    return props.review.comment1 || '';
   }
   return '';
 });
 
-const currentAuditStatusLabel = computed(() => {
-  const found = auditStatusOptions.find(opt => opt.value === currentAuditStatus.value);
-  return found ? found.label : '待审核';
+// 二级审核状态
+const currentLevel2Status = computed(() => {
+  if (isMonthlyData.value && props.review.status2) {
+    return props.review.status2[month.value - 1] || 'pending';
+  } else if (!isMonthlyData.value && props.review.status2) {
+    return props.review.status2 || 'pending';
+  }
+  return 'pending';
 });
 
-// 切换审核状态
-const handleAuditStatusChange = (status) => {
-  if (!isAuditEditable.value) return;
-  showAuditDropdown.value = false;
-  if (status !== currentAuditStatus.value) {
-    pendingStatus.value = status; // 先存储选择的状态
+const currentLevel2Comment = computed(() => {
+  if (isMonthlyData.value && props.review.comment2) {
+    return props.review.comment2[month.value - 1] || '';
+  } else if (!isMonthlyData.value && props.review.comment2) {
+    return props.review.comment2 || '';
+  }
+  return '';
+});
+
+// 处理审核状态变更
+const handleLevel1StatusChange = (status) => {
+  if (status !== currentLevel1Status.value) {
+    pendingStatus.value = status;
+    pendingLevel.value = 1;
     if (status === 'pending') {
-      // 待审核状态不需要评论，直接提交
       newComment.value = '';
       submitAudit();
     } else {
-      // 通过和不通过都需要填写评论
       showCommentModal.value = true;
-      newComment.value = currentAuditComment.value || '';
+      newComment.value = currentLevel1Comment.value || '';
     }
   }
 };
 
-// 提交审核状态和评论
+const handleLevel2StatusChange = (status) => {
+  if (status !== currentLevel2Status.value) {
+    pendingStatus.value = status;
+    pendingLevel.value = 2;
+    if (status === 'pending') {
+      newComment.value = '';
+      submitAudit();
+    } else {
+      showCommentModal.value = true;
+      newComment.value = currentLevel2Comment.value || '';
+    }
+  }
+};
+
+// 提交审核
 const submitAudit = async () => {
   const auditData = {
-    factory: factory.value,
-    year: year.value,
-    month: authStore.isDataMode ? month.value : null,
-    formType: props.formType,
+    id: authStore.isDataMode ? props.review.id[month.value - 1] : props.review.id,
+    level: pendingLevel.value,
     status: pendingStatus.value,
     comment: newComment.value
   };
   try {
-    const response = await apiClient.patch('/review', auditData);
+    const response = await apiClient.patch(`/review`, auditData);
     if (response.data && response.data.status === 'success') {
       emit('selection-changed');
     } else {
@@ -262,10 +415,11 @@ const submitAudit = async () => {
     }
   } catch (error) {
     console.error('审核状态更新失败:', error);
-    handleError(error)
+    handleError(error);
   } finally {
     showCommentModal.value = false;
     pendingStatus.value = '';
+    pendingLevel.value = '';
     newComment.value = '';
   }
 };
@@ -273,10 +427,10 @@ const submitAudit = async () => {
 const cancelAudit = () => {
   showCommentModal.value = false;
   pendingStatus.value = '';
+  pendingLevel.value = '';
   newComment.value = '';
 };
 
-// 处理弹窗背景点击
 const handleOverlayClick = (e) => {
   if (e.target === e.currentTarget) {
     cancelAudit();
@@ -293,36 +447,304 @@ const getStatusClass = (status) => {
     case 'pending':
       return 'status-pending';
     default:
-      return '';
+      return 'status-pending';
   }
 };
 
+// 获取状态标签
+const getStatusLabel = (status) => {
+  const found = auditStatusOptions.find(opt => opt.value === status);
+  return found ? found.label : '待审核';
+};
+
 // 监听选择变化
-watch([factory, year], () => {
+watch([factory, year, month], () => {
   emit('selection-changed');
 });
 </script>
 
 <style scoped>
-.audit-comment {
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background-color: #f9f9f9;
-  min-height: 45px;
+.base-info-container {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.basic-info {
+  flex: 1;
+}
+
+.section-title {
+  color: #2c3e50;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.875rem;
+}
+
+.custom-select {
+  position: relative;
+}
+
+.selected {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.selected:hover {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.selected .value {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.arrow {
+  transition: transform 0.3s ease;
+}
+
+.arrow.up {
+  transform: rotate(180deg);
+}
+
+.arrow::before {
+  content: '▼';
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 0.25rem;
+}
+
+.option {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: #495057;
+}
+
+.option:hover {
+  background-color: rgba(102, 126, 234, 0.1);
+}
+
+.selected-option {
+  background-color: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* 提交状态指示器 */
+.submission-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-badge {
   display: flex;
   align-items: center;
-  font-size: 14px;
-  line-height: 1.4;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.empty-comment {
-  color: #999;
-  font-style: italic;
+.status-badge.status-submitted {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
 }
 
-/* 审核弹窗样式 */
-.audit-modal-overlay {
+.status-badge.status-not-submitted {
+  background: linear-gradient(135deg, #ffc516 0%, #ff9800 100%);
+  color: white;
+}
+
+.status-detail {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+/* 审核信息区域 */
+.review-section {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 1.5rem;
+}
+
+.monthly-review, .yearly-review {
+  margin-top: 1rem;
+}
+
+.review-header {
+  margin-bottom: 1rem;
+}
+
+.month-label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.review-column {
+  background: rgba(248, 249, 250, 0.8);
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.review-column:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.review-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: #495057;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.review-title i {
+  color: #667eea;
+}
+
+.status-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.status-badge.status-approved {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+}
+
+.status-badge.status-rejected {
+  background: linear-gradient(135deg, #dc3545 0%, #e91e63 100%);
+  color: white;
+}
+
+.status-badge.status-pending {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  color: white;
+}
+
+.edit-control {
+  margin-top: 0.5rem;
+}
+
+.status-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  background: white;
+  color: #495057;
+  font-size: 0.875rem;
+  transition: border-color 0.3s ease;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.comment-display {
+  margin-top: 1rem;
+}
+
+.comment-label {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.comment-text {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  color: #495057;
+  line-height: 1.5;
+  min-height: 2.5rem;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -336,9 +758,9 @@ watch([factory, year], () => {
   backdrop-filter: blur(4px);
 }
 
-.audit-modal {
+.modal-container {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   width: 90%;
   max-width: 500px;
@@ -358,106 +780,26 @@ watch([factory, year], () => {
   }
 }
 
-.audit-modal-header {
-  padding: 1.5rem 2rem 1rem;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.modal-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-}
-
-.header-left {
+  padding: 1.5rem;
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  justify-content: left;
 }
 
-.audit-icon {
-  width: 24px;
-  height: 24px;
-}
-
-.header-text h3 {
+.modal-header h3 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
 }
 
-.status-badge {
-  display: flex;
-  align-items: center;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-top: 0.25rem;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-}
-
-.status-approved {
-  background: rgba(212, 237, 218, 0.9);
-  color: #155724;
-}
-
-.status-rejected {
-  background: rgba(248, 215, 218, 0.9);
-  color: #721c24;
-}
-
-.status-pending {
-  background: rgba(255, 243, 205, 0.9);
-  color: #856404;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-}
-
-.close-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.audit-modal-body {
-  padding: 2rem;
+.modal-body {
+  padding: 1.5rem;
 }
 
 .comment-section {
-  margin-bottom: 1.5rem;
-}
-
-.comment-label {
-  display: block;
-  margin-bottom: 0.75rem;
-  font-weight: 600;
-  color: #495057;
-  position: relative;
-}
-
-.comment-label svg {
-  position: absolute;
-  left: -24px;
-  top: 50%;
-  transform: translateY(-50%);
-  fill: #667eea;
-}
-
-.textarea-wrapper {
-  position: relative;
+  margin-bottom: 1rem;
 }
 
 .comment-input {
@@ -465,7 +807,7 @@ watch([factory, year], () => {
   padding: 0.75rem;
   border: 2px solid #e9ecef;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.5;
   resize: vertical;
   min-height: 100px;
@@ -479,27 +821,26 @@ watch([factory, year], () => {
 }
 
 .char-count {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  font-size: 12px;
-  color: #999;
+  text-align: right;
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-top: 0.5rem;
 }
 
-.audit-modal-footer {
-  padding: 1rem 2rem 1.5rem;
+.modal-footer {
+  background: #f8f9fa;
+  padding: 1rem 1.5rem;
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  background: #f8f9fa;
 }
 
 .btn {
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   min-width: 80px;
@@ -525,42 +866,87 @@ watch([factory, year], () => {
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-.btn:active {
-  transform: translateY(0);
+/* 深色模式支持 */
+.dark-theme .base-info-container {
+  background: rgba(45, 55, 72, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* 深色主题支持 */
-.dark-theme .audit-modal {
+.dark-theme .section-title {
+  background: linear-gradient(135deg, #e94560 0%, #533483 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark-theme .info-label {
+  color: #cbd5e0;
+}
+
+.dark-theme .selected {
+  background: rgba(74, 85, 104, 0.8);
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+.dark-theme .selected:hover {
+  border-color: #e94560;
+}
+
+.dark-theme .options {
+  background: #2d3748;
+  border-color: rgba(233, 69, 96, 0.3);
+}
+
+.dark-theme .option {
+  color: #cbd5e0;
+}
+
+.dark-theme .option:hover {
+  background-color: rgba(233, 69, 96, 0.2);
+}
+
+.dark-theme .selected-option {
+  background-color: rgba(233, 69, 96, 0.3);
+  color: #e94560;
+}
+
+.dark-theme .review-column {
+  background: rgba(74, 85, 104, 0.4);
+  border-color: #4a5568;
+}
+
+.dark-theme .review-title {
+  color: #cbd5e0;
+}
+
+.dark-theme .review-title i {
+  color: #e94560;
+}
+
+.dark-theme .status-select {
+  background: #4a5568;
+  border-color: #718096;
+  color: #e2e8f0;
+}
+
+.dark-theme .status-select:focus {
+  border-color: #e94560;
+}
+
+.dark-theme .comment-text {
+  background: rgba(74, 85, 104, 0.6);
+  border-color: #4a5568;
+  color: #cbd5e0;
+}
+
+.dark-theme .modal-container {
   background: #2d3748;
   color: #e2e8f0;
 }
 
-.dark-theme .audit-modal-header {
-  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-  border-bottom-color: #4a5568;
-}
-
-.dark-theme .status-badge {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.dark-theme .status-approved {
-  background: rgba(72, 187, 120, 0.3);
-  color: #9ae6b4;
-}
-
-.dark-theme .status-rejected {
-  background: rgba(245, 101, 101, 0.3);
-  color: #feb2b2;
-}
-
-.dark-theme .status-pending {
-  background: rgba(237, 137, 54, 0.3);
-  color: #fbb064;
-}
-
-.dark-theme .comment-section label {
-  color: #cbd5e0;
+.dark-theme .modal-header {
+  background: linear-gradient(135deg, #e94560 0%, #533483 100%);
 }
 
 .dark-theme .comment-input {
@@ -570,20 +956,34 @@ watch([factory, year], () => {
 }
 
 .dark-theme .comment-input:focus {
-  border-color: #667eea;
+  border-color: #e94560;
 }
 
-.dark-theme .audit-modal-footer {
+.dark-theme .modal-footer {
   background: #4a5568;
 }
 
-.dark-theme .audit-comment {
-  background: #4a5568;
-  border-color: #718096;
-  color: #e2e8f0;
-}
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .info-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
 
-.dark-theme .empty-comment {
-  color: #a0aec0;
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .submission-indicator {
+    align-self: stretch;
+  }
+
+  .status-badge {
+    justify-content: center;
+  }
 }
 </style>

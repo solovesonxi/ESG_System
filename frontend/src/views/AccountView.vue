@@ -114,11 +114,6 @@
         </div>
       </div>
     </div>
-    <!-- 通知消息 -->
-    <div class="notification" :class="{ show: showNotification, error: notificationError }">
-      <i class="fas" :class="notificationError ? 'fa-exclamation-circle' : 'fa-check-circle'"></i>
-      <span>{{ notificationMessage }}</span>
-    </div>
   </div>
 </template>
 
@@ -126,11 +121,9 @@
 import {computed, ref} from 'vue';
 import {useAuthStore} from '@/stores/authStore';
 import apiClient from '@/utils/axios';
+import {showSuccess, showError, showInfo} from '@/utils/toast.js';
 
 const authStore = useAuthStore();
-
-// 主题切换相关
-const isDark = ref(true);
 
 // 账号信息相关
 const user = ref({
@@ -175,12 +168,11 @@ const uploadAvatar = async (file) => {
       }
     });
     if (response.data.status === 'success') {
-      const fullAvatarUrl = `${apiClient.defaults.baseURL}${response.data.avatar}?t=${new Date().getTime()}`;
-      user.value.avatar = fullAvatarUrl;
-      authStore.user.avatar = fullAvatarUrl;
-      showNotificationMessage('头像上传成功！');
+      authStore.updateAvatar(response.data.avatar);
+      user.value.avatar = authStore.user.avatar;
+      showSuccess('头像上传成功！');
     } else {
-      showNotificationMessage('头像上传失败，请稍后重试', true);
+      showError('头像上传失败，请稍后重试');
     }
   } catch (error) {
     console.error('上传头像失败:', error);
@@ -225,12 +217,7 @@ const currentPassword = ref('');
 const newPassword = ref('');
 const confirmPassword = ref('');
 
-// 通知状态
-const showNotification = ref(false);
-const notificationMessage = ref('');
-const notificationError = ref(false);
-
-// 鼠标悬停头像时显示“更换头像”提示文字
+// 鼠标悬停头像时显示"更换头像"提示文字
 const showAvatarTip = ref(false);
 
 // 打开编辑模态框
@@ -248,42 +235,41 @@ const closeEditModal = () => {
 
 const sendVerificationCode = async () => {
   if (!editValue.value.trim()) {
-    showNotificationMessage('输入内容不能为空', true);
+    showError('输入内容不能为空');
     return;
   }
-  showNotificationMessage('已发送验证码...有效期5分钟');
+  showInfo('已发送验证码...有效期5分钟');
   try {
     const data = currentField.value === 'phone' ? {phone: editValue.value.trim()} : {email: editValue.value.trim()}
     await apiClient.post('/auth/verification', data);
   } catch (error) {
     console.error('验证码发送失败：', error);
-    showNotificationMessage('验证码发送失败：' + error.response.data.detail, true);
+    showError('验证码发送失败：' + error.response.data.detail);
   }
 }
 
 // 提交编辑
 const submitEdit = async () => {
-  showNotificationMessage('正在更新信息...');
   if (!editValue.value.trim()) {
-    showNotificationMessage('输入内容不能为空', true);
+    showError('输入内容不能为空');
     return;
   }
   if (currentField.value === 'phone' && !/^\d{10,15}$/.test(editValue.value.trim())) {
-    showNotificationMessage('请输入有效的电话号码', true);
+    showError('请输入有效的电话号码');
     return;
   }
   if (currentField.value === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editValue.value.trim())) {
-    showNotificationMessage('请输入有效的邮箱地址', true);
+    showError('请输入有效的邮箱地址');
     return;
   }
-  showNotificationMessage('正在更改' + currentField.value + '...请稍等', false, 20000);
+  showInfo('正在更改' + currentField.value + '...请稍等', false, 20000);
   try {
     let response;
     if (currentField.value === 'username') {
       response = await apiClient.patch('/user/username', editValue.value.trim());
     } else {
       if (!verificationCode.value.trim()) {
-        showNotificationMessage('请输入验证码', true);
+        showError('请输入验证码');
         return;
       }
       if (currentField.value === 'phone') {
@@ -298,7 +284,7 @@ const submitEdit = async () => {
         });
       }
     }
-    console.log('更新结果：', response.data);
+    console.log('用户信息更新结果：', response.data);
     if (response.data.status === 'success') {
       user.value[currentField.value] = editValue.value;
       authStore.user[currentField.value] = editValue.value;
@@ -307,13 +293,13 @@ const submitEdit = async () => {
         authStore.setAuth(token, response.data.user)
       }
       closeEditModal();
-      showNotificationMessage(`${fieldLabel.value}更新成功！`);
+      showSuccess(`${fieldLabel.value}更新成功！`);
     } else {
-      showNotificationMessage(response.data.message || '更新失败，请稍后重试', true);
+      showError(response.data.message || '更新失败，请稍后重试');
     }
   } catch (error) {
     console.error('更新失败：', error);
-    showNotificationMessage('更新失败：' + error.response.data.detail, true);
+    showError('更新失败：' + error.response.data.detail);
   }
 };
 
@@ -333,42 +319,31 @@ const closePasswordModal = () => {
 // 提交密码更改
 const submitPassword = async () => {
   if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
-    showNotificationMessage('所有字段都必须填写', true);
+    showError('所有字段都必须填写');
     return;
   }
   if (newPassword.value !== confirmPassword.value) {
-    showNotificationMessage('两次输入的密码不一致', true);
+    showError('两次输入的密码不一致');
     return;
   }
   if (newPassword.value.length < 6) {
-    showNotificationMessage('密码长度至少为6位', true);
+    showError('密码长度至少为6位');
     return;
   }
-  showNotificationMessage('正在更新密码...');
+  showInfo('正在更新密码...');
   try {
     const response = await apiClient.post('/user/password', {
       current_password: currentPassword.value,
       new_password: newPassword.value
     });
     if (response.data.status === 'success') {
-      showNotificationMessage('密码更新成功！');
+      showSuccess('密码更新成功！');
       closePasswordModal();
     }
   } catch (error) {
     console.log(error.response.data);
-    showNotificationMessage('密码更新失败，请稍后重试：' + error.response.data.detail, true);
+    showError('密码更新失败，请稍后重试：' + error.response.data.detail);
   }
-};
-
-// 显示通知消息
-const showNotificationMessage = (message, isError = false, duration = 3000) => {
-  notificationMessage.value = message;
-  notificationError.value = isError;
-  showNotification.value = true;
-
-  setTimeout(() => {
-    showNotification.value = false;
-  }, duration);
 };
 </script>
 
@@ -712,14 +687,15 @@ const showNotificationMessage = (message, isError = false, duration = 3000) => {
   gap: 8px;
 }
 
-.cancel-btn {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+.action-btn {
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .submit-btn {

@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import OHSData
-from core.permissions import get_current_user, require_view
+from core.permissions import get_current_user
 from core.schemas import OHSSubmission
-from core.utils import submit_data
+from core.utils import submit_data, get_review_info, require_view
 
 router = APIRouter(prefix="/quantitative/ohs", tags=["定量数据-职健与安全"])
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/quantitative/ohs", tags=["定量数据-职健与安�
 async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                      current_user: dict = Depends(get_current_user)):
     try:
-        require_view(factory, current_user)
+        require_view(factory, "ohs", current_user)
         data = db.query(OHSData).filter(OHSData.factory == factory, OHSData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
@@ -26,7 +26,7 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                      "coverageRate": data.coverage_rate, "emergencyDrills": data.emergency_drills,
                      "hazardsFound": data.hazards_found, "occupationalChecks": data.occupational_checks}
         return {"status": "success", "data": data_dict,
-                "review": {"status": data.review_status, "comment": data.review_comment}}
+                "review": get_review_info(db, factory, year, "ohs")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -1,5 +1,6 @@
 import os
 import random
+import re
 import smtplib
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -36,14 +37,15 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 def login(username: str = Body(..., description="用户名"), password: str = Body(..., description="密码"),
           db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
+    logger.info(pwd_context.hash(password))
     if not user or not pwd_context.verify(password, str(user.hashed_password)):
         raise HTTPException(status_code=400, detail="用户名或密码错误")
     # 在token中包含权限信息
-    token_data = {"username": user.username, "role": user.role, "factory": user.factory}
+    token_data = {"username": user.username, "role": user.role, "factory": user.factory, "departments": user.departments}
     access_token = create_access_token(data=token_data, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"token": access_token,
-            "user": {"username": user.username, "factory": user.factory, "role": user.role,
-                     "phone": user.phone, "email": user.email, "avatar": user.avatar}}
+            "user": {"username": user.username, "factory": user.factory, "departments": user.departments,
+                     "role": user.role, "phone": user.phone, "email": user.email, "avatar": user.avatar}}
 
 
 @router.post("/refresh", summary="刷新令牌")
@@ -93,7 +95,6 @@ def register(username: str = Body(..., description="用户名"), password: str =
         db.rollback()
         logger.error(f"注册失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 def send_sms(phone: str, code: str):
@@ -163,4 +164,42 @@ def send_verification_code(phone: Optional[str] = Body(None, description="电话
         send_email(email, verification_code)
         channel = "邮箱"
 
+    return {"success": True, "message": f"验证码已发送至您的{channel}", "channel": channel, "target": target}
+
+
+@router.post("/forgot-password", summary="忘记密码发送验证码")
+def forgot_password(text: str = Body(..., description="用户名/邮箱/手机号"), db: Session = Depends(get_db),
+                    redis_client: redis.Redis = Depends(get_redis)):
+    email_pattern = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+    phone_pattern = r"^1[3-9]\d{9}$"
+    if re.match(email_pattern, text):
+        user = db.query(User).filter(User.email == text).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="邮箱未注册")
+        target = user.email
+        channel = "邮箱"
+    elif re.match(phone_pattern, text):
+        user = db.query(User).filter(User.phone == text).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="手机号未注册")
+        target = user.phone
+        channel = "手机"
+    else:
+        user = db.query(User).filter(User.username == text).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="用户名未注册")
+        if user.email:
+            target = user.email
+            channel = "邮箱"
+        elif user.phone:
+            target = user.phone
+            channel = "手机"
+        else:
+            raise HTTPException(status_code=400, detail="该用户未绑定邮箱或手机号")
+    verification_code = str(random.randint(100000, 999999))
+    redis_client.setex(f"verification_code:{target}", 300, verification_code)
+    if channel == "邮箱":
+        send_email(str(target), verification_code)
+    else:
+        send_sms(str(target), verification_code)
     return {"success": True, "message": f"验证码已发送至您的{channel}", "channel": channel, "target": target}

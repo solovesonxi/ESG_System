@@ -31,7 +31,7 @@
     <!-- 右侧面板 - 表单区域 -->
     <div class="form-container">
       <!-- 登录表单 -->
-      <div v-if="!showRegister" class="register-form">
+      <div class="register-form">
         <div class="form-row">
           <label class="form-label">用户名</label>
           <input
@@ -67,129 +67,11 @@
         </div>
       </div>
 
-      <!-- 注册表单 -->
-      <div v-else class="register-form">
-        <div class="form-row">
-          <label class="form-label">用户名</label>
-          <input
-              v-model="registerForm.username"
-              type="text"
-              placeholder="请设置用户名"
-              required
-              :class="{'input-error': registrationErrors.username}"
-          >
-        </div>
-        <div v-if="registrationErrors.username" class="error-message">
-          {{ registrationErrors.username }}
-        </div>
-
-        <div class="form-row">
-          <label class="form-label">密码</label>
-          <div class="password-wrapper">
-            <input
-                v-model="registerForm.password"
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="请设置登录密码"
-                required
-                :class="{'input-error': registrationErrors.password}"
-            >
-            <button
-                type="button"
-                class="password-toggle"
-                @click="showPassword = !showPassword"
-            >
-              <i :class="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
-            </button>
-          </div>
-        </div>
-        <div v-if="registrationErrors.password" class="error-message">
-          {{ registrationErrors.password }}
-        </div>
-
-        <div class="form-row">
-          <label class="form-label">确认密码</label>
-          <div class="password-wrapper">
-            <input
-                v-model="registerForm.confirmPassword"
-                :type="showConfirmPassword ? 'text' : 'password'"
-                placeholder="请再次输入密码"
-                required
-                :class="{'input-error': registrationErrors.confirmPassword}"
-            >
-            <button
-                type="button"
-                class="password-toggle"
-                @click="showConfirmPassword = !showConfirmPassword"
-            >
-              <i :class="showConfirmPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
-            </button>
-          </div>
-        </div>
-        <div v-if="registrationErrors.confirmPassword" class="error-message">
-          {{ registrationErrors.confirmPassword }}
-        </div>
-
-        <div class="form-row">
-          <label class="form-label">工厂名称</label>
-          <select
-              v-model="registerForm.factory"
-              required
-              :class="{'input-error': registrationErrors.factory}"
-          >
-            <option value="" disabled selected>请选择工厂</option>
-            <option v-for="factory in factories" :key="factory" :value="factory">
-              {{ factory }}
-            </option>
-          </select>
-        </div>
-        <div v-if="registrationErrors.factory" class="error-message">
-          {{ registrationErrors.factory }}
-        </div>
-
-        <div class="form-row">
-          <label class="form-label">手机号/邮箱</label>
-          <input
-              v-model="registerForm.contact"
-              type="text"
-              placeholder="请输入手机号或邮箱"
-              required
-              :class="{'input-error': registrationErrors.contact}"
-          >
-        </div>
-        <div v-if="registrationErrors.contact" class="error-message">
-          {{ registrationErrors.contact }}
-        </div>
-        <div class="form-row">
-          <label class="form-label">验证码</label>
-          <div class="verification-wrapper">
-            <input
-                v-model="registerForm.verificationCode"
-                type="text"
-                placeholder="请输入验证码"
-                required
-                :class="{'input-error': registrationErrors.verificationCode}"
-            >
-            <span class="verification-code"
-                  :class="{ 'disabled': registerForm.countdown > 0 }"
-                  @click="sendVerificationCode">
-              {{ registerForm.countdown > 0 ? `重新发送(${registerForm.countdown}s)` : '发送验证码' }}
-            </span>
-          </div>
-        </div>
-        <div v-if="registrationErrors.verificationCode" class="error-message">
-          {{ registrationErrors.verificationCode }}
-        </div>
-      </div>
-      <button class="btn" @click="showRegister ? handleRegister() : handleLogin()">
-        {{ showRegister ? '注册' : '登录' }}
+      <button class="btn" @click="handleLogin()">
+        登录
       </button>
       <div class="links">
-        <a href="#" @click="showRegister = !showRegister">
-          {{ showRegister ? '已有账号？立即登录' : '没有账号？立即注册' }}
-        </a>
-        <a href="#" @click="showRegister ? (showRegister=false) : forgetPassword()">{{
-            showRegister ? "了解更多关于 ESG" : "忘记密码"
-          }}</a>
+        <a href="#" @click="forgetPassword()">忘记密码</a>
       </div>
     </div>
 
@@ -203,44 +85,17 @@
 import router from "@/router/index.js";
 import {useAuthStore} from '@/stores/authStore';
 import apiClient from "@/utils/axios.js";
-import {handleError, showError, showInfo, showSuccess} from "@/utils/toast.js";
+import {showInfo} from "@/utils/toast.js";
 
 export default {
   name: 'LoginView',
   data() {
     return {
-      showRegister: false,
       showPassword: false,
-      showConfirmPassword: false,
       loginError: '',
-      factories: [
-        "安徽光大美科", "安徽光大同创", "昆山一", "昆山二", "成都厂", "惠阳厂",
-        "厦门奔方", "武汉厂", "南昌厂", "越南", "墨西哥", "深圳光大", "沃普智选",
-        "青岛音诺", "天津茂创", "合肥山秀", "苏州领新", "东莞美科同创",
-        "重庆致贯", "苏州致贯"
-      ],
       loginForm: {
         username: '',
         password: '',
-      },
-      registerForm: {
-        username: '',
-        password: '',
-        confirmPassword: '',
-        factory: '',
-        contact: '', // 输入的手机号或邮箱
-        phone: '', // 手机号
-        email: '', // 邮箱
-        verificationCode: '',
-        countdown: 0 // 倒计时秒数
-      },
-      registrationErrors: {
-        username: '',
-        password: '',
-        confirmPassword: '',
-        factory: '',
-        contact: '',
-        verificationCode: ''
       }
     }
   },
@@ -266,128 +121,8 @@ export default {
       }
     },
 
-    async handleRegister() {
-      Object.keys(this.registrationErrors).forEach(key => {
-        this.registrationErrors[key] = '';
-      });
-      let isValid = true;
-      if (!this.registerForm.username) {
-        this.registrationErrors.username = '用户名不能为空';
-        isValid = false;
-      }
-      if (!this.registerForm.password) {
-        this.registrationErrors.password = '密码不能为空';
-        isValid = false;
-      } else if (this.registerForm.password.length < 6) {
-        this.registrationErrors.password = '密码至少需要6个字符';
-        isValid = false;
-      }
-      if (this.registerForm.password !== this.registerForm.confirmPassword) {
-        this.registrationErrors.confirmPassword = '两次输入的密码不一致';
-        isValid = false;
-      }
-      if (!this.registerForm.factory) {
-        this.registrationErrors.factory = '请选择工厂';
-        isValid = false;
-      }
-      if (!this.registerForm.contact) {
-        this.registrationErrors.contact = '请输入手机号或邮箱';
-        isValid = false;
-      } else {
-        const input = this.registerForm.contact;
-        const isPhone = /^1[3-9]\d{9}$/.test(input);
-        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
-        if (!isPhone && !isEmail) {
-          this.registrationErrors.contact = '请输入正确的手机号或邮箱';
-          isValid = false;
-        } else {
-          if (isPhone) {
-            this.registerForm.phone = input;
-            this.registerForm.email = '';
-            showInfo('抱歉，目前暂不支持手机号注册，请使用邮箱注册。');
-            return;
-          } else {
-            this.registerForm.email = input;
-            this.registerForm.phone = '';
-          }
-        }
-      }
-      if (!this.registerForm.verificationCode) {
-        this.registrationErrors.verificationCode = '请输入验证码';
-        isValid = false;
-      }
-      if (!isValid) {
-        return;
-      }
-      console.log('注册信息:', this.registerForm);
-      const payload = {
-        username: this.registerForm.username,
-        password: this.registerForm.password,
-        factory: this.registerForm.factory,
-        phone: this.registerForm.phone,
-        email: this.registerForm.email,
-        verificationCode: this.registerForm.verificationCode
-      }
-      const response = await apiClient.post('/auth/register', payload)
-      if (response.data.status === 'success') {
-        showSuccess('注册成功!', response.data.username)
-        this.showRegister = false;
-      } else {
-        showError(response.data.message || '注册失败，请稍后重试。')
-      }
-    },
-
     forgetPassword() {
       showInfo('请联系管理员重置密码。');
-    },
-
-    async sendVerificationCode() {
-      if (this.registerForm.countdown > 0) {
-        return;
-      }
-      const input = this.registerForm.contact;
-      if (!input) {
-        this.registrationErrors.contact = '请输入手机号或邮箱';
-        return;
-      }
-      const isPhone = /^1[3-9]\d{9}$/.test(input);
-      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
-      if (!isPhone && !isEmail) {
-        this.registrationErrors.contact = '请输入正确的手机号或邮箱';
-        return;
-      }
-      this.registrationErrors.contact = '';
-      if (isPhone) {
-        this.registerForm.phone = input;
-        this.registerForm.email = '';
-        showError('抱歉，目前暂不支持手机号注册，请使用邮箱注册。');
-        return;
-      } else {
-        this.registerForm.email = input;
-        this.registerForm.phone = '';
-      }
-      try {
-        const response = await apiClient.post('/auth/verification', {
-          phone: this.registerForm.phone,
-          email: this.registerForm.email
-        });
-
-        if (response.data.success) {
-          showInfo(`验证码已发送至您的${isPhone ? '手机' : '邮箱'}，请注意查收！`);
-          this.registerForm.countdown = 60;
-          const timer = setInterval(() => {
-            this.registerForm.countdown--;
-            if (this.registerForm.countdown <= 0) {
-              clearInterval(timer);
-            }
-          }, 1000);
-        } else {
-          showError(response.data.message || '发送验证码失败，请稍后重试。');
-        }
-      } catch (error) {
-        console.error('发送验证码失败:', error);
-        handleError(error);
-      }
     }
   }
 }
@@ -530,7 +265,7 @@ input:focus, select:focus {
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
 }
 
-.password-wrapper, .verification-wrapper {
+.password-wrapper {
   position: relative;
   flex: 1;
   display: flex;
@@ -559,35 +294,6 @@ input:focus, select:focus {
   background: rgba(0, 0, 0, 0.1);
 }
 
-.verification-code {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 500;
-  font-size: 14px;
-  cursor: pointer;
-  color: #fff;
-  background: #4CAF50;
-  transition: all 0.3s ease;
-}
-
-.verification-code:hover {
-  background: #388E3C;
-}
-
-.verification-code.disabled {
-  background: #999;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.verification-code.disabled:hover {
-  background: #999;
-}
-
 .btn {
   width: 80%;
   background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
@@ -599,7 +305,7 @@ input:focus, select:focus {
   cursor: pointer;
   transition: all 0.3s ease;
   display: block;
-  margin: 0 auto;
+  margin: 30px auto 0 auto;
   padding: 12px 24px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
@@ -740,7 +446,7 @@ input:focus, select:focus {
 
 .links {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   position: absolute;
   bottom: 8px;
   left: 20px;
@@ -784,37 +490,16 @@ input:focus, select:focus {
 
 /* 响应式设计 */
 @media (max-width: 900px) {
-  .container {
-    flex-direction: column;
-    height: auto;
-  }
-
-  .left-panel, .right-panel {
-    padding: 30px 20px;
-  }
-
-  .form-container {
-    padding: 20px;
-  }
-
-  .form-label {
-    width: 100%;
-    margin-bottom: 8px;
-    margin-right: 0;
-  }
-
-  .error-message {
-    margin-left: 0;
-  }
-}
-
-@media (max-width: 600px) {
   .login-container {
+    flex-direction: column;
+    min-height: 100vh;
     padding: 10px;
   }
 
-  .container {
-    border-radius: 15px;
+  .left-panel {
+    max-width: 100%;
+    padding: 20px;
+    margin-bottom: 20px;
   }
 
   .logo-text {
@@ -823,23 +508,156 @@ input:focus, select:focus {
 
   .tagline {
     font-size: 16px;
+    margin-top: 20px;
   }
 
-  .form-container {
-    padding: 15px;
+  .features {
+    margin-bottom: 20px;
   }
 
   .feature {
     font-size: 14px;
   }
 
-  .links {
-    flex-direction: column;
-    gap: 10px;
+  .form-container {
+    max-width: 100%;
+    width: 100%;
+    padding: 30px 20px;
+    min-height: auto;
   }
 
-  .links a {
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    width: 100%;
+    margin-bottom: 8px;
+    margin-right: 0;
+    text-align: left;
+  }
+
+  input {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    min-height: 50px;
+    box-sizing: border-box;
+  }
+
+  .password-wrapper {
+    width: 100%;
+  }
+
+  .password-toggle {
+    right: 15px;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 15px 24px;
+    font-size: 18px;
+    margin-top: 20px;
+  }
+
+  .error-message {
+    margin-left: 0;
     text-align: center;
+    margin-top: 10px;
+  }
+
+  .links {
+    position: static;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .footer {
+    position: static;
+    margin-top: 20px;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .login-container {
+    padding: 5px;
+    border-radius: 10px;
+  }
+
+  .left-panel {
+    padding: 15px;
+  }
+
+  .logo {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .logo-icon {
+    font-size: 36px;
+  }
+
+  .logo-text {
+    font-size: 22px;
+  }
+
+  .tagline {
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .features {
+    text-align: center;
+  }
+
+  .feature {
+    justify-content: center;
+    font-size: 13px;
+  }
+
+  .form-container {
+    padding: 20px 15px;
+  }
+
+  input {
+    padding: 12px;
+    font-size: 16px;
+    min-height: 48px;
+  }
+
+  .btn {
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+
+  .form-label {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 400px) {
+  .left-panel {
+    padding: 10px;
+  }
+
+  .form-container {
+    padding: 15px 10px;
+  }
+
+  .logo-text {
+    font-size: 20px;
+  }
+
+  .tagline {
+    font-size: 13px;
+  }
+
+  input {
+    padding: 10px;
+    min-height: 44px;
   }
 }
 </style>

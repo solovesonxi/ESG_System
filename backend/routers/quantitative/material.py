@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import MaterialData
-from core.permissions import get_current_user, require_view
+from core.permissions import get_current_user
 from core.schemas import MaterialSubmission
-from core.utils import submit_data
+from core.utils import submit_data, get_review_info, require_view
 
 router = APIRouter(prefix="/quantitative/material", tags=["定量数据-物料"])
 
@@ -14,11 +14,10 @@ router = APIRouter(prefix="/quantitative/material", tags=["定量数据-物料"]
 async def fetch_material_data(factory: str, year: int, db: Session = Depends(get_db),
                               current_user: dict = Depends(get_current_user)):
     try:
-        require_view(factory, current_user)
+        require_view(factory, "material", current_user)
         data = db.query(MaterialData).filter(MaterialData.factory == factory, MaterialData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
-
         data_dict = {"renewableInput": data.renewable_input, "nonRenewableInput": data.non_renewable_input,
                      "renewableOutput": data.renewable_output, "nonRenewableOutput": data.non_renewable_output,
                      "materialConsumption": data.material_consumption, "woodFiber": data.wood_fiber,
@@ -28,9 +27,8 @@ async def fetch_material_data(factory: str, year: int, db: Session = Depends(get
                      "totalInput": data.total_input, "totalOutput": data.total_output,
                      "renewableInputRatio": data.renewable_input_ratio,
                      "renewableOutputRatio": data.renewable_output_ratio}
-
         return {"status": "success", "data": data_dict,
-                "review": {"status": data.review_status, "comment": data.review_comment}}
+                "review": get_review_info(db, factory,  year, "material")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

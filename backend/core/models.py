@@ -4,23 +4,56 @@ from datetime import datetime, timezone
 from core.dependencies import Base
 
 
+# 用户表更新
 class User(Base):
     __tablename__ = 'users'
     username = Column(String(50), primary_key=True)
     hashed_password = Column(String(100), nullable=False)
-    factory = Column(String(100), nullable=False)
-    role = Column(String(20), nullable=False, default='factory')  # 'headquarter' 或 'factory' 或 'admin'
+    factory = Column(String(100), nullable=True)
+    departments = Column(JSON, nullable=True)  # 新增：部门权限列表
+    role = Column(String(20), nullable=False, default='department')  # 更新：支持4种角色
     phone = Column(String(20), nullable=True)
     email = Column(String(50), nullable=True)
     avatar = Column(String(60), nullable=True)
 
-class YearInfo(Base):
-    __tablename__ = 'year_info'
-    factory = Column(String(100), primary_key=True)
-    year = Column(Integer, primary_key=True)
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False] * 7)  # 对应七个模块的提交状态
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 7)  # 对应七个模块的审核状态
-    review_comment = Column(JSON, nullable=False, default=lambda: [""] * 7)  # 对应七个模块的审核意见
+
+class Message(Base):
+    __tablename__ = 'messages'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    type = Column(String(30), nullable=False)  # 消息类型
+    title = Column(String(30), nullable=False)  # 消息标题
+    content = Column(Text, nullable=True)  # 消息内容
+    sender_role = Column(String(20), nullable=False)  # 发送方角色
+    sender_factory = Column(String(50), nullable=True)  # 发送方工厂
+    sender_department = Column(String(50), nullable=True)  # 发送方部门
+    receiver_role = Column(String(20), nullable=False)  # 接收方角色
+    receiver_factory = Column(String(50), nullable=True)  # 接收方工厂
+    receiver_department = Column(String(50), nullable=True)  # 接收方部门
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))  # 发送时间
+    is_read = Column(Boolean, nullable=False, default=False)  # 是否已读
+
+# 审核表（推荐新建）
+class ReviewRecord(Base):
+    __tablename__ = 'review_records'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    factory = Column(String(100), nullable=False, index=True)
+    data_type = Column(String(50), nullable=False)  # 对应15种数据类型
+    year = Column(Integer, nullable=False, index=True)
+    month = Column(Integer, nullable=True, index=True)
+    is_submitted = Column(Boolean, default=False)
+
+    # 一级审核（工厂级）
+    level1_status = Column(String(20), default='pending')
+    level1_comment = Column(Text, nullable=True)
+    level1_reviewer = Column(String(50), nullable=True)
+    level1_review_time = Column(DateTime, nullable=True)
+
+    # 二级审核（总部级）
+    level2_status = Column(String(20), default='pending')
+    level2_comment = Column(Text, nullable=True)
+    level2_reviewer = Column(String(50), nullable=True)
+    level2_review_time = Column(DateTime, nullable=True)
+
 
 class MaterialData(Base):
     __tablename__ = 'material'
@@ -47,10 +80,6 @@ class MaterialData(Base):
     renewable_input_ratio = Column(Float, nullable=False)  # 可再生进料占比 (%)
     renewable_output_ratio = Column(Float, nullable=False)  # 可再生出料占比 (%)
 
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
-
 
 class EnergyData(Base):
     __tablename__ = 'energy'
@@ -71,9 +100,6 @@ class EnergyData(Base):
     total_energy_consumption = Column(Float)  # Tce
     turnover = Column(Float)  # 万元
     energy_consumption_intensity = Column(Float)
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class WaterData(Base):
@@ -106,9 +132,6 @@ class WaterData(Base):
     total_recycled = Column(Float, nullable=False)
     water_intensity = Column(Float, nullable=False)
     water_recycle_rate = Column(Float, nullable=False)
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class EmissionData(Base):
@@ -137,9 +160,6 @@ class EmissionData(Base):
     particulate = Column(Float, nullable=False)
     nox_sox_other = Column(Float, nullable=False)
     waste_gas_total = Column(Float, nullable=False)
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class WasteData(Base):
@@ -169,9 +189,6 @@ class WasteData(Base):
     # 强度指标
     hazardous_intensity = Column(Float, nullable=False)
     wastewater_intensity = Column(Float, nullable=False)
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class InvestmentData(Base):
@@ -190,9 +207,6 @@ class InvestmentData(Base):
     green_income_ratio = Column(Float, nullable=False)
     total_revenue = Column(Float, nullable=False)
     env_invest_intensity = Column(Float, nullable=False)
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class ManagementData(Base):
@@ -205,9 +219,6 @@ class ManagementData(Base):
     environmental_penalty_intensity = Column(JSON, nullable=False)
     environmental_penalty_amount = Column(JSON, nullable=False)
     environmental_violation = Column(JSON, nullable=False)
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class EmploymentData(Base):
@@ -267,9 +278,6 @@ class EmploymentData(Base):
     management_turnover_rate = Column(Float, default=0.0)
     middle_turnover_rate = Column(Float, default=0.0)
     general_turnover_rate = Column(Float, default=0.0)
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class TrainingData(Base):
@@ -299,9 +307,6 @@ class TrainingData(Base):
     mgmt_rate = Column(Float, default=0.0)  # 管理层占比
     middle_rate = Column(Float, default=0.0)  # 中层占比
     general_rate = Column(Float, default=0.0)
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class OHSData(Base):
@@ -336,9 +341,6 @@ class OHSData(Base):
     emergency_drills = Column(Integer, default=0)  # 安全应急演练次数(次)
     hazards_found = Column(Integer, default=0)  # 安全检查排查隐患数(个)
     occupational_checks = Column(Integer, default=0)  # 职业病体检人数(人)
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class SatisfactionData(Base):
@@ -347,9 +349,6 @@ class SatisfactionData(Base):
     year = Column(Integer, primary_key=True)
     satisfaction = Column(JSON, nullable=False)  # 存储12个月份的满意度数据
     annual_average = Column(Float, default=0.0)  # 年度平均值
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class SupplyData(Base):
@@ -384,9 +383,6 @@ class SupplyData(Base):
     # 新增：评估计数
     env_assessment_count = Column(Integer, default=0)  # 开展环境影响评估的供应商数量
     soc_assessment_count = Column(Integer, default=0)
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class ResponsibilityData(Base):
@@ -409,9 +405,6 @@ class ResponsibilityData(Base):
     recall_rate = Column(Float, default=0.0)  # 产品召回百分比
     quality_issues_total = Column(Integer, default=0)  # 产品安全质量问题
     cyber_incidents_total = Column(Integer, default=0)  # 网络数据安全事件
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class IPData(Base):
@@ -436,9 +429,6 @@ class IPData(Base):
     granted_patents_total = Column(Integer, default=0)  # 累计被授权专利数
     software_copyrights_total = Column(Integer, default=0)  # 累计软件著作权数量
     trademarks_total = Column(Integer, default=0)  # 累计商标注册数量
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class CommunityData(Base):
@@ -450,9 +440,6 @@ class CommunityData(Base):
     community_investment = Column(JSON, default=0.0)  # 社区发展投入金额
     volunteer_participants = Column(JSON, default=0)  # 志愿者活动参与人次
     volunteer_hours = Column(JSON, default=0.0)  # 志愿者服务总时长
-    is_submitted = Column(JSON, nullable=False, default=lambda: [False]*12)
-    review_status = Column(JSON, nullable=False, default=lambda: ["pending"] * 12)
-    review_comment = Column(JSON, nullable=False, default=lambda: [""]*12)
 
 
 class EnvQuantData(Base):
@@ -591,16 +578,3 @@ class Governance(Base):
     comparison_text = Column(Text)
     reason = Column(Text)
 
-
-class Message(Base):
-    __tablename__ = 'messages'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    type = Column(String(30), nullable=False)  # 消息类型
-    title = Column(String(30), nullable=False)  # 消息标题
-    content = Column(Text, nullable=True)  # 消息内容
-    sender_role = Column(String(20), nullable=False)  # 发送方角色
-    sender_factory = Column(String(100), nullable=True)  # 发送方工厂
-    receiver_role = Column(String(20), nullable=False)  # 接收方角色
-    receiver_factory = Column(String(100), nullable=True)  # 接收方工厂
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))  # 发送时间
-    is_read = Column(Boolean, nullable=False, default=False)  # 是否已读

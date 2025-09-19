@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db, indicators
-from core.models import (EnvQuantData, MaterialData, EnergyData, WaterData, EmissionData, WasteData, InvestmentData,
-                         ManagementData, YearInfo)
-from core.permissions import get_current_user, require_view, require_edit, check_factory_year
-from core.utils import send_yearly_message, _calc_comparison
+from core.models import EnvQuantData, MaterialData, EnergyData, WaterData, EmissionData, WasteData, InvestmentData, \
+    ManagementData
+from core.permissions import get_current_user
+from core.utils import send_yearly_message, _calc_comparison, get_review_info, check_review_record, require_view, require_edit
 
 router = APIRouter(prefix="/analytical/env_quantitative", tags=["分析数据-环境定量"])
 
@@ -46,7 +46,7 @@ def process_category_data(db, factory, year, category, fields, model_class, reas
 async def get_data(factory: str = Query(..., description="工厂名称"), year: int = Query(..., description="统计年份"),
                    db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)) -> Dict[str, Any]:
     try:
-        require_view(factory, current_user)
+        require_view(factory, "env_quant", current_user)
         reasons_rows = db.query(EnvQuantData).filter_by(factory=factory, year=year).all()
         reasons_map = {row.indicator: row.reason for row in reasons_rows}
         envquant_indicators = indicators["env_quant"]
@@ -65,10 +65,8 @@ async def get_data(factory: str = Query(..., description="工厂名称"), year: 
             InvestmentData, reasons_map)
         result["management"] = process_category_data(db, factory, year, "management", envquant_indicators["management"],
             ManagementData, reasons_map, [0, 1, 2])
-        year_info = db.query(YearInfo).with_entities(YearInfo.review_status, YearInfo.review_comment).filter_by(
-            factory=factory, year=year).first()
         return {"data": result,
-                "review": {"status": year_info.review_status[0], "comment": year_info.review_comment[0]}}
+                "review": get_review_info(db, factory, year, "env_quant")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取环境定量数据失败: {str(e)}")
 
@@ -78,8 +76,8 @@ async def save_reasons(factory: str = Body(..., description="工厂名称"), yea
                        reasons: Dict[str, str] = Body(...), isSubmitted: bool = Body(..., description="是否提交"),
                        db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
-        require_edit(factory, current_user)
-        check = check_factory_year(factory, year, db, isSubmitted, 0)
+        require_edit(factory, "env_quant", current_user)
+        check = check_review_record(db, factory, year, "env_quant", isSubmitted)
         if check["status"] == "fail":
             return check
         for indicator, reason in reasons.items():

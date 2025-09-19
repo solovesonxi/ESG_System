@@ -1,13 +1,12 @@
-from datetime import datetime
 from typing import Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
-from core.models import EmploymentData, TrainingData, OHSData, SatisfactionData, LaborReason, YearInfo
-from core.permissions import require_view, get_current_user, require_edit, check_factory_year
-from core.utils import _calc_comparison, send_yearly_message
+from core.models import EmploymentData, TrainingData, OHSData, SatisfactionData, LaborReason
+from core.permissions import get_current_user
+from core.utils import _calc_comparison, send_yearly_message, get_review_info, check_review_record, require_view, require_edit
 
 router = APIRouter(prefix="/analytical/social_quantitative_labor", tags=["分析数据-社会定量-劳工"])
 
@@ -16,7 +15,7 @@ router = APIRouter(prefix="/analytical/social_quantitative_labor", tags=["分析
 async def get_data(factory: str = Query(...), year: int = Query(...), db: Session = Depends(get_db),
                    current_user: dict = Depends(get_current_user)):
     try:
-        require_view(factory, current_user)
+        require_view(factory, "social_quant_labor", current_user)
         # 当前年与去年数据
         emp_cur = db.query(EmploymentData).filter(EmploymentData.factory == factory,
                                                   EmploymentData.year == year).first()
@@ -97,7 +96,7 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
         try:
             if gv(emp_cur, 'management') and gv(emp_cur, 'management') != 0:
                 mgmt_female_rate_cur = round((gv(emp_cur, 'management_female') or 0) / gv(emp_cur, 'management') * 100,
-                    2)
+                                             2)
             if gv(emp_prev, 'management') and gv(emp_prev, 'management') != 0:
                 mgmt_female_rate_prev = round(
                     (gv(emp_prev, 'management_female') or 0) / gv(emp_prev, 'management') * 100, 2)
@@ -242,10 +241,7 @@ async def get_data(factory: str = Query(...), year: int = Query(...), db: Sessio
                                                                   gv(sat_cur, 'annual_average'),
                                                                   gv(sat_prev, 'annual_average'))
 
-        year_info = db.query(YearInfo).with_entities(YearInfo.review_status, YearInfo.review_comment).filter_by(
-            factory=factory, year=year).first()
-        return {"data": data,
-                "review": {"status": year_info.review_status[2], "comment": year_info.review_comment[2]}}
+        return {"data": data, "review": get_review_info(db, factory, year, "social_quant_labor")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取社会定量-劳工数据失败: {str(e)}")
 
@@ -255,8 +251,8 @@ async def save_reasons(factory: str = Body(..., description="工厂名称"), yea
                        reasons: Dict[str, str] = Body(...), isSubmitted: bool = Body(..., description="是否提交"),
                        db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
-        require_edit(factory, current_user)
-        check = check_factory_year(factory, year, db, isSubmitted, 2)
+        require_edit(factory, "social_quant_labor", current_user)
+        check = check_review_record(db, factory, year, "social_quant_labor", isSubmitted)
         if check["status"] == "fail":
             return check
         for indicator, reason in reasons.items():

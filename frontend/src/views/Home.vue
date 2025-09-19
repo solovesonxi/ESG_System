@@ -1,13 +1,99 @@
 <template>
   <div class="dashboard">
-    <div class="theme-toggle">
-      <label class="theme-label">☀️</label>
-      <input type="checkbox" v-model="isDark" @click="toggleTheme" class="theme-switch"/>
-      <label class="theme-label">🌙</label>
+    <!-- 权限错误提示 -->
+    <div v-if="permissionError" class="permission-error-banner">
+      <div class="error-content">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div class="error-text">
+          <h4>访问受限</h4>
+          <p>{{ permissionErrorMessage }}</p>
+        </div>
+        <button class="close-error-btn" @click="dismissError">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
     </div>
-    <h1 class="welcome-text">欢迎回来, {{ authStore.user?.username }}!</h1>
+
+    <!-- 页面顶部区域 -->
+    <div class="top-section">
+      <div class="theme-toggle">
+        <label class="theme-label">☀️</label>
+        <input type="checkbox" v-model="isDark" @click="toggleTheme" class="theme-switch"/>
+        <label class="theme-label">🌙</label>
+      </div>
+      <div class="welcome-section">
+        <h1 class="welcome-text">欢迎回来, {{ authStore.user?.username }}!</h1>
+        <div class="user-role-badge">
+          <i class="fas fa-user-shield"></i>
+          <span>{{ getRoleDisplayName() }}</span>
+        </div>
+      </div>
+      <div class="user-info-section">
+        <div class="current-time">{{ currentTime }}</div>
+        <div class="online-status">
+          <div class="status-dot"></div>
+          <span>在线</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 部门权限卡片 -->
+    <div v-if="authStore.isDepartment && authStore.departments.length > 0" class="department-permissions-wrapper">
+      <div class="department-info-card modern">
+        <div class="card-content">
+          <div class="permission-header">
+            <div class="header-left">
+              <div class="permission-icon">
+                <i class="fas fa-shield-check"></i>
+              </div>
+              <div class="permission-title">
+                <h3>您的访问权限</h3>
+                <p>您可以管理以下 {{ authStore.departments.length }} 个部门的数据</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="departments-container">
+            <div class="department-grid">
+              <div
+                v-for="dept in departmentList"
+                :key="dept.value"
+                class="department-item"
+                :class="dept.class"
+                @click="navigateToDepartment(dept.value)"
+              >
+                <div class="dept-icon">
+                  <i :class="getDepartmentIcon(dept.value)"></i>
+                </div>
+                <div class="dept-info">
+                  <span class="dept-name">{{ dept.label }}</span>
+                  <span class="dept-status">可访问</span>
+                </div>
+                <div class="dept-arrow">
+                  <i class="fas fa-chevron-right"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="permission-footer">
+            <div class="permission-stats">
+              <span class="stat-item">
+                <i class="fas fa-database"></i>
+                {{ authStore.departments.length }} 个部门
+              </span>
+              <span class="stat-item">
+                <i class="fas fa-calendar"></i>
+                {{ '月度填报' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主内容区（填报进度、系统通知、最近操作） -->
     <div class="main-layout">
-      <!-- 左侧主内容区 -->
       <div class="main-half">
         <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
           <h2 style="margin: 0;">{{ authStore.isDataMode ? '月度填报' : '年度分析' }}进度</h2>
@@ -51,7 +137,6 @@
           </div>
         </div>
       </div>
-      <!-- 右侧系统通知和最近操作区 -->
       <div class="main-half">
         <!-- 系统通知区 -->
         <div class="message-section">
@@ -218,9 +303,7 @@
         </div>
         <div class="modal-content detail-content">
           <div class="message-meta">
-            <span class="message-type" :class="getMessageTypeClass(currentMessage?.type)">{{
-                currentMessage?.type
-              }}</span>
+            <span class="message-type" :class="getMessageTypeClass(currentMessage?.type)">{{ currentMessage?.type }}</span>
             <span class="message-date">{{ formatDate(currentMessage?.created_at) }}</span>
           </div>
           <div class="message-body">
@@ -266,6 +349,60 @@ const authStore = useAuthStore();
 const selectionStore = useSelectionStore();
 const router = useRouter();
 
+// 权限错误相关
+const permissionError = ref(false);
+const permissionErrorMessage = ref('');
+
+// 部门类型映射
+const departmentTypeMap = {
+  'material': { label: '物料消耗', class: 'dept-material' },
+  'energy': { label: '能源消耗', class: 'dept-energy' },
+  'water': { label: '水资源', class: 'dept-water' },
+  'waste': { label: '废料管理', class: 'dept-waste' },
+  'emission': { label: '排放数据', class: 'dept-emission' },
+  'investment': { label: '环境投资', class: 'dept-investment' },
+  'management': { label: '环境管理', class: 'dept-management' },
+  'employment': { label: '雇佣数据', class: 'dept-employment' },
+  'training': { label: '培训数据', class: 'dept-training' },
+  'ohs': { label: '职业健康安全', class: 'dept-ohs' },
+  'satisfaction': { label: '员工满意度', class: 'dept-satisfaction' },
+  'supply': { label: '供应链', class: 'dept-supply' },
+  'responsibility': { label: '产品责任', class: 'dept-responsibility' },
+  'ip': { label: '知识产权', class: 'dept-ip' },
+  'community': { label: '社区参与', class: 'dept-community' },
+  'governance': { label: '公司治理', class: 'dept-governance' }
+};
+
+// 部门权限列表
+const departmentList = computed(() => {
+  return authStore.departments.map(dept => {
+    const map = departmentTypeMap[dept] || { label: dept, class: 'dept-default' }
+    return { value: dept, label: map.label, class: map.class }
+  })
+})
+
+
+// 检查URL参数中的错误信息
+const checkPermissionErrors = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('error') === 'no_permission') {
+    permissionError.value = true;
+    permissionErrorMessage.value = '您没有权限访问该页面，只能访问您负责的部门数据。';
+  } else if (urlParams.get('error') === 'no_review_permission') {
+    permissionError.value = true;
+    permissionErrorMessage.value = '您没有审核权限，无法访问审核管理页面。';
+  }
+};
+
+// 关闭权限错误提示
+const dismissError = () => {
+  permissionError.value = false;
+  // 清除URL参数
+  const url = new URL(window.location);
+  url.searchParams.delete('error');
+  window.history.replaceState({}, '', url);
+};
+
 // 系统通知相关
 const notifications = ref([]);
 const operations = ref([]);
@@ -279,6 +416,7 @@ const selectedNotifications = ref(new Set());
 const selectedOperations = ref(new Set());
 const isSelectMode = ref(false);
 const isOperationSelectMode = ref(false);
+const currentTime = ref('')
 
 // 计算属性
 const allNotificationsSelected = computed(() =>
@@ -330,13 +468,6 @@ const showAllMessagesModal = ref(false);
 const showAllHistoryModal = ref(false);
 const showDeleteConfirmModal = ref(false);
 const deleteMode = ref('');
-const messageToDelete = ref(null);
-const checked = ref(false);
-// 导航功能
-const navigateTo = (path) => {
-  authStore.isDataMode = !path.includes('/env-quantitative');
-  router.push(path);
-};
 
 // 通知相关函数
 const fetchMessages = async () => {
@@ -372,7 +503,6 @@ const openMessageDetail = (msg) => {
 const closeAllModals = () => {
   showAllMessagesModal.value = false;
   showAllHistoryModal.value = false;
-  checked.value = false;
 };
 
 const closeDetailModal = () => {
@@ -381,7 +511,6 @@ const closeDetailModal = () => {
 
 const closeDeleteConfirm = () => {
   showDeleteConfirmModal.value = false;
-  messageToDelete.value = null;
 };
 
 const markMessageAsRead = async (messageId) => {
@@ -595,11 +724,66 @@ const fetchQuantitativeProgress = async () => {
     console.error('获取进度数据失败:', error);
   }
 };
+// 获取角色显示名称
+const getRoleDisplayName = () => {
+  const roleMap = {
+    'department': '部门管理员',
+    'factory': '工厂管理员',
+    'headquarter': '总部管理员',
+    'admin': '系统管理员'
+  }
+  return roleMap[authStore.user?.role] || '用户'
+}
 
+// 获取部门图标
+const getDepartmentIcon = (deptType) => {
+  const iconMap = {
+    'material': 'fas fa-boxes',
+    'energy': 'fas fa-bolt',
+    'water': 'fas fa-tint',
+    'waste': 'fas fa-trash',
+    'emission': 'fas fa-smog',
+    'investment': 'fas fa-coins',
+    'management': 'fas fa-cogs',
+    'employment': 'fas fa-users',
+    'training': 'fas fa-graduation-cap',
+    'ohs': 'fas fa-shield-alt',
+    'satisfaction': 'fas fa-smile',
+    'supply': 'fas fa-truck',
+    'responsibility': 'fas fa-handshake',
+    'ip': 'fas fa-copyright',
+    'community': 'fas fa-heart',
+    'governance': 'fas fa-balance-scale'
+  }
+  return iconMap[deptType] || 'fas fa-folder'
+}
+
+// 导航到部门
+const navigateToDepartment = (deptType) => {
+  // 这里可以添加导航逻辑
+  console.log('导航到部门:', deptType)
+  router.push(`/${deptType}`)
+}
+
+// 更新时间
+const updateTime = () => {
+  const now = new Date()
+  currentTime.value = now.toLocaleString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
+// 在 onMounted 中添加
 onMounted(() => {
   initTheme();
   fetchQuantitativeProgress();
   fetchMessages();
+  checkPermissionErrors();
+  updateTime()
+  setInterval(updateTime, 60000) // 每分钟更新一次
 });
 
 // 监听年份变化，更新进度数据
@@ -631,31 +815,44 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   overflow: hidden;
 }
 
+/* 页面顶部区域 */
+.top-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+  position: relative;
+}
+
 .theme-toggle {
-  position: absolute;
-  top: 2rem;
-  left: 2rem;
+  position: static; /* 移除绝对定位 */
   display: flex;
   align-items: center;
-  cursor: pointer;
-  z-index: 10;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 25px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .theme-label {
-  font-size: 1.5rem;
-  color: #66aff6;
-  margin: 0 0.5rem;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
 }
 
 .theme-switch {
-  width: 50px;
-  height: 24px;
+  width: 45px;
+  height: 22px;
   appearance: none;
-  background: #ccc;
-  border-radius: 12px;
+  background: #ddd;
+  border-radius: 11px;
   position: relative;
   outline: none;
-  cursor: pointer !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .theme-switch:before {
@@ -663,20 +860,537 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   background: #fff;
   border-radius: 50%;
-  transition: transform 0.3s;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .theme-switch:checked {
-  background: #66aff6;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .theme-switch:checked:before {
-  transform: translateX(26px);
+  transform: translateX(23px);
 }
+
+/* 欢迎区域 */
+.welcome-section {
+  text-align: center;
+  flex: 1;
+  max-width: 500px;
+  margin: 0 2rem;
+}
+
+.welcome-text {
+  font-size: 2.2rem;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+.user-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 20px;
+  color: #495057;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.user-role-badge i {
+  color: #667eea;
+}
+
+/* 用户信息区域 */
+.user-info-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.current-time {
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.online-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #28a745;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: #28a745;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+/* 部门权限卡片 - 现代化设计 */
+.department-permissions-wrapper {
+  margin-bottom: 2rem;
+}
+
+.department-info-card.modern {
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.department-info-card.modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+}
+
+.card-content {
+  padding: 1.5rem 2rem;
+}
+
+.permission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.permission-icon {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #4CAF50 0%, #81C784 100%);
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.permission-title h3 {
+  margin: 0 0 0.2rem 0;
+  color: #2c3e50;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.permission-title p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.departments-container {
+  max-height: 500px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+.department-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.department-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(248, 249, 250, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.department-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.dept-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.dept-material .dept-icon { background: linear-gradient(135deg, #FF6B35 0%, #FF8E53 100%); }
+.dept-energy .dept-icon { background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%); }
+.dept-water .dept-icon { background: linear-gradient(135deg, #45B7D1 0%, #96C93D 100%); }
+.dept-waste .dept-icon { background: linear-gradient(135deg, #FFA07A 0%, #FA8072 100%); }
+.dept-emission .dept-icon { background: linear-gradient(135deg, #98D8C8 0%, #F093FB 100%); }
+.dept-investment .dept-icon { background: linear-gradient(135deg, #A8E6CF 0%, #DCEDC1 100%); }
+.dept-management .dept-icon { background: linear-gradient(135deg, #C7CEEA 0%, #B19CD9 100%); }
+.dept-employment .dept-icon { background: linear-gradient(135deg, #FFB6C1 0%, #FFA0AC 100%); }
+.dept-training .dept-icon { background: linear-gradient(135deg, #DDA0DD 0%, #D8BFD8 100%); }
+.dept-ohs .dept-icon { background: linear-gradient(135deg, #F0E68C 0%, #E6DB74 100%); }
+.dept-satisfaction .dept-icon { background: linear-gradient(135deg, #87CEEB 0%, #87CEFA 100%); }
+.dept-supply .dept-icon { background: linear-gradient(135deg, #D2B48C 0%, #DEB887 100%); }
+.dept-responsibility .dept-icon { background: linear-gradient(135deg, #F5DEB3 0%, #F0E68C 100%); }
+.dept-ip .dept-icon { background: linear-gradient(135deg, #E6E6FA 0%, #DDA0DD 100%); }
+.dept-community .dept-icon { background: linear-gradient(135deg, #AFEEEE 0%, #7FFFD4 100%); }
+.dept-governance .dept-icon { background: linear-gradient(135deg, #FAFAD2 0%, #F0E68C 100%); }
+.dept-default .dept-icon { background: linear-gradient(135deg, #999 0%, #777 100%); }
+
+.dept-info {
+  flex: 1;
+}
+
+.dept-name {
+  display: block;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+}
+
+.dept-status {
+  display: block;
+  font-size: 0.8rem;
+  color: #28a745;
+  font-weight: 500;
+}
+
+.dept-arrow {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.permission-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding-top: 1rem;
+}
+
+.permission-stats {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.stat-item i {
+  color: #4CAF50;
+}
+
+/* 深色模式适配 */
+.dark-theme .top-section .theme-toggle {
+  background: rgba(45, 55, 72, 0.9);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .welcome-text {
+  background: linear-gradient(135deg, #ff6b9d 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark-theme .user-role-badge {
+  background: linear-gradient(135deg, rgba(255, 107, 157, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
+  border-color: rgba(255, 107, 157, 0.2);
+  color: #e2e8f0;
+}
+
+.dark-theme .user-role-badge i {
+  color: #ff6b9d;
+}
+
+.dark-theme .current-time {
+  color: #a0aec0;
+}
+
+.dark-theme .department-info-card.modern {
+  background: rgba(45, 55, 72, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .permission-title h3 {
+  color: #e2e8f0;
+}
+
+.dark-theme .permission-title p {
+  color: #a0aec0;
+}
+
+.dark-theme .department-item {
+  background: rgba(74, 85, 104, 0.4);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .department-item:hover {
+  border-color: rgba(255, 107, 157, 0.3);
+}
+
+.dark-theme .dept-name {
+  color: #e2e8f0;
+}
+
+.dark-theme .dept-arrow {
+  color: #a0aec0;
+}
+
+.dark-theme .permission-footer {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .stat-item {
+  color: #a0aec0;
+}
+
+.dark-theme .stat-item i {
+  color: #ff6b9d;
+}
+
+/* 移动端响应式 */
+@media (max-width: 768px) {
+  .top-section {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    text-align: center;
+  }
+
+  .theme-toggle {
+    align-self: flex-start;
+  }
+
+  .welcome-section {
+    margin: 0;
+    max-width: none;
+  }
+
+  .welcome-text {
+    font-size: 1.8rem;
+  }
+
+  .user-info-section {
+    align-items: center;
+  }
+
+  .department-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .permission-stats {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .card-content {
+    padding: 1rem;
+  }
+
+  .main-layout {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard {
+    padding: 1.5rem;
+  }
+
+  .welcome-text {
+    font-size: 1.5rem;
+  }
+
+  .header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .permission-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+}
+
+/* 动画效果 */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.top-section > * {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.department-permissions-wrapper {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.main-layout {
+  animation: fadeInUp 1s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 权限错误提示横幅 */
+.permission-error-banner {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #ff5252 0%, #f44336 100%);
+  color: white;
+  padding: 12px 0;
+  z-index: 999;
+  box-shadow: 0 2px 10px rgba(244, 67, 54, 0.3);
+  animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.error-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.error-content i {
+  font-size: 1.5rem;
+  color: #ffeb3b;
+}
+
+.error-text h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.error-text p {
+  margin: 2px 0 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.close-error-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.close-error-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 部门信息卡片 */
+.department-info-card {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(129, 199, 132, 0.1) 100%);
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 20px auto;
+  max-width: 800px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.1);
+}
+
+/* 深色主题下的权限提示 */
+.dark-theme .department-info-card {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(129, 199, 132, 0.1) 100%);
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+.dark-theme .card-header h3 {
+  color: #81C784;
+}
+
+.dark-theme .card-header i {
+  color: #4CAF50;
+}
+
+.dark-theme .card-footer small {
+  color: #A5D6A7;
+}
+
 
 .main-layout {
   display: flex;
@@ -1047,7 +1761,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   text-align: center;
   color: #888;
   padding: 2rem 0;
-  font-size: 0.95rem;
 }
 
 .message-list {
@@ -1132,15 +1845,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
 .item-date {
   font-size: 0.85rem;
   color: #888;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #eee;
-  gap: 1rem;
 }
 
 .modal-footer button {
@@ -1247,11 +1951,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   .main-half {
     width: 100%;
     max-width: 100%;
-  }
-
-  .quick-actions {
-    flex-direction: column;
-    align-items: center;
   }
 
   .progress-list {
@@ -1388,10 +2087,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
 
 .dark-theme .action-btn:not(:disabled):hover {
   background: #555;
-}
-
-.dark-theme .modal-footer {
-  border-top-color: #555;
 }
 
 .small-select {

@@ -25,6 +25,8 @@ import GovernanceView from "@/views/GovernanceView.vue";
 import LoginView from "@/views/LoginView.vue";
 import AccountView from "@/views/AccountView.vue";
 import Home from "@/views/Home.vue";
+import ReviewManagement from "@/views/ReviewManagement.vue";
+import {showError} from "@/utils/toast.js";
 
 const routes = [{path: '/', redirect: '/login'}, {path: '/login', component: LoginView}, {
     path: '/account', component: AccountView
@@ -51,13 +53,35 @@ const routes = [{path: '/', redirect: '/login'}, {path: '/login', component: Log
     path: '/social-qualitative-labor', component: SocialQualitativeLaborView
 }, {path: '/social-quantitative-other', component: SocialQuantitativeOtherView}, {
     path: '/social-qualitative-other', component: SocialQualitativeOtherView
-}, {path: '/governance', component: GovernanceView},]
+}, {path: '/governance', component: GovernanceView}, {
+    path: '/review-management', component: ReviewManagement
+},]
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL), routes
 })
 
 const publicRoutes = ['/login']
+
+// 基于部门权限的页面访问控制
+const routePermissionMap = {
+    '/material': 'material',
+    '/energy': 'energy',
+    '/water': 'water',
+    '/waste': 'waste',
+    '/emission': 'emission',
+    '/investment': 'investment',
+    '/management': 'management',
+    '/employment': 'employment',
+    '/training': 'training',
+    '/ohs': 'ohs',
+    '/satisfaction': 'satisfaction',
+    '/supply': 'supply',
+    '/responsibility': 'responsibility',
+    '/ip': 'ip',
+    '/community': 'community',
+    '/governance': 'governance'
+};
 
 // 路由守卫 - 保护需要认证的路由
 router.beforeEach((to, from, next) => {
@@ -67,6 +91,42 @@ router.beforeEach((to, from, next) => {
     }
     if (!authStore.isAuthenticated) {
         return next('/login');
+    }
+
+    const requiredDepartment = routePermissionMap[to.path];
+    if (requiredDepartment) {
+        // 部门账号权限检查 - 只能访问自己负责的部门数据
+        if (authStore.isDepartment) {
+            if (!authStore.hasDepartmentAccess(requiredDepartment)) {
+                showError(`无权限访问页面: ${to.path}, 需要${requiredDepartment}部门权限`);
+                return next('/home?error=no_permission');
+            }
+        }
+        // 工厂账号 - 可以访问15个部门的定量数据月报
+        else if (authStore.isFactory) {
+            // 工厂可以访问所有定量数据类型
+            if (!authStore.canViewQuantitativeData) {
+                showError(`工厂账号无权限访问页面: ${to.path}`);
+                return next('/home?error=no_permission');
+            }
+        }
+        // 总部账号 - 可以看定量数据和年度数据
+        else if (authStore.isHeadquarter) {
+            // 总部可以访问所有数据
+            if (!authStore.canViewAllData) {
+                showError(`总部账号无权限访问页面: ${to.path}`);
+                return next('/home?error=no_permission');
+            }
+        }
+    }
+
+    // 审核管理页面权限检查
+    if (to.path === '/review-management') {
+        // 只有工厂、总部、管理员可以访问审核管理
+        if (!authStore.canLevel1Review && !authStore.canLevel2Review) {
+            showError('无审核权限，无法访问审核管理页面');
+            return next('/home?error=no_review_permission');
+        }
     }
 
     next();

@@ -27,7 +27,6 @@ async def update_avatar(avatar: UploadFile = File(..., description="用户头像
         file_ext = os.path.splitext(avatar.filename)[1].lower()
         if file_ext not in [".png", ".jpg", ".jpeg", ".gif"]:
             raise HTTPException(status_code=400, detail="仅支持 PNG、JPG、JPEG 或 GIF 格式")
-
         # 检查用户是否已有头像，并删除旧头像文件
         if user.avatar:
             if isinstance(user.avatar, UploadFile):
@@ -37,7 +36,6 @@ async def update_avatar(avatar: UploadFile = File(..., description="用户头像
             old_avatar_path = os.path.join(AVATAR_DIR, old_avatar_filename)
             if os.path.exists(old_avatar_path):
                 os.remove(old_avatar_path)
-
         # 保存新头像
         avatar_filename = f"user_{user.username}{file_ext}"
         avatar_path = os.path.join(AVATAR_DIR, avatar_filename)
@@ -61,8 +59,6 @@ def update_username(new_username: str = Body(..., description="新用户名"), d
         user = current_user["user"]
         if db.query(User).filter(User.username == new_username).first():
             raise HTTPException(status_code=400, detail="用户名已存在")
-
-        # 检查用户是否有头像，且头像文件存在
         if user.avatar:
             file_ext = Path(user.avatar).suffix.lower()
             if file_ext in [".png", ".jpg", ".jpeg", ".gif"]:
@@ -73,13 +69,12 @@ def update_username(new_username: str = Body(..., description="新用户名"), d
                     user.avatar = f"/{AVATAR_DIR}/user_{new_username}{file_ext}"
         user.username = new_username
         db.commit()
-        # 生成新 token
         payload = {"username": new_username, "role": current_user["role"],
                    "factory": current_user["factory"], "exp": datetime.now(timezone.utc) + timedelta(minutes=15)}
         new_token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
         return {"status": "success", "new_token": new_token,
                 "user": {"username": new_username, "factory": user.factory, "role": user.role,
-                         "phone": user.phone, "email": user.email}}
+                         "phone": user.phone, "email": user.email, "avatar": user.avatar}}
     except Exception as e:
         db.rollback()
         logger.error(e)

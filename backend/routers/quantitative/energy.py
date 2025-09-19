@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import EnergyData
-from core.permissions import get_current_user, require_view
+from core.permissions import get_current_user
 from core.schemas import EnergySubmission
-from core.utils import submit_data
+from core.utils import submit_data, get_review_info, require_view
 
 router = APIRouter(prefix="/quantitative/energy", tags=["定量数据-能源"])
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/quantitative/energy", tags=["定量数据-能源"])
 async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                      current_user: dict = Depends(get_current_user)):
     try:
-        require_view(factory, current_user)
+        require_view(factory, "energy", current_user)
         data = db.query(EnergyData).filter(EnergyData.factory == factory, EnergyData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
@@ -24,7 +24,7 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                      "turnover": data.turnover}
 
         return {"status": "success", "data": data_dict,
-                "review": {"status": data.review_status, "comment": data.review_comment}}
+                "review": get_review_info(db, factory, year, "energy")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -49,7 +49,7 @@
       <div class="logout-dropdown" v-if="showLogout" @mouseenter="handleDropdownEnter"
            @mouseleave="handleDropdownLeave">
         <div class="user-avatar">
-          <img :src="authStore.user.avatar" alt="用户头像" class="avatar-image"
+          <img :src="authStore.user?.avatar" alt="用户头像" class="avatar-image"
                style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%;"/>
         </div>
         <span class="welcome-text">你好, {{ authStore.user?.username }}</span>
@@ -191,6 +191,9 @@ const dataModeItems = [
       {name: 'community', path: '/community', label: '社区参与与志愿活动'}
     ]
   },
+  // 只有工厂、总部和管理员可以看到审核管理
+  ...(authStore.canLevel1Review || authStore.canLevel2Review ?
+    [{name: 'review', path: '/review-management', label: '审核管理'}] : []),
   {name: 'account', path: '/account', label: '账号管理'}
 ]
 
@@ -210,6 +213,9 @@ const analyzeModeItems = [
     ]
   },
   {name: 'governance', path: '/governance', label: '治理'},
+  // 只有总部和管理员可以在分析模式下看到审核管理
+  ...(authStore.isHeadquarter || authStore.isAdmin ?
+    [{name: 'review', path: '/review-management', label: '审核管理'}] : []),
   {name: 'account', path: '/account', label: '账号管理'}
 ]
 

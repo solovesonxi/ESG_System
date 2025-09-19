@@ -228,6 +228,8 @@ const energyConsumptionIntensity = computed(() => {
 
 onMounted(() => {
   document.addEventListener("click", selectionStore.handleClickOutside);
+  // 页面初始化时自动加载数据
+  fetchData();
 });
 onBeforeUnmount(() => {
   document.removeEventListener("click", selectionStore.handleClickOutside);

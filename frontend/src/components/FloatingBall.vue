@@ -61,16 +61,14 @@ const stopDrag = (e) => {
 
 // 切换模式
 const toggleMode = () => {
-  if (route.path === '/home' || route.path === '/account') {
+  if (route.path === '/home' || route.path === '/account' && route.path === 'review-management') {
     authStore.isDataMode = !authStore.isDataMode;
   } else {
     const currentMode = authStore.isDataMode ? 'data' : 'analyze';
-    if (route.path !== '/home' && route.path !== '/account') {
-      localStorage.setItem(`lastPath_${currentMode}`, route.path);
-    }
+    localStorage.setItem(`lastPath_${currentMode}`, route.path);
     authStore.isDataMode = !authStore.isDataMode;
     const targetPath = localStorage.getItem(`lastPath_${authStore.isDataMode ? 'data' : 'analyze'}`) ||
-      (authStore.isDataMode ? '/material' : '/env-quantitative');
+        (authStore.isDataMode ? '/material' : '/env-quantitative');
     router.push(targetPath);
   }
 };
@@ -95,8 +93,8 @@ const updatePosition = () => {
 onMounted(() => {
   const ballHeight = 120;
   const ballWidth = 120;
-  posX.value = window.innerWidth * 0.94 - ballWidth/2;
-  posY.value = window.innerHeight * 0.9 - ballHeight/2;
+  posX.value = window.innerWidth * 0.94 - ballWidth / 2;
+  posY.value = window.innerHeight * 0.9 - ballHeight / 2;
   updatePosition();
   document.addEventListener('mouseup', stopDrag);
 });

@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import SatisfactionData
-from core.permissions import get_current_user, require_view
+from core.permissions import get_current_user
 from core.schemas import SatisfactionSubmission
-from core.utils import submit_data
+from core.utils import submit_data, get_review_info, require_view
 
 router = APIRouter(prefix="/quantitative/satisfaction", tags=["定量数据-员工满意度"])
 
@@ -14,14 +14,14 @@ router = APIRouter(prefix="/quantitative/satisfaction", tags=["定量数据-员�
 async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                      current_user: dict = Depends(get_current_user)):
     try:
-        require_view(factory, current_user)
+        require_view(factory, "satisfaction", current_user)
         data = db.query(SatisfactionData).filter(SatisfactionData.factory == factory,
                                                  SatisfactionData.year == year).first()
         if not data:
             return {"status": "success", "data": None, "message": "No data found for the specified factory and year"}
         data_dict = {"satisfaction": data.satisfaction}
         return {"status": "success", "data": data_dict,
-                "review": {"status": data.review_status, "comment": data.review_comment}}
+                "review": get_review_info(db, factory, year, "satisfaction")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

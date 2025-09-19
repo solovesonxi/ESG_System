@@ -1,10 +1,12 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db, indicators
-from core.models import YearInfo
+from core.models import ReviewRecord
 from core.permissions import get_current_user
-from core.utils import send_message, QUANT_MODEL_MAP, ANALY_MODEL_MAP
+from core.utils import send_message
 
 router = APIRouter(prefix="/review", tags=["审核"])
 
@@ -15,58 +17,64 @@ from core.schemas import ReviewUpdateRequest
 async def update_review_status(request: ReviewUpdateRequest, db: Session = Depends(get_db),
                                current_user: dict = Depends(get_current_user)):
     role = current_user["role"]
-    if role == "factory":
-        raise HTTPException(status_code=403, detail="无权限进行审核操作")
-    if request.formType in QUANT_MODEL_MAP:
-        model = QUANT_MODEL_MAP.get(request.formType)
-        data = db.query(model).filter_by(factory=request.factory, year=request.year).first()
-        if not data:
-            raise HTTPException(status_code=404, detail="未找到数据")
-        # 更新定量数据表的审核状态和评论
-        for field, value in [("review_status", request.status), ("review_comment", request.comment)]:
-            if hasattr(data, field):
-                if request.month is not None:
-                    arr = getattr(data, field).copy()
-                    arr[request.month - 1] = value
-                    setattr(data, field, arr)
-                else:
-                    setattr(data, field, [value] * 12)
-        # 更新提交状态
-        if hasattr(data, "is_submitted") and request.month is not None:
-            is_submit = getattr(data, "is_submitted").copy()
+    username = current_user["user"].username if hasattr(current_user["user"], "username") else current_user["user"][
+        "username"]
+    if role == "department":
+        raise HTTPException(status_code=403, detail="部门账号无审核权限")
+    if request.level not in [1, 2]:
+        raise HTTPException(status_code=400, detail="审核级别错误")
+    record = db.query(ReviewRecord).filter_by(id=request.id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="未找到审核记录")
+    factory = str(record.factory)
+    department = str(record.data_type)
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    action = '审核通过' if request.status == "approved" else '驳回' if request.status == "rejected" else '反审核'
+    record.is_submitted = True if request.status == "approved" else False if request.status == "rejected" else record.is_submitted
+    if request.level == 1:
+        if record.level1_comment or record.level1_reviewer or record.level1_review_time:
+            raise HTTPException(status_code=400, detail="该数据已被一级审核，无法重复审核")
+        record.level1_status = request.status
+        record.level1_comment = request.comment
+        record.level1_reviewer = username
+        record.level1_review_time = datetime.now()
+        # 工厂审核部门月度数据
+        if record.month:
+            msg_title = f"{action}了{factory}{record.year}年{record.month}月的{indicators['categories'][department]}数据"
+            msg_content = f"{username}于{now_str}{msg_title}"
+            send_message(db, "审核", msg_title, msg_content + "，请悉知。", sender_role=role, receiver_role='department',
+                         receiver_factory=factory, receiver_department=department)
             if request.status == "approved":
-                is_submit[request.month - 1] = True
-            elif request.status == "rejected":
-                is_submit[request.month - 1] = False
-            setattr(data, "is_submitted", is_submit)
-    elif request.formType in ANALY_MODEL_MAP:
-        # 处理分析数据 - 操作year_info表
-        data = db.query(YearInfo).filter_by(factory=request.factory, year=request.year).first()
-        if not data:
-            raise HTTPException(status_code=404, detail="未找到年度信息数据")
-        module_index = list(ANALY_MODEL_MAP.keys()).index(request.formType)
-        # 更新year_info表的审核状态和评论
-        review_status = data.review_status.copy()
-        review_comment = data.review_comment.copy()
-        review_status[module_index] = request.status
-        review_comment[module_index] = request.comment
-        data.review_status = review_status
-        data.review_comment = review_comment
-        is_submitted = data.is_submitted.copy()
-        if request.status == "approved":
-            is_submitted[module_index] = True
-        elif request.status == "rejected":
-            is_submitted[module_index] = False
-        data.is_submitted = is_submitted
-    else:
-        raise HTTPException(status_code=400, detail="无效的formType")
+                send_message(db, "审核", msg_title, msg_content + "，请总部审核。", sender_role=role,
+                             receiver_role='headquarter')
+                send_message(db, "审核", msg_title, msg_content + "，请管理员审核。", sender_role=role,
+                             receiver_role='admin')
+            send_message(db, "最近操作", msg_title, sender_role=role, receiver_role=role)
+        # 总部审核工厂年度数据
+        else:
+            msg_title = f"{action}了{factory}{record.year}年的{indicators['categories'][department]}数据"
+            msg_content = f"{username}于{now_str}{msg_title}"
+            send_message(db, "审核", msg_title, msg_content, sender_role=role, receiver_role='factory',
+                         receiver_factory=factory)
+            send_message(db, "最近操作", msg_title, sender_role=role, receiver_role=role)
+    elif request.level == 2:
+        if role != "headquarter" and role != "admin":
+            raise HTTPException(status_code=403, detail="只有总部和管理员账号有二级审核权限")
+        if record.level2_comment or record.level2_reviewer or record.level2_review_time:
+            raise HTTPException(status_code=400, detail="该数据已被二级审核，无法重复审核")
+        record.level2_status = request.status
+        record.level2_comment = request.comment
+        record.level2_reviewer = username
+        record.level2_review_time = datetime.now()
+        # 总部二次审核部门月度数据
+        if record.month:
+            msg_title = f"{action}了{factory}{record.year}年{record.month}月的{indicators['categories'][department]}数据"
+            msg_content = f"{username}于{now_str}{msg_title}"
+            send_message(db, "审核", msg_title, msg_content, sender_role=role, receiver_role='factory',
+                         receiver_factory=factory)
+            send_message(db, "审核", msg_title, msg_content, sender_role=role, receiver_role='department',
+                         receiver_factory=factory, receiver_department=department)
+            send_message(db, "最近操作", msg_title, sender_role=role, receiver_role=role)
+
     db.commit()
-    action = "审核通过" if request.status == "approved" else "审核拒绝" if request.status == "rejected" else "反审核"
-    month_str = f"{request.month}月" if request.month is not None else ""
-    title = f"{action}了{request.factory}{request.year}年{month_str}的{indicators["categories"][request.formType]}数据"
-    content = current_user["user"].username + title + "，请知悉。"
-    send_message(db, "审核", title, content=content, sender_role=role, receiver_role="factory",
-                 receiver_factory=request.factory)
-    send_message(db, "最近操作", title, sender_role=role, receiver_role=role)
-    send_message(db, "审核", title, sender_role=role, receiver_role="headquarter" if role == "admin" else "admin")
-    return {"status": "success"}
+    return {"status": "success", "id": request.id, "message": "审核状态已更新"}

@@ -4,10 +4,8 @@ from pydantic import BaseModel
 
 
 class ReviewUpdateRequest(BaseModel):
-    factory: str
-    year: int
-    month: Optional[int] = None
-    formType: str
+    id: int
+    level: int  # 1=一级审核，2=二级审核
     status: str
     comment: str
 

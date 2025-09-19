@@ -5,11 +5,12 @@
       <component :is="Component" ref="currentComponent"/>
     </router-view>
   </main>
-  <FloatingBall v-if="isAuthedPage"/>
-  <EditControls v-if="isEditPage && (authStore.isFactory || authStore.isHeadquarter)" :is-editing="isEditing" @start-edit="handleStartEdit"
+  <FloatingBall v-if="isAuthedPage && !authStore.isDepartment"/>
+  <EditControls v-if="isEditPage && (authStore.isDepartment || (authStore.isFactory && !authStore.isDataMode))"
+                :is-editing="isEditing" @start-edit="handleStartEdit"
                 @cancel-edit="handleCancelEdit"
                 @save-edit="handleSubmitEdit(false)" @submit-edit="handleSubmitEdit(true)"/>
-  <ToastContainer />
+  <ToastContainer/>
   <canvas id="starry-bg"></canvas>
 </template>
 
@@ -28,7 +29,7 @@ const isEditing = ref(false)
 const currentComponent = ref(null)
 const route = useRoute()
 const isAuthedPage = computed(() => route.path !== '/' && route.path !== '/login')
-const isEditPage = computed(() => isAuthedPage.value && route.path !== '/home' && route.path !== '/account')
+const isEditPage = computed(() => isAuthedPage.value && route.path !== '/home' && route.path !== '/review-management' && route.path !== '/account')
 
 const handleStartEdit = () => {
   console.log('currentComponent:', currentComponent.value);
@@ -79,7 +80,7 @@ watch(() => route.path, (newPath, oldPath) => {
       console.log('切换到新路由：', newPath, '- 当前组件不存在');
     }
   }, 10);
-}, { immediate: false });
+}, {immediate: false});
 
 // 动态星空背景（保持不变）
 onMounted(() => {

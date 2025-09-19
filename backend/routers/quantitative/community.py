@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
 from core.models import CommunityData
-from core.permissions import get_current_user, require_view
+from core.permissions import get_current_user
 from core.schemas import CommunitySubmission
-from core.utils import submit_data
+from core.utils import submit_data, get_review_info, require_view
 
 router = APIRouter(prefix="/quantitative/community", tags=["定量数据-社区参与"])
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/quantitative/community", tags=["定量数据-社区�
 async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                      current_user: dict = Depends(get_current_user)):
     try:
-        require_view(factory, current_user)
+        require_view(factory, "community", current_user)
         data = db.query(CommunityData).filter(CommunityData.factory == factory,
                                                         CommunityData.year == year).first()
         if not data:
@@ -23,7 +23,7 @@ async def fetch_data(factory: str, year: int, db: Session = Depends(get_db),
                                               "communityInvestment": data.community_investment,
                                               "volunteerParticipants": data.volunteer_participants,
                                               "volunteerHours": data.volunteer_hours},
-                "review": {"status": data.review_status, "comment": data.review_comment}}
+                "review": get_review_info(db, factory, year, "community")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
