@@ -188,7 +188,7 @@ def check_review_record(db, factory, year, data_type, is_submitted):
             review_record.level1_comment = None
             review_record.level1_reviewer = None
             review_record.level1_review_time = None
-            review_record.level2_status = "pending"
+            review_record.level2_status = None
             review_record.level2_comment = None
             review_record.level2_reviewer = None
             review_record.level2_review_time = None

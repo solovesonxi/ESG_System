@@ -49,7 +49,7 @@ class ReviewRecord(Base):
     level1_review_time = Column(DateTime, nullable=True)
 
     # 二级审核（总部级）
-    level2_status = Column(String(20), default='pending')
+    level2_status = Column(String(20), nullable=True)
     level2_comment = Column(Text, nullable=True)
     level2_reviewer = Column(String(50), nullable=True)
     level2_review_time = Column(DateTime, nullable=True)
