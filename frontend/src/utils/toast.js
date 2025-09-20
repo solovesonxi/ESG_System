@@ -54,14 +54,15 @@ export const showInfo = (message, duration = 2000) => {
 }
 export const handleError = (error)=>{
     console.error('操作失败:', error);
+    const detail  = error.response?.data?.detail || error.message;
     if (error.response?.status === 404) {
-        showInfo('未找到相关数据');
+        showInfo(detail || '请求的资源不存在');
     } else if (error.response?.status >= 500) {
-        showError('服务器内部错误，请联系管理员');
+        showError(detail || '服务器内部错误，请联系管理员');
     } else if (error.response?.status === 403) {
-        showWarning('权限不足，请检查您的操作权限');
+        showWarning(detail || '权限不足，请检查您的操作权限');
     } else if (error.code === 'NETWORK_ERROR') {
-        showWarning('网络连接异常，请检查网络后重试');
+        showWarning(detail || '网络连接异常，请检查网络后重试');
     } else {
         showError(`操作失败: ${error.response?.data?.detail || error.message}`);
     }

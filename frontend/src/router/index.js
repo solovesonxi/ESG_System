@@ -99,36 +99,10 @@ router.beforeEach((to, from, next) => {
         if (authStore.isDepartment) {
             if (!authStore.hasDepartmentAccess(requiredDepartment)) {
                 showError(`无权限访问页面: ${to.path}, 需要${requiredDepartment}部门权限`);
-                return next('/home?error=no_permission');
-            }
-        }
-        // 工厂账号 - 可以访问15个部门的定量数据月报
-        else if (authStore.isFactory) {
-            // 工厂可以访问所有定量数据类型
-            if (!authStore.canViewQuantitativeData) {
-                showError(`工厂账号无权限访问页面: ${to.path}`);
-                return next('/home?error=no_permission');
-            }
-        }
-        // 总部账号 - 可以看定量数据和年度数据
-        else if (authStore.isHeadquarter) {
-            // 总部可以访问所有数据
-            if (!authStore.canViewAllData) {
-                showError(`总部账号无权限访问页面: ${to.path}`);
-                return next('/home?error=no_permission');
+                return next(false);
             }
         }
     }
-
-    // 审核管理页面权限检查
-    if (to.path === '/review-management') {
-        // 只有工厂、总部、管理员可以访问审核管理
-        if (!authStore.canLevel1Review && !authStore.canLevel2Review) {
-            showError('无审核权限，无法访问审核管理页面');
-            return next('/home?error=no_review_permission');
-        }
-    }
-
     next();
 })
 

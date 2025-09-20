@@ -32,7 +32,7 @@ class Message(Base):
     created_at = Column(DateTime, default=datetime.now(timezone.utc))  # 发送时间
     is_read = Column(Boolean, nullable=False, default=False)  # 是否已读
 
-# 审核表（推荐新建）
+# 审核表
 class ReviewRecord(Base):
     __tablename__ = 'review_records'
     id = Column(Integer, primary_key=True, autoincrement=True)

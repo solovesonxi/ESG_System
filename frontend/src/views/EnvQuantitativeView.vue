@@ -95,7 +95,7 @@ const resetData = () => {
   data.value = {
     material: {}, energy: {}, water: {}, emission: {}, waste: {}, investment: {}, envQuant: {}
   }
-  review.value = {status: 'pending', comment: ''};
+  review.value = {id: -1, is_submitted: false, status1: "pending", comment1: '', status2: "pending", comment22: ''};
 }
 
 const submitEdit = async (ifSubmit) => {
@@ -127,7 +127,6 @@ const submitEdit = async (ifSubmit) => {
 
 onMounted(() => {
   document.addEventListener('click', selectionStore.handleClickOutside)
-  fetchData()
 })
 
 defineExpose({

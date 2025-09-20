@@ -196,7 +196,10 @@ const resetFormData = () => {
   setArray(formData.shipments, Array(12).fill(0))
   setArray(formData.customerSatisfaction, Array(12).fill(0))
   setArray(formData.cyberIncidents, Array(12).fill(0))
-  review.value = {status: Array(12).fill("pending"), comment: Array(12).fill('')};
+  review.value = {
+    id: Array(12).fill(-1), is_submitted: Array(12).fill(false), status1: Array(12).fill("pending"), comment1: Array(12).fill(''),
+    status2: Array(12).fill("pending"), comment22: Array(12).fill('')
+  };
 }
 
 

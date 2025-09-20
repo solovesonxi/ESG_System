@@ -1,5 +1,12 @@
 // constants/indicators.js
 export const CATEGORY = {
+    "climate_change": "气候变化",
+    "env_opportunities": "环境机遇",
+    "bio_conservation": "生物多样性保护",
+    "env_inc_management": "环境事故管理",
+    "material_consumption": "物料消耗",
+    "energy_consumption": "能源消耗",
+    "carbon_emission": "碳排放",
     "material": "物料",
     "energy": "能源",
     "water": "水资源",
@@ -7,13 +14,21 @@ export const CATEGORY = {
     "waste": "废弃物",
     "investment": "资金投入",
     "management": "环境管理",
-    "climate_change": "气候变化",
-    "env_opportunities": "环境机遇",
-    "bio_conservation": "生物多样性保护",
-    "env_inc_management": "环境事故管理",
-    "material_consumption": "物料消耗",
-    "energy_consumption": "能源消耗",
-    "carbon_emission": "碳排放"
+    "employment": "雇佣",
+    "training": "教育与培训",
+    "ohs": "职健与安全",
+    "satisfaction": "员工满意度",
+    "supply": "供应链",
+    "responsibility": "产品责任",
+    "ip": "知识产权",
+    "community": "社区参与与志愿活动",
+    "env_quant": "环境定量",
+    "env_qual": "环境定性",
+    "social_quant_labor": "社会定量-劳工",
+    "social_qual_labor": "社会定性-劳工",
+    "social_quant_other": "社会定量-其他",
+    "social_qual_other": "社会定性-其他",
+    "governance": "治理"
 };
 // 环境定量指标名称映射
 export const ENV_QUANT_INDICATORS = {

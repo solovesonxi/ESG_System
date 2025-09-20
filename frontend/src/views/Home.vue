@@ -355,22 +355,22 @@ const permissionErrorMessage = ref('');
 
 // 部门类型映射
 const departmentTypeMap = {
-  'material': { label: '物料消耗', class: 'dept-material' },
-  'energy': { label: '能源消耗', class: 'dept-energy' },
+  'material': { label: '物料', class: 'dept-material' },
+  'energy': { label: '能源', class: 'dept-energy' },
   'water': { label: '水资源', class: 'dept-water' },
-  'waste': { label: '废料管理', class: 'dept-waste' },
-  'emission': { label: '排放数据', class: 'dept-emission' },
-  'investment': { label: '环境投资', class: 'dept-investment' },
+  'waste': { label: '废弃物', class: 'dept-waste' },
+  'emission': { label: '排放', class: 'dept-emission' },
+  'investment': { label: '资金投入', class: 'dept-investment' },
   'management': { label: '环境管理', class: 'dept-management' },
-  'employment': { label: '雇佣数据', class: 'dept-employment' },
-  'training': { label: '培训数据', class: 'dept-training' },
-  'ohs': { label: '职业健康安全', class: 'dept-ohs' },
+  'employment': { label: '雇佣', class: 'dept-employment' },
+  'training': { label: '培训', class: 'dept-training' },
+  'ohs': { label: '职健与安全', class: 'dept-ohs' },
   'satisfaction': { label: '员工满意度', class: 'dept-satisfaction' },
   'supply': { label: '供应链', class: 'dept-supply' },
   'responsibility': { label: '产品责任', class: 'dept-responsibility' },
   'ip': { label: '知识产权', class: 'dept-ip' },
-  'community': { label: '社区参与', class: 'dept-community' },
-  'governance': { label: '公司治理', class: 'dept-governance' }
+  'community': { label: '社区参与与志愿活动', class: 'dept-community' },
+  'governance': { label: '治理', class: 'dept-governance' }
 };
 
 // 部门权限列表
@@ -851,7 +851,7 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   border-radius: 11px;
   position: relative;
   outline: none;
-  cursor: pointer;
+  cursor: pointer !important;
   transition: all 0.3s ease;
 }
 
@@ -960,7 +960,7 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
 }
 
 .department-info-card.modern:hover {
-  transform: translateY(-2px);
+  transform: translateY(-5px);
   box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
 }
 
@@ -1143,7 +1143,7 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
 }
 
 .dark-theme .department-info-card.modern {
-  background: rgba(45, 55, 72, 0.95);
+  background: rgba(27, 32, 47, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 

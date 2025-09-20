@@ -66,11 +66,11 @@ const fetchData = async () => {
         year: year.value
       }
     })
-    if (response.data && response.data.data){
+    if (response.data && response.data.data) {
       data.value = response.data.data
       review.value = response.data.review;
-    }else {
-      review.value = {status: 'pending', comment: ''};
+    } else {
+      review.value = {id: -1, is_submitted: false, status1: "pending", comment1: '', status2: "pending", comment22: ''};
       showInfo('未找到数据')
     }
   } catch (error) {
@@ -117,7 +117,7 @@ const submitEdit = async (ifSubmit) => {
     });
     if (response.data.status === 'success') {
       showSuccess('数据提交成功!')
-    }else {
+    } else {
       showError(`数据提交失败: ${response.data.message || '未知错误'}`)
     }
   } catch (error) {

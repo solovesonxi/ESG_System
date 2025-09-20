@@ -92,14 +92,14 @@ async def submit_data(db: Session, model: Type[Any], data: Any, current_user: di
             db.add(review_record)
         if data.isSubmitted:
             review_record.is_submitted = True
-            review_record.level1_status="pending"
-            review_record.level1_comment=None
-            review_record.level1_reviewer=None
-            review_record.level1_review_time=None
-            review_record.level2_status="pending"
-            review_record.level2_comment=None
-            review_record.level2_reviewer=None
-            review_record.level2_review_time=None
+            review_record.level1_status = "pending"
+            review_record.level1_comment = None
+            review_record.level1_reviewer = None
+            review_record.level1_review_time = None
+            review_record.level2_status = "pending"
+            review_record.level2_comment = None
+            review_record.level2_reviewer = None
+            review_record.level2_review_time = None
         db.commit()
         # 4. 推送消息
         now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')

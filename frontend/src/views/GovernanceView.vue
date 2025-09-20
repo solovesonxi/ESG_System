@@ -68,7 +68,7 @@ const fetchData = async () => {
       qualData.value = response.data.data;
       review.value = response.data.review;
     }else {
-      review.value = {status: 'pending', comment: ''};
+      review.value = {id: -1, is_submitted: false, status1: "pending", comment1: '', status2: "pending", comment22: ''};
       showInfo('未找到数据')
     }
   } catch (error) {

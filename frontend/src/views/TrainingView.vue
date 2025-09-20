@@ -229,7 +229,10 @@ const resetFormData = () => {
   formData.hoursMgmt = 0
   formData.hoursMiddle = 0
   formData.hoursGeneral = 0
-  review.value = {status: Array(12).fill("pending"), comment: Array(12).fill('')};
+  review.value = {
+    id: Array(12).fill(-1), is_submitted: Array(12).fill(false), status1: Array(12).fill("pending"), comment1: Array(12).fill(''),
+    status2: Array(12).fill("pending"), comment22: Array(12).fill('')
+  };
 }
 
 const submitEdit = async (ifSubmit) => {

@@ -143,7 +143,10 @@ const resetFormData = () => {
   setArray(formData.communityInvestment, Array(12).fill(0))
   setArray(formData.volunteerParticipants, Array(12).fill(0))
   setArray(formData.volunteerHours, Array(12).fill(0))
-  review.value = {status: Array(12).fill("pending"), comment: Array(12).fill('')};
+  review.value = {
+    id: Array(12).fill(-1), is_submitted: Array(12).fill(false), status1: Array(12).fill("pending"), comment1: Array(12).fill(''),
+    status2: Array(12).fill("pending"), comment22: Array(12).fill('')
+  };
 }
 
 // —— 提交编辑（保持原字段，不改动内容，只改样式） —— //

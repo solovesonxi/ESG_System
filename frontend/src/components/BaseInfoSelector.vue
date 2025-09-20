@@ -73,32 +73,28 @@
           </div>
         </div>
       </div>
-
       <!-- 提交状态指示器 -->
       <div class="submission-indicator">
         <div class="status-badge" :class="submissionStatusClass">
           <i class="fas" :class="submissionStatusIcon"></i>
-          <span class="status-text">{{ submissionStatusText }}</span>
+          {{ submissionStatusText }}
         </div>
         <div class="status-detail">
           提交状态
         </div>
       </div>
     </div>
-
     <!-- 审核信息区域 -->
     <div class="review-section" v-if="hasReviewData">
       <h3 class="section-title">审核信息</h3>
-
-      <!-- 月度数据审核信息 -->
-      <div v-if="isMonthlyData" class="monthly-review">
+      <div class="review">
         <div class="review-item">
-          <div class="review-header">
+          <div class="review-header" v-if="isMonthlyData">
             <span class="month-label">{{ month }}月审核状态</span>
           </div>
           <div class="review-grid">
             <!-- 一级审核 -->
-            <div class="review-column" v-if="authStore.canViewLevel1Results">
+            <div class="review-column">
               <div class="review-title">
                 <i class="fas fa-check-circle"></i>
                 一级审核
@@ -127,7 +123,7 @@
             </div>
 
             <!-- 二级审核 -->
-            <div class="review-column" v-if="authStore.canViewLevel2Results">
+            <div class="review-column" v-if="authStore.isDataMode">
               <div class="review-title">
                 <i class="fas fa-shield-alt"></i>
                 二级审核
@@ -153,69 +149,6 @@
                 <div class="comment-label">审核意见</div>
                 <div class="comment-text">{{ currentLevel2Comment }}</div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 年度数据审核信息 -->
-      <div v-else class="yearly-review">
-        <div class="review-grid">
-          <!-- 一级审核 -->
-          <div class="review-column" v-if="authStore.canViewLevel1Results">
-            <div class="review-title">
-              <i class="fas fa-check-circle"></i>
-              一级审核
-            </div>
-            <div class="status-display">
-              <span class="status-badge" :class="getStatusClass(currentLevel1Status)">
-                {{ getStatusLabel(currentLevel1Status) }}
-              </span>
-              <!-- 编辑控制 -->
-              <div class="edit-control" v-if="canEditLevel1">
-                <select
-                    :value="currentLevel1Status"
-                    @change="handleLevel1StatusChange($event.target.value)"
-                    class="status-select"
-                >
-                  <option v-for="option in auditStatusOptions" :key="option.value" :value="option.value">
-                    {{ option.label }}
-                  </option>
-                </select>
-              </div>
-            </div>
-            <div class="comment-display" v-if="currentLevel1Comment">
-              <div class="comment-label">审核意见</div>
-              <div class="comment-text">{{ currentLevel1Comment }}</div>
-            </div>
-          </div>
-
-          <!-- 二级审核 -->
-          <div class="review-column" v-if="authStore.canViewLevel2Results">
-            <div class="review-title">
-              <i class="fas fa-shield-alt"></i>
-              二级审核
-            </div>
-            <div class="status-display">
-              <span class="status-badge" :class="getStatusClass(currentLevel2Status)">
-                {{ getStatusLabel(currentLevel2Status) }}
-              </span>
-              <!-- 编辑控制 -->
-              <div class="edit-control" v-if="canEditLevel2">
-                <select
-                    :value="currentLevel2Status"
-                    @change="handleLevel2StatusChange($event.target.value)"
-                    class="status-select"
-                >
-                  <option v-for="option in auditStatusOptions" :key="option.value" :value="option.value">
-                    {{ option.label }}
-                  </option>
-                </select>
-              </div>
-            </div>
-            <div class="comment-display" v-if="currentLevel2Comment">
-              <div class="comment-label">审核意见</div>
-              <div class="comment-text">{{ currentLevel2Comment }}</div>
             </div>
           </div>
         </div>
@@ -465,13 +398,13 @@ watch([factory, year, month], () => {
 
 <style scoped>
 .base-info-container {
-  background: rgba(255, 255, 255, 0.95);
+  background: #f7f8fa;
   border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e3e6ee;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 .info-header {
@@ -519,8 +452,8 @@ watch([factory, year, month], () => {
 }
 
 .selected {
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid #e9ecef;
+  background: #f7f8fa;
+  border: 2px solid #e3e6ee;
   border-radius: 8px;
   padding: 0.75rem 1rem;
   cursor: pointer;
@@ -532,7 +465,7 @@ watch([factory, year, month], () => {
 
 .selected:hover {
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.08);
 }
 
 .selected .value {
@@ -540,29 +473,15 @@ watch([factory, year, month], () => {
   font-weight: 500;
 }
 
-.arrow {
-  transition: transform 0.3s ease;
-}
-
-.arrow.up {
-  transform: rotate(180deg);
-}
-
-.arrow::before {
-  content: '▼';
-  font-size: 0.75rem;
-  color: #6c757d;
-}
-
 .options {
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 2px solid rgba(102, 126, 234, 0.2);
+  background: #fff;
+  border: 2px solid #e3e6ee;
   border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
   z-index: 1000;
   max-height: 200px;
   overflow-y: auto;
@@ -573,15 +492,15 @@ watch([factory, year, month], () => {
   padding: 0.75rem 1rem;
   cursor: pointer;
   transition: background-color 0.2s;
-  color: #495057;
+  color: #2c3e50;
 }
 
 .option:hover {
-  background-color: rgba(102, 126, 234, 0.1);
+  background-color: #e3e6ee;
 }
 
 .selected-option {
-  background-color: rgba(102, 126, 234, 0.2);
+  background-color: #e3e6ee;
   color: #667eea;
   font-weight: 600;
 }
@@ -601,20 +520,31 @@ watch([factory, year, month], () => {
   padding: 0.75rem 1.5rem;
   border-radius: 25px;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 1rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+  color: #333333;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .status-badge.status-submitted {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-  color: white;
+  background: linear-gradient(135deg, #44e0b1 0%, #2aa95c 100%);
 }
 
 .status-badge.status-not-submitted {
-  background: linear-gradient(135deg, #ffc516 0%, #ff9800 100%);
-  color: white;
+  background: linear-gradient(135deg, #f5d985 0%, #f8b046 100%);
+}
+
+.status-badge.status-pending {
+  background: linear-gradient(135deg, #c7cfea 0%, #ae75e5 100%);
+}
+
+.status-badge.status-approved {
+  background: linear-gradient(135deg, #93e7a6 0%, #31b766 100%);
+}
+
+.status-badge.status-rejected {
+  background: linear-gradient(135deg, #f3adbd 0%, #c04a5d 100%);
 }
 
 .status-detail {
@@ -629,7 +559,7 @@ watch([factory, year, month], () => {
   padding-top: 1.5rem;
 }
 
-.monthly-review, .yearly-review {
+.review {
   margin-top: 1rem;
 }
 
@@ -683,21 +613,6 @@ watch([factory, year, month], () => {
   margin-bottom: 1rem;
 }
 
-.status-badge.status-approved {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-  color: white;
-}
-
-.status-badge.status-rejected {
-  background: linear-gradient(135deg, #dc3545 0%, #e91e63 100%);
-  color: white;
-}
-
-.status-badge.status-pending {
-  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
-  color: white;
-}
-
 .edit-control {
   margin-top: 0.5rem;
 }
@@ -741,6 +656,12 @@ watch([factory, year, month], () => {
   color: #495057;
   line-height: 1.5;
   min-height: 2.5rem;
+}
+
+.dark-theme .comment-text {
+  background: linear-gradient(135deg, #23272f 0%, #313543 100%);
+  border-color: #3a3f4b;
+  color: #b0d9ff;
 }
 
 /* 弹窗样式 */
@@ -866,101 +787,117 @@ watch([factory, year, month], () => {
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-/* 深色模式支持 */
+/* 深色模式优化 */
 .dark-theme .base-info-container {
-  background: rgba(45, 55, 72, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dark-theme .section-title {
-  background: linear-gradient(135deg, #e94560 0%, #533483 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.dark-theme .info-label {
-  color: #cbd5e0;
+  background: linear-gradient(135deg, #181a20 0%, #23272f 100%);
+  border: 1px solid #313543;
 }
 
 .dark-theme .selected {
-  background: rgba(74, 85, 104, 0.8);
-  border-color: #4a5568;
-  color: #e2e8f0;
+  background: #23272f;
+  border-color: #3a3f4b;
+  color: #b0d9ff;
 }
 
 .dark-theme .selected:hover {
-  border-color: #e94560;
+  border-color: #7ab7ff;
+}
+
+.dark-theme .selected .value {
+  color: #b0d9ff;
 }
 
 .dark-theme .options {
-  background: #2d3748;
-  border-color: rgba(233, 69, 96, 0.3);
+  background: linear-gradient(135deg, #181a20 0%, #23272f 100%);
+  border-color: #3a3f4b;
 }
 
 .dark-theme .option {
-  color: #cbd5e0;
+  color: #b0d9ff;
 }
 
 .dark-theme .option:hover {
-  background-color: rgba(233, 69, 96, 0.2);
+  background-color: #23272f;
 }
 
 .dark-theme .selected-option {
-  background-color: rgba(233, 69, 96, 0.3);
-  color: #e94560;
+  background-color: #313543;
+  color: #7ab7ff;
+  font-weight: 600;
 }
 
 .dark-theme .review-column {
-  background: rgba(74, 85, 104, 0.4);
-  border-color: #4a5568;
+  background: linear-gradient(135deg, #181a20 0%, #23272f 100%);
+  border-color: #3a3f4b;
 }
 
-.dark-theme .review-title {
-  color: #cbd5e0;
-}
-
-.dark-theme .review-title i {
-  color: #e94560;
+.dark-theme .review-title,
+.dark-theme .status-badge,
+.dark-theme .comment-label,
+.dark-theme .comment-text {
+  color: #b0d9ff;
 }
 
 .dark-theme .status-select {
-  background: #4a5568;
-  border-color: #718096;
-  color: #e2e8f0;
+  background: #23272f;
+  border-color: #3a3f4b;
+  color: #b0d9ff;
 }
 
 .dark-theme .status-select:focus {
-  border-color: #e94560;
+  border-color: #7ab7ff;
 }
 
-.dark-theme .comment-text {
-  background: rgba(74, 85, 104, 0.6);
-  border-color: #4a5568;
-  color: #cbd5e0;
+.dark-theme .status-select option {
+  background: #23272f;
+  color: #b0d9ff;
 }
 
-.dark-theme .modal-container {
-  background: #2d3748;
-  color: #e2e8f0;
+.dark-theme .btn-submit {
+  background: linear-gradient(135deg, #7ab7ff 0%, #533483 100%);
+  color: #fff;
 }
 
-.dark-theme .modal-header {
-  background: linear-gradient(135deg, #e94560 0%, #533483 100%);
+.dark-theme .btn-cancel {
+  background: #3a3f4b;
+  color: #b0d9ff;
+}
+
+.dark-theme .btn-cancel:hover {
+  background: #23272f;
+}
+
+.dark-theme .status-badge.status-submitted {
+  background: linear-gradient(135deg, #199872 0%, #16542e 100%);
+}
+
+.dark-theme .status-badge.status-not-submitted {
+  background: linear-gradient(135deg, #bd951d 0%, #8a5400 100%);
+}
+
+.dark-theme .status-badge.status-pending {
+  background: linear-gradient(135deg, #364588 0%, #3c1267 100%);
+  color: #fff;
+}
+
+.dark-theme .status-badge.status-approved {
+  background: linear-gradient(135deg, #247035 0%, #045224 100%);
+  color: #fff;
+}
+
+.dark-theme .status-badge.status-rejected {
+  background: linear-gradient(135deg, #c71789 0%, #98041d 100%);
+  color: #fff;
 }
 
 .dark-theme .comment-input {
-  background: #4a5568;
-  border-color: #718096;
-  color: #e2e8f0;
+  background: #23272f;
+  border-color: #3a3f4b;
+  color: #b0d9ff;
 }
 
 .dark-theme .comment-input:focus {
-  border-color: #e94560;
-}
-
-.dark-theme .modal-footer {
-  background: #4a5568;
+  border-color: #7ab7ff;
 }
 
 /* 响应式设计 */
