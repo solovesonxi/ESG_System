@@ -68,7 +68,7 @@ const toggleMode = () => {
     localStorage.setItem(`lastPath_${currentMode}`, route.path);
     authStore.isDataMode = !authStore.isDataMode;
     const targetPath = localStorage.getItem(`lastPath_${authStore.isDataMode ? 'data' : 'analyze'}`) ||
-        (authStore.isDataMode ? '/material' : '/env-quantitative');
+        (authStore.isDataMode ? '/material' : '/env-quant');
     router.push(targetPath);
   }
 };

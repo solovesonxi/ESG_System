@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import or_, and_
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db, indicators, logger
@@ -100,7 +101,8 @@ async def get_review_records(db: Session = Depends(get_db), current_user: dict =
     elif role not in ["admin", "headquarter"]:
         raise HTTPException(status_code=403, detail="无权限访问审核记录")
     logger.info(f"get_review_records: {role}, {user_factory}, {departments}")
-    logger.info(f"筛选 - factory: {factory}, department: {department}, year: {year}, month: {month}, is_submitted: {is_submitted}, level1_status: {level1_status}, level2_status: {level2_status}, comment_keyword: {comment_keyword}")
+    logger.info(
+        f"筛选 - factory: {factory}, department: {department}, year: {year}, month: {month}, is_submitted: {is_submitted}, level1_status: {level1_status}, level2_status: {level2_status}, comment_keyword: {comment_keyword}")
     # 筛选条件
     if factory:
         query = query.filter(ReviewRecord.factory == factory)
@@ -118,8 +120,8 @@ async def get_review_records(db: Session = Depends(get_db), current_user: dict =
         query = query.filter(ReviewRecord.level2_status == level2_status)
     if comment_keyword:
         query = query.filter(
-            (ReviewRecord.level1_comment != None and ReviewRecord.level1_comment.contains(comment_keyword)) | (
-                    ReviewRecord.level2_comment != None and ReviewRecord.level2_comment.contains(comment_keyword)))
+            or_(and_(ReviewRecord.level1_comment != None, ReviewRecord.level1_comment.contains(comment_keyword)),
+                and_(ReviewRecord.level2_comment != None, ReviewRecord.level2_comment.contains(comment_keyword))))
     total = query.count()
     records = query.order_by(ReviewRecord.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
 

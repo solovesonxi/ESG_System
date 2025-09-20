@@ -19,24 +19,53 @@ export const useSelectionStore = defineStore('selection', () => {
                 setTimeout(initSelection, 100);
                 return;
             }
-            if (authStore.isDepartment || authStore.isFactory) {
-                factories.value = [authStore.factory];
-            } else if (authStore.isHeadquarter || authStore.isAdmin) {
-                factories.value = ["安徽光大美科", "安徽光大同创", "昆山一", "昆山二", "成都厂", "惠阳厂", "厦门奔方", "武汉厂", "南昌厂", "越南", "墨西哥", "深圳光大", "沃普智选", "青岛音诺", "天津茂创", "合肥山秀", "苏州领新", "东莞美科同创", "重庆致贯", "苏州致贯"];
+            if (factories.value.length === 0 && years.value.length === 0 && months.value.length === 0) {
+                if (authStore.isDepartment || authStore.isFactory) {
+                    factories.value = [authStore.factory];
+                } else if (authStore.isHeadquarter || authStore.isAdmin) {
+                    factories.value = ["安徽光大美科", "安徽光大同创", "昆山一", "昆山二", "成都厂", "惠阳厂", "厦门奔方", "武汉厂", "南昌厂", "越南", "墨西哥", "深圳光大", "沃普智选", "青岛音诺", "天津茂创", "合肥山秀", "苏州领新", "东莞美科同创", "重庆致贯", "苏州致贯"];
+                }
+                const currentYear = new Date().getFullYear()
+                years.value = []
+                for (let y = 2020; y <= currentYear; y++) {
+                    years.value.push(y.toString())
+                }
+                months.value = Array.from({length: 12}, (_, i) => (i + 1).toString())
+                selectedFactory.value = factories.value[0] || null;
+                selectedYear.value = currentYear.toString()
+                selectedMonth.value = (new Date().getMonth() + 1).toString()
+                console.log("选择器首次初始化完成");
+            } else {
+                console.log("选择器已初始化");
             }
-            const currentYear = new Date().getFullYear()
-            years.value = []
-            for (let y = 2020; y <= currentYear; y++) {
-                years.value.push(y.toString())
-            }
-            months.value = Array.from({length: 12}, (_, i) => (i + 1).toString())
-            selectedFactory.value = factories.value[0] || null;
-            selectedYear.value = currentYear.toString()
-            selectedMonth.value = (new Date().getMonth() + 1).toString()
         } catch (error) {
             console.error('选择器初始化失败:', error);
         }
     };
+
+    const setSelection = (factory, year, month) => {
+        if (factory) {
+            const factoryStr = factory.toString()
+            if (factories.value.includes(factoryStr)) {
+                selectedFactory.value = factory
+            }
+        }
+        if (year) {
+            const yearStr = year.toString()
+            if (years.value.includes(yearStr)) {
+                selectedYear.value = yearStr
+            }
+        }
+        if (month !== undefined && month !== null) {
+            const monthStr = month.toString()
+            if (months.value.includes(monthStr)) {
+                selectedMonth.value = monthStr
+            }
+        }
+        console.log("输入参数设置选择器:", factory, year, month);
+        console.log("初始参数选项集合:", factories.value, years.value, months.value);
+        console.log("选择器数据已更新", selectedFactory.value, selectedYear.value, selectedMonth.value);
+    }
 
     // 封装所有操作方法
     const toggleFactoryDropdown = () => {
@@ -96,6 +125,7 @@ export const useSelectionStore = defineStore('selection', () => {
         showYearDropdown,
         showMonthDropdown,
         initSelection,
+        setSelection,
         toggleFactoryDropdown,
         selectFactory,
         toggleYearDropdown,

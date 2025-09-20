@@ -5,6 +5,7 @@
         <h3>{{ modalTitle }}</h3>
         <button class="close-btn" @click="closeModal">
           <i class="fas fa-times"></i>
+          查看详情
         </button>
       </div>
 

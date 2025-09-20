@@ -25,13 +25,10 @@
             </div>
             <div class="role-permissions">
               <div class="permission-item">
-                查看自己部门的定量数据
+                查看管辖部门每月的定量数据和一二级审核结果
               </div>
               <div class="permission-item">
-                查看自己部门的一二级审核结果
-              </div>
-              <div class="permission-item">
-                填写自己部门的数据
+                每月填写管辖部门的数据
               </div>
             </div>
           </div>
@@ -44,10 +41,16 @@
             </div>
             <div class="role-permissions">
               <div class="permission-item">
-                查看所有部门的定量数据月报
+                查看所有部门的定量数据和一二级审核结果
               </div>
               <div class="permission-item">
-                编辑所有部门的一级审核结果
+                审核所有部门的定量数据
+              </div>
+              <div class="permission-item">
+                查看本工厂的年度数据和审核结果
+              </div>
+              <div class="permission-item">
+                每年填写本工厂的年度数据
               </div>
             </div>
           </div>
@@ -60,13 +63,13 @@
             </div>
             <div class="role-permissions">
               <div class="permission-item">
-                查看所有定量和年度数据
+                查看所有月度和年度数据和一二级审核结果
               </div>
               <div class="permission-item">
-                查看一级审核结果
+                审核所有工厂所有部门的定量数据
               </div>
               <div class="permission-item">
-                编辑二级审核结果
+                审核所有工厂的年度数据
               </div>
               <div class="permission-item">
                 最终审核确认
@@ -100,11 +103,11 @@
             <div class="notice-icon">
               <i class="fas fa-info-circle"></i>
             </div>
-            <div class="notice-content">
+            <div style="flex: 1;">
               <strong>您当前的操作权限：</strong>
               <div class="user-permissions">
               <span v-if="authStore.isDepartment" class="permission-tag">
-                限部门数据: {{ authStore.departments.join('、') }}
+                仅限以下部门数据: {{ departmentsListZh.join('、') }}
               </span>
                 <span v-if="authStore.isFactory" class="permission-tag">
                 本工厂: {{ authStore.factory }}
@@ -113,7 +116,7 @@
                 全公司数据访问
               </span>
                 <span v-if="authStore.isAdmin" class="permission-tag">
-                超级管理员
+                超级管理员权限
               </span>
               </div>
             </div>
@@ -137,7 +140,7 @@
           <label>数据类型</label>
           <select v-model="filterDepartment">
             <option value="">全部</option>
-            <option v-for="dept in departmentsListZh" :key="dept" :value="dept">{{ dept }}</option>
+            <option v-for="dept in departmentsList" :key="dept" :value="dept">{{ CATEGORY[dept] }}</option>
           </select>
         </div>
         <div class="filter-item">
@@ -151,7 +154,10 @@
           <label>月份</label>
           <select v-model="filterMonth">
             <option value="">全部</option>
-            <option v-for="month in Array.from({length: 12}, (_, i) => i + 1)" :key="month" :value="month">{{ month }}月</option>
+            <option v-for="month in Array.from({length: 12}, (_, i) => i + 1)" :key="month" :value="month">{{
+                month
+              }}月
+            </option>
           </select>
         </div>
         <div class="filter-item">
@@ -207,24 +213,28 @@
         <div v-for="record in filteredRecords" :key="record.id" class="record-row" @click="openDetails(record)">
           <span class="cell factory">{{ record.factory }}</span>
           <span class="cell data-type">{{ CATEGORY[record.data_type] }}</span>
-          <span class="cell date">{{ record.year }}{{ record.month ? ('-' + record.month + '月') : '' }}</span>
-          <span class="cell status-badge" :class="record.is_submitted ? 'submitted' : 'not-submitted'">{{ record.is_submitted ? '已提交' : '未提交' }}</span>
-          <span class="cell status-badge" :class="record.level1_status">{{ getStatusLabel(record.level1_status) }}</span>
-          <span class="cell comment" :title="record.level1_comment">{{ record.level1_comment?.slice(0, 12) || '—' }}<span v-if="record.level1_comment?.length > 12">...</span></span>
-          <span class="cell status-badge" v-if="!isAnnualType(record.data_type)" :class="record.level2_status">{{ getStatusLabel(record.level2_status) }}</span>
-          <span class="cell comment" v-if="!isAnnualType(record.data_type)" :title="record.level2_comment">{{ record.level2_comment?.slice(0, 12) || '—' }}<span v-if="record.level2_comment?.length > 12">...</span></span>
+          <span class="cell date">{{ record.year }}年{{ record.month ? (record.month + '月') : '' }}</span>
+          <span class="cell status-badge" :class="record.is_submitted ? 'submitted' : 'not-submitted'">{{record.is_submitted ? '已提交' : '未提交' }}</span>
+          <span class="cell status-badge" :class="record.level1_status">{{getStatusLabel(record.level1_status) }}</span>
+          <span class="cell comment" :title="record.level1_comment">{{record.level1_comment?.slice(0, 12) || '' }}
+            <span v-if="record.level1_comment?.length > 12">...</span></span>
+          <span class="cell status-badge" v-if="!isAnnualType(record.data_type)"
+                :class="record.level2_status">{{ getStatusLabel(record.level2_status) }}</span>
+          <span class="cell comment" v-if="!isAnnualType(record.data_type)" :title="record.level2_comment">{{ record.level2_comment?.slice(0, 12) || '' }}<span
+              v-if="record.level2_comment?.length > 12">...</span></span>
         </div>
         <div v-if="filteredRecords.length === 0" class="no-records">暂无符合条件的审核记录</div>
       </div>
-      <div class="pagination-bar pagination-horizontal">
-        <button @click="goToPage(1)" :disabled="currentPage===1">首页</button>
-        <button @click="goToPage(currentPage-1)" :disabled="currentPage===1">上一页</button>
-        <span class="page-text">第 <input type="number" v-model.number="currentPage" min="1" :max="totalPages" style="width:3em;"> 页 / 共 {{ totalPages }} 页</span>
-        <button @click="goToPage(currentPage+1)" :disabled="currentPage===totalPages">下一页</button>
-        <button @click="goToPage(totalPages)" :disabled="currentPage===totalPages">尾页</button>
-      </div>
-      <ReviewDetailsModal v-if="showDetailsModal" :record="selectedRecord" @close="showDetailsModal=false" />
     </div>
+    <div class="pagination-bar pagination-horizontal">
+      <button @click="goToPage(1)" :disabled="currentPage===1">首页</button>
+      <button @click="goToPage(currentPage-1)" :disabled="currentPage===1">上一页</button>
+      <span class="page-text">第 <input type="number" v-model.number="currentPage" min="1" :max="totalPages"
+                                        style="width:3em;"> 页 / 共 {{ totalPages }} 页</span>
+      <button @click="goToPage(currentPage+1)" :disabled="currentPage===totalPages">下一页</button>
+      <button @click="goToPage(totalPages)" :disabled="currentPage===totalPages">尾页</button>
+    </div>
+    <ReviewDetailsModal v-if="showDetailsModal" :record="selectedRecord" @close="showDetailsModal=false"/>
   </div>
 </template>
 
@@ -235,12 +245,13 @@ import apiClient from '@/utils/axios'
 import {useSelectionStore} from "@/stores/selectionStore.js";
 import {showError} from "@/utils/toast.js";
 import {CATEGORY} from '@/constants/indicators.js';
+import ReviewDetailsModal from "@/components/ReviewDetailsModal.vue";
 
 const authStore = useAuthStore()
 const selectionStore = useSelectionStore()
 
 const showPermissionDetails = ref(false)
-const factoryList = computed(() => authStore.isFactory ? [authStore.factory] : selectionStore.factories)
+const factoryList = computed(() => (authStore.isDepartment || authStore.isFactory) ? [authStore.factory] : selectionStore.factories)
 const departmentsList = computed(() => authStore.getReviewableDataTypes)
 const departmentsListZh = computed(() => departmentsList.value.map(dep => CATEGORY[dep] || dep))
 
@@ -274,8 +285,7 @@ const fetchRecords = async () => {
       level2_status: filterLevel2Status.value || undefined,
       comment_keyword: filterCommentKeyword.value || undefined
     }
-    const response = await apiClient.get('/review/', { params })
-    console.log("审核记录数据：", response.data)
+    const response = await apiClient.get('/review/', {params})
     filteredRecords.value = response.data.records
     totalRecords.value = response.data.total
   } catch (error) {
@@ -294,69 +304,7 @@ const getStatusLabel = (status) => {
 }
 
 // 过滤器相关
-const filteredRecords = ref([
-  {
-    id: 1,
-    factory: '工厂A',
-    data_type: 'material',
-    year: 2025,
-    month: 8,
-    is_submitted: true,
-    level1_status: 'approved',
-    level1_comment: '数据准确，审核通过',
-    level2_status: 'pending',
-    level2_comment: ''
-  },
-  {
-    id: 2,
-    factory: '工厂B',
-    data_type: 'energy',
-    year: 2025,
-    month: 7,
-    is_submitted: false,
-    level1_status: 'pending',
-    level1_comment: '',
-    level2_status: 'pending',
-    level2_comment: ''
-  },
-  {
-    id: 3,
-    factory: '工厂A',
-    data_type: 'env_qual',
-    year: 2024,
-    month: null,
-    is_submitted: true,
-    level1_status: 'rejected',
-    level1_comment: '分析内容不完整',
-    level2_status: '',
-    level2_comment: ''
-  },
-  {
-    id: 4,
-    factory: '工厂C',
-    data_type: 'water',
-    year: 2023,
-    month: 12,
-    is_submitted: true,
-    level1_status: 'approved',
-    level1_comment: '水资源利用合理',
-    level2_status: 'approved',
-    level2_comment: '总部复核通过'
-  },
-  {
-    id: 5,
-    factory: '工厂B',
-    data_type: 'social_qual_labor',
-    year: 2025,
-    month: null,
-    is_submitted: false,
-    level1_status: 'pending',
-    level1_comment: '',
-    level2_status: '',
-    level2_comment: ''
-  }
-])
-
+const filteredRecords = ref([])
 const filterFactory = ref('')
 const filterDepartment = ref('')
 const filterYear = ref('')
@@ -382,34 +330,77 @@ function isAnnualType(type) {
   return ['env_qual', 'env_quant', 'social_qual_labor', 'social_qual_other', 'social_quant_labor', 'social_quant_other', 'governance'].includes(type)
 }
 
-onMounted(async () => {
-  try {
-    await fetchRecords()
-  } catch (error) {
-    showError(error)
-  }
-})
+const STORAGE_KEY = 'reviewManagementState'
 
-// 生命周期
 onMounted(() => {
-  // 加载审核数据
-  fetchRecords();
+  const saved = localStorage.getItem(STORAGE_KEY)
+  if (saved) {
+    const state = JSON.parse(saved)
+    filterFactory.value = state.filterFactory || ''
+    filterDepartment.value = state.filterDepartment || ''
+    filterYear.value = state.filterYear || ''
+    filterMonth.value = state.filterMonth || ''
+    filterSubmitted.value = state.filterSubmitted || ''
+    filterLevel1Status.value = state.filterLevel1Status || ''
+    filterLevel2Status.value = state.filterLevel2Status || ''
+    filterCommentKeyword.value = state.filterCommentKeyword || ''
+    currentPage.value = state.currentPage || 1
+  }
+  fetchRecords()
 })
 
+// 统一监听筛选条件和 pageSize，变化时重置页码并刷新
 watch([
   filterFactory, filterDepartment, filterYear, filterMonth,
   filterSubmitted, filterLevel1Status, filterLevel2Status, filterCommentKeyword, pageSize
 ], () => {
   currentPage.value = 1
+  // 持久化筛选和分页状态到localStorage
+  const state = {
+    filterFactory: filterFactory.value,
+    filterDepartment: filterDepartment.value,
+    filterYear: filterYear.value,
+    filterMonth: filterMonth.value,
+    filterSubmitted: filterSubmitted.value,
+    filterLevel1Status: filterLevel1Status.value,
+    filterLevel2Status: filterLevel2Status.value,
+    filterCommentKeyword: filterCommentKeyword.value,
+    currentPage: currentPage.value
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   fetchRecords()
 })
-watch(currentPage, fetchRecords)
+// 监听页码变化，只刷新数据并持久化
+watch(currentPage, () => {
+  const state = {
+    filterFactory: filterFactory.value,
+    filterDepartment: filterDepartment.value,
+    filterYear: filterYear.value,
+    filterMonth: filterMonth.value,
+    filterSubmitted: filterSubmitted.value,
+    filterLevel1Status: filterLevel1Status.value,
+    filterLevel2Status: filterLevel2Status.value,
+    filterCommentKeyword: filterCommentKeyword.value,
+    currentPage: currentPage.value
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  fetchRecords()
+})
 
 const totalPages = computed(() => Math.max(1, Math.ceil(totalRecords.value / pageSize.value)))
+
 function goToPage(page) {
   if (page < 1) page = 1
   if (page > totalPages.value) page = totalPages.value
   currentPage.value = page
+}
+
+const showDetailsModal = ref(false)
+const selectedRecord = ref(null)
+
+function openDetails(record) {
+  selectedRecord.value = record
+  showDetailsModal.value = true
 }
 </script>
 
@@ -417,17 +408,25 @@ function goToPage(page) {
 .review-management {
   padding: 2rem;
   min-height: 100vh;
-  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 25%, #fce4ec 50%, #fff3e0 75%, #f1f8e9 100%);
+  background: linear-gradient(135deg, #e3f2fd 0%, #e78ff5 25%, #f8cad9 50%, #f8d488 75%, #f1f8e9 100%);
+}
+
+.dark-theme .review-management {
+  background: linear-gradient(135deg, #151f1a 0%, #3a0113 25%, #420833 50%, #02012d 100%);
 }
 
 .permission-card {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.4);
   border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 2rem;
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .permission-card {
+  background: rgba(12, 13, 28, 0.4);
 }
 
 .permission-details {
@@ -452,6 +451,10 @@ function goToPage(page) {
   backdrop-filter: blur(10px);
 }
 
+.dark-theme .role-card {
+  background: rgba(47, 18, 30, 0.7);
+}
+
 .role-card:hover {
   background: rgba(255, 255, 255, 0.95);
   border-color: rgba(103, 126, 234, 0.4);
@@ -459,10 +462,18 @@ function goToPage(page) {
   box-shadow: 0 8px 25px rgba(103, 126, 234, 0.2);
 }
 
+.dark-theme .role-card:hover {
+  background: rgba(84, 32, 54, 0.7);
+}
+
 .role-card.current-user {
   border-color: #e94560;
-  background: linear-gradient(135deg, rgba(233, 69, 96, 0.1) 0%, rgba(255, 255, 255, 0.9) 100%);
+  background: linear-gradient(135deg, rgba(255, 0, 204, 0.01) 0%, rgba(253, 0, 0, 0.2) 100%);
   box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+}
+
+.dark-theme .role-card.current-user {
+  background: linear-gradient(135deg, rgba(252, 159, 233, 0.2) 0%, rgba(246, 158, 158, 0.01) 100%);
 }
 
 .role-card-header {
@@ -482,19 +493,19 @@ function goToPage(page) {
 }
 
 .role-badge.department {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, rgba(248, 220, 170, 0.5) 0%, #88f513 100%);
 }
 
 .role-badge.factory {
-  background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+  background: linear-gradient(135deg, rgba(25, 238, 92, 0.5) 0%, #03ecb6 100%);
 }
 
 .role-badge.headquarter {
-  background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+  background: linear-gradient(135deg, rgba(130, 198, 246, 0.5) 0%, #a007dc 100%);
 }
 
 .role-badge.admin {
-  background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+  background: linear-gradient(135deg, rgba(248, 109, 204, 0.5) 0%, #ff0013 100%);
 }
 
 .current-label {
@@ -526,6 +537,11 @@ function goToPage(page) {
   font-size: 0.875rem;
 }
 
+.dark-theme .permission-item {
+  background: rgba(119, 132, 217, 0.1);
+  color: rgba(255, 243, 224, 0.9);
+}
+
 .current-user-notice {
   background: linear-gradient(135deg, rgba(233, 69, 96, 0.1) 0%, rgba(103, 126, 234, 0.1) 100%);
   border: 2px solid rgba(233, 69, 96, 0.3);
@@ -549,10 +565,6 @@ function goToPage(page) {
   flex-shrink: 0;
 }
 
-.notice-content {
-  flex: 1;
-}
-
 .user-permissions {
   display: flex;
   flex-wrap: wrap;
@@ -564,7 +576,7 @@ function goToPage(page) {
   color: white;
   padding: 0.3rem 0.8rem;
   border-radius: 15px;
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -572,7 +584,7 @@ function goToPage(page) {
 }
 
 .card {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(103, 126, 234, 0.08);
   padding: 1.5rem;
@@ -581,14 +593,6 @@ function goToPage(page) {
 
 .filter-section {
   margin-bottom: 2rem;
-}
-
-.filter-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.2rem;
-  align-items: center;
-  margin-bottom: 0.5rem;
 }
 
 .filter-grid-modern {
@@ -642,6 +646,10 @@ function goToPage(page) {
 
 .records-section {
   margin-bottom: 2rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(103, 126, 234, 0.08);
+  padding: 1.5rem;
 }
 
 .records-list-modern {
@@ -649,20 +657,23 @@ function goToPage(page) {
   flex-direction: column;
   gap: 0.5rem;
 }
+
 .record-row {
   display: grid;
   grid-template-columns: 1.2fr 1fr 1fr 1fr 1.2fr 1.5fr 1.2fr 1.5fr;
   align-items: flex-start;
   background: #fff;
   border-radius: 10px;
-  box-shadow: 0 1px 6px rgba(103,126,234,0.07);
+  box-shadow: 0 1px 6px rgba(103, 126, 234, 0.07);
   padding: 0.4rem 0.4rem;
   font-size: 0.95rem;
   transition: box-shadow 0.2s;
 }
+
 .record-row:hover {
-  box-shadow: 0 4px 16px rgba(233,69,96,0.10);
+  box-shadow: 0 4px 16px rgba(233, 69, 96, 0.10);
 }
+
 .cell {
   padding: 0.1rem 0.2rem;
   overflow: hidden;
@@ -671,6 +682,7 @@ function goToPage(page) {
   color: #222;
   font-size: 0.95rem;
 }
+
 .cell.comment {
   color: #764ba2;
   background: #f3e5f5;
@@ -679,21 +691,14 @@ function goToPage(page) {
   font-size: 0.92rem;
   cursor: pointer;
   max-width: 120px;
+  min-height: 24px;
 }
+
 .cell.comment:hover {
   background: #fff3e0;
   color: #e94560;
 }
-.cell.reviewer {
-  color: #888;
-  font-size: 0.85em;
-  margin-left: 0.2em;
-}
-.cell.review-time {
-  color: #bbb;
-  font-size: 0.8em;
-  margin-left: 0.1em;
-}
+
 .status-badge {
   display: inline-block;
   width: fit-content;
@@ -709,21 +714,27 @@ function goToPage(page) {
   margin-right: 0.2em;
   vertical-align: middle;
 }
+
 .status-badge.submitted {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, #44e0b1 0%, #2aa95c 100%);
 }
+
 .status-badge.not-submitted {
-  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  background: linear-gradient(135deg, #f5d985 0%, #f8b046 100%);
 }
+
 .status-badge.pending {
-  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  background: linear-gradient(135deg, #c7cfea 0%, #ae75e5 100%);
 }
+
 .status-badge.approved {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, #93e7a6 0%, #31b766 100%);
 }
+
 .status-badge.rejected {
-  background: linear-gradient(135deg, #dc3545 0%, #e91e63 100%);
+  background: linear-gradient(135deg, #f3adbd 0%, #c04a5d 100%);
 }
+
 .pagination-bar.pagination-horizontal {
   display: flex;
   flex-direction: row;
@@ -733,6 +744,7 @@ function goToPage(page) {
   background: transparent;
   height: 32px;
 }
+
 .pagination-bar button {
   width: fit-content;
   height: 28px;
@@ -745,6 +757,7 @@ function goToPage(page) {
   display: flex;
   align-items: center;
 }
+
 .page-text {
   font-size: 0.95rem;
   color: #2f2f2f;
@@ -754,11 +767,12 @@ function goToPage(page) {
   gap: 0.3rem;
   height: 28px;
 }
+
 .pagination-bar button:disabled {
   cursor: not-allowed;
   color: #555;
-  border: 1px solid #eee;
 }
+
 .pagination-bar input[type="number"] {
   height: 24px;
   min-width: 70px;
@@ -771,83 +785,103 @@ function goToPage(page) {
   display: flex;
   align-items: center;
 }
+
 :root .dark-theme .pagination-bar.pagination-horizontal {
   background: transparent;
 }
+
 :root .dark-theme .pagination-bar button {
   color: #f8f9fa;
   background: transparent;
   border: 1px solid #444;
 }
+
 :root .dark-theme .pagination-bar button:disabled {
   color: #888;
   border-color: #333;
 }
+
 :root .dark-theme .pagination-bar input[type="number"] {
   color: #f8f9fa;
   background: #222;
   border: 1px solid #444;
 }
+
 :root .dark-theme .page-text {
   color: #ccc;
 }
+
 :root .dark-theme .records-section,
 :root .dark-theme .card,
 :root .dark-theme .filter-section {
   background: #181818 !important;
   color: #f8f9fa !important;
 }
+
 :root .dark-theme .record-row {
   background: #222 !important;
   color: #f8f9fa !important;
-  box-shadow: 0 1px 6px rgba(103,126,234,0.15);
+  box-shadow: 0 1px 6px rgba(103, 126, 234, 0.15);
 }
+
 :root .dark-theme .cell {
   color: #f8f9fa !important;
 }
+
 :root .dark-theme .cell.comment {
   background: #333 !important;
   color: #e94560 !important;
 }
+
 :root .dark-theme .cell.comment:hover {
   background: #444 !important;
   color: #ff6b9d !important;
 }
+
 :root .dark-theme .cell.reviewer {
   color: #aaa !important;
 }
+
 :root .dark-theme .cell.review-time {
   color: #888 !important;
 }
+
 :root .dark-theme .status-badge.submitted {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  background: linear-gradient(135deg, #199872 0%, #16542e 100%) !important;
   color: #fff !important;
 }
+
 :root .dark-theme .status-badge.not-submitted {
-  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%) !important;
+  background: linear-gradient(135deg, #bd951d 0%, #8a5400 100%) !important;
   color: #fff !important;
 }
+
 :root .dark-theme .status-badge.pending {
-  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%) !important;
+  background: linear-gradient(135deg, #364588 0%, #3c1267 100%) !important;
   color: #fff !important;
 }
+
 :root .dark-theme .status-badge.approved {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  background: linear-gradient(135deg, #247035 0%, #045224 100%) !important;
   color: #fff !important;
 }
+
 :root .dark-theme .status-badge.rejected {
-  background: linear-gradient(135deg, #dc3545 0%, #e91e63 100%) !important;
+  background: linear-gradient(135deg, #c71789 0%, #98041d 100%) !important;
   color: #fff !important;
 }
+
 :root .dark-theme .filter-item label {
   color: #e94560 !important;
 }
+
 :root .dark-theme .filter-item select,
 :root .dark-theme .filter-item input {
   background: #222 !important;
   color: #f8f9fa !important;
   border: 1px solid #444 !important;
 }
+
 :root .dark-theme .reset-btn {
   background: linear-gradient(135deg, #e94560 0%, #764ba2 100%) !important;
   color: #fff !important;
@@ -888,11 +922,15 @@ function goToPage(page) {
   align-items: center;
   margin-bottom: 2rem;
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.4);
   border-radius: 16px;
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(17, 4, 23, 0.1);
+}
+
+.dark-theme .page-header {
+  background: rgba(33, 10, 45, 0.4);
 }
 
 .user-info {
@@ -910,8 +948,13 @@ function goToPage(page) {
 }
 
 .username {
-  color: #495057;
-  font-weight: 600;
+  color: #3c4248;
+  font-weight: 700;
+  font-size: 2rem;
+}
+
+.dark-theme .username {
+  color: #dea4be;
 }
 
 .role-badge {
@@ -985,6 +1028,7 @@ function goToPage(page) {
   padding: 0.4rem 0.7rem;
   margin-bottom: 2px;
 }
+
 .header-cell {
   padding: 0.1rem 0.2rem;
   text-align: left;
@@ -992,10 +1036,12 @@ function goToPage(page) {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 :root .dark-theme .record-header-row {
   background: #222 !important;
   color: #f8f9fa !important;
 }
+
 :root .dark-theme .header-cell {
   color: #f8f9fa !important;
 }

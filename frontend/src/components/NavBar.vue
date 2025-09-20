@@ -198,16 +198,16 @@ const dataModeItems = [
 const analyzeModeItems = [
   {name: 'home', path: '/home', label: '首页'},
   {
-    name: 'env', label: '环境', children: [{name: 'env-quantitative', path: '/env-quantitative', label: '定量'},
-      {name: 'env-qualitative', path: '/env-qualitative', label: '定性'},
+    name: 'env', label: '环境', children: [{name: 'env-quant', path: '/env-quant', label: '定量'},
+      {name: 'env-qual', path: '/env-qual', label: '定性'},
     ]
   },
   {
     name: 'social', label: '社会',
-    children: [{name: 'social-quantitative-labor', path: '/social-quantitative-labor', label: '定量-劳工'},
-      {name: 'social-qualitative-labor', path: '/social-qualitative-labor', label: '定性-劳工'},
-      {name: 'social-quantitative-other', path: '/social-quantitative-other', label: '定量-其他'},
-      {name: 'social-qualitative-other', path: '/social-qualitative-other', label: '定性-其他'},
+    children: [{name: 'social-quant-labor', path: '/social-quant-labor', label: '定量-劳工'},
+      {name: 'social-qual-labor', path: '/social-qual-labor', label: '定性-劳工'},
+      {name: 'social-quant-other', path: '/social-quant-other', label: '定量-其他'},
+      {name: 'social-qual-other', path: '/social-qual-other', label: '定性-其他'},
     ]
   },
   {name: 'governance', path: '/governance', label: '治理'},

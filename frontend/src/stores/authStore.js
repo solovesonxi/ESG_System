@@ -27,14 +27,17 @@ export const useAuthStore = defineStore('auth', () => {
         }
         return false
     }
-
+    const setDataMode = (dataType) => {
+        isDataMode.value = !['env_qual', 'env_quant', 'social_qual_labor', 'social_qual_other', 'social_quant_labor', 'social_quant_other', 'governance'].includes(dataType)
+    }
     // 获取用户可访问的部门列表
     const getReviewableDataTypes = computed(() => {
         const QUANT_TYPES = ['material', 'energy', 'water', 'waste', 'emission', 'investment', 'management', 'employment', 'training', 'ohs', 'satisfaction', 'supply', 'responsibility', 'ip', 'community', 'governance']
         const ANALYTICAL_TYPES = ['env_qual', 'env_quant', 'social_qual_labor', 'social_qual_other', 'social_quant_labor', 'social_quant_other', 'governance']
         if (isHeadquarter.value || isAdmin.value) return [...QUANT_TYPES, ...ANALYTICAL_TYPES]
-        if (isFactory) return  QUANT_TYPES
-        return departments.value || []
+        if (isFactory.value) return QUANT_TYPES
+        if (isDepartment.value) return departments.value
+        return []
     })
 
     // 权限相关计算属性
@@ -149,6 +152,7 @@ export const useAuthStore = defineStore('auth', () => {
         factory,
         departments,
         hasDepartmentAccess,
+        setDataMode,
         getReviewableDataTypes,
         canLevel1Review,
         canLevel2Review,

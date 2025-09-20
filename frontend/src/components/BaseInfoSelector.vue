@@ -97,14 +97,14 @@
             <div class="review-column">
               <div class="review-title">
                 <i class="fas fa-check-circle"></i>
-                一级审核
+                {{ authStore.isDataMode ? '工厂' : '总部/管理员' }}审核
               </div>
               <div class="status-display">
                 <span class="status-badge" :class="getStatusClass(currentLevel1Status)">
                   {{ getStatusLabel(currentLevel1Status) }}
                 </span>
                 <!-- 编辑控制 -->
-                <div class="edit-control" v-if="canEditLevel1">
+                <div class="edit-control" v-if="canEditLevel1 && currentLevel1Status === 'pending'">
                   <select
                       :value="currentLevel1Status"
                       @change="handleLevel1StatusChange($event.target.value)"
@@ -126,14 +126,14 @@
             <div class="review-column" v-if="authStore.isDataMode">
               <div class="review-title">
                 <i class="fas fa-shield-alt"></i>
-                二级审核
+                {{ '总部/管理员' }}审核
               </div>
               <div class="status-display">
                 <span class="status-badge" :class="getStatusClass(currentLevel2Status)">
                   {{ getStatusLabel(currentLevel2Status) }}
                 </span>
                 <!-- 编辑控制 -->
-                <div class="edit-control" v-if="canEditLevel2">
+                <div class="edit-control" v-if="canEditLevel2 && currentLevel2Status === 'pending'">
                   <select
                       :value="currentLevel2Status"
                       @change="handleLevel2StatusChange($event.target.value)"

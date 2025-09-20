@@ -47,12 +47,12 @@ const routes = [{path: '/', redirect: '/login'}, {path: '/login', component: Log
     path: '/ip', component: IPView
 }, {
     path: '/community', component: CommunityView
-}, {path: '/env-quantitative', component: EnvQuantitativeView}, {
-    path: '/env-qualitative', component: EnvQualitativeView
-}, {path: '/social-quantitative-labor', component: SocialQuantitativeLaborView}, {
-    path: '/social-qualitative-labor', component: SocialQualitativeLaborView
-}, {path: '/social-quantitative-other', component: SocialQuantitativeOtherView}, {
-    path: '/social-qualitative-other', component: SocialQualitativeOtherView
+}, {path: '/env-quant', component: EnvQuantitativeView}, {
+    path: '/env-qual', component: EnvQualitativeView
+}, {path: '/social-quant-labor', component: SocialQuantitativeLaborView}, {
+    path: '/social-qual-labor', component: SocialQualitativeLaborView
+}, {path: '/social-quant-other', component: SocialQuantitativeOtherView}, {
+    path: '/social-qual-other', component: SocialQualitativeOtherView
 }, {path: '/governance', component: GovernanceView}, {
     path: '/review-management', component: ReviewManagement
 },]
