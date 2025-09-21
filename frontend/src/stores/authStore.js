@@ -16,6 +16,8 @@ export const useAuthStore = defineStore('auth', () => {
     const isAdmin = computed(() => user.value?.role === 'admin')
     const factory = computed(() => user.value?.factory)
     const departments = computed(() => user.value?.departments)
+    const QUANT_TYPES = ['material', 'energy', 'water', 'waste', 'emission', 'investment', 'management', 'employment', 'training', 'ohs', 'satisfaction', 'supply', 'responsibility', 'ip', 'community', 'governance']
+    const ANALYTICAL_TYPES = ['env_qual', 'env_quant', 'social_qual_labor', 'social_qual_other', 'social_quant_labor', 'social_quant_other', 'governance']
 
     // 部门权限检查
     const hasDepartmentAccess = (departmentType) => {
@@ -32,8 +34,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
     // 获取用户可访问的部门列表
     const getReviewableDataTypes = computed(() => {
-        const QUANT_TYPES = ['material', 'energy', 'water', 'waste', 'emission', 'investment', 'management', 'employment', 'training', 'ohs', 'satisfaction', 'supply', 'responsibility', 'ip', 'community', 'governance']
-        const ANALYTICAL_TYPES = ['env_qual', 'env_quant', 'social_qual_labor', 'social_qual_other', 'social_quant_labor', 'social_quant_other', 'governance']
         if (isHeadquarter.value || isAdmin.value) return [...QUANT_TYPES, ...ANALYTICAL_TYPES]
         if (isFactory.value) return QUANT_TYPES
         if (isDepartment.value) return departments.value
@@ -62,6 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem('user', JSON.stringify(user.value)) // 保存更新后的用户信息
         localStorage.removeItem('lastPath_data');
         localStorage.removeItem('lastPath_analyze');
+        localStorage.removeItem('reviewManagementState');
         selectionStore.initSelection();
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
     }
@@ -91,11 +92,12 @@ export const useAuthStore = defineStore('auth', () => {
 
     // 清除认证信息
     const clearAuth = () => {
-        accessToken.value = null
-        user.value = null
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('user')
-        delete apiClient.defaults.headers.common['Authorization']
+        accessToken.value = null;
+        user.value = null;
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('reviewManagementState');
+        delete apiClient.defaults.headers.common['Authorization'];
     }
 
     // 检查token是否有效
@@ -154,6 +156,8 @@ export const useAuthStore = defineStore('auth', () => {
         hasDepartmentAccess,
         setDataMode,
         getReviewableDataTypes,
+        QUANT_TYPES,
+        ANALYTICAL_TYPES,
         canLevel1Review,
         canLevel2Review,
         canViewAllData,

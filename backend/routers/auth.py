@@ -34,17 +34,20 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 
 @router.post("/login", summary="用户登录")
-def login(username: str = Body(..., description="用户名"), password: str = Body(..., description="密码"),
+def login(username: str = Body(..., description="用户名或ID"), password: str = Body(..., description="密码"),
           db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == username).first()
-    logger.info(pwd_context.hash(password))
+    user = None
+    if username.isdigit():
+        user = db.query(User).filter(User.id == int(username)).first()
+    if not user:
+        user = db.query(User).filter(User.username == username).first()
     if not user or not pwd_context.verify(password, str(user.hashed_password)):
-        raise HTTPException(status_code=400, detail="用户名或密码错误")
+        raise HTTPException(status_code=400, detail="密码错误")
     # 在token中包含权限信息
-    token_data = {"username": user.username, "role": user.role, "factory": user.factory, "departments": user.departments}
+    token_data = {"id": user.id, "role": user.role, "factory": user.factory, "departments": user.departments}
     access_token = create_access_token(data=token_data, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"token": access_token,
-            "user": {"username": user.username, "factory": user.factory, "departments": user.departments,
+            "user": {"id": user.id, "username": user.username, "factory": user.factory, "departments": user.departments,
                      "role": user.role, "phone": user.phone, "email": user.email, "avatar": user.avatar}}
 
 
@@ -53,14 +56,14 @@ async def refresh_token(input_data: dict = Body(...), db: Session = Depends(get_
     try:
         payload = jwt.decode(input_data.get("access_token", ""), SECRET_KEY, algorithms=[ALGORITHM],
                              options={"verify_exp": False})
-        username = payload.get("username")
-        user = db.query(User).filter(User.username == username).first()
+        user_id = payload.get("id")
+        user = db.query(User).filter(User.id == user_id).first()
         if not user:
             raise HTTPException(status_code=401, detail="用户无效或已被禁用")
         token_exp = datetime.fromtimestamp(payload["exp"], timezone.utc)
         if datetime.now(timezone.utc) - token_exp > timedelta(minutes=5):
             raise HTTPException(status_code=401, detail="Token 过期时间过长，请重新登录")
-        new_payload = {"username": user.username, "role": user.role}
+        new_payload = {"id": user.id, "role": user.role, "factory": user.factory, "departments": user.departments}
         new_token = create_access_token(new_payload)
         return {"new_token": new_token}
     except jwt.InvalidTokenError:
@@ -81,20 +84,22 @@ def register(username: str = Body(..., description="用户名"), password: str =
         stored_code = redis_client.get(f"verification_code:{contact}")
         if not stored_code or stored_code != verificationCode:
             raise HTTPException(status_code=400, detail="验证码无效或已过期")
-        existing_user = db.query(User).filter(User.username == username).first()
-        if existing_user:
+        # 检查用户名是否已存在
+        if db.query(User).filter(User.username == username).first():
             raise HTTPException(status_code=400, detail="用户名已存在")
         hashed_password = pwd_context.hash(password)
-        new_user = User(username=username, hashed_password=hashed_password, factory=factory, role="factory",
-                        phone=phone, email=email)
-        db.add(new_user)
+        user = User(username=username, hashed_password=hashed_password, factory=factory, phone=phone, email=email)
+        db.add(user)
         db.commit()
-        redis_client.delete(f"verification_code:{contact}")
-        return {"status": "success", "username": new_user.username}
+        db.refresh(user)
+        token_data = {"id": user.id, "role": user.role, "factory": user.factory, "departments": user.departments}
+        access_token = create_access_token(data=token_data, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        return {"token": access_token,
+                "user": {"id": user.id, "username": user.username, "factory": user.factory, "departments": user.departments,
+                         "role": user.role, "phone": user.phone, "email": user.email, "avatar": user.avatar}}
     except Exception as e:
-        db.rollback()
-        logger.error(f"注册失败: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"注册异常: {e}")
+        raise HTTPException(status_code=500, detail="注册失败")
 
 
 def send_sms(phone: str, code: str):

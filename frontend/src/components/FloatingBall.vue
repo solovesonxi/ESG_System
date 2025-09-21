@@ -60,8 +60,9 @@ const stopDrag = (e) => {
 };
 
 // 切换模式
+const commonRoutes = ['/home', '/account-management', '/indicator-library', '/announcement-board', '/review-management', '/profile'];
 const toggleMode = () => {
-  if (route.path === '/home' || route.path === '/account' && route.path === 'review-management') {
+  if (commonRoutes.includes(route.path)) {
     authStore.isDataMode = !authStore.isDataMode;
   } else {
     const currentMode = authStore.isDataMode ? 'data' : 'analyze';

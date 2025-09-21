@@ -37,7 +37,7 @@ async def update_avatar(avatar: UploadFile = File(..., description="用户头像
             if os.path.exists(old_avatar_path):
                 os.remove(old_avatar_path)
         # 保存新头像
-        avatar_filename = f"user_{user.username}{file_ext}"
+        avatar_filename = f"user_{user.id}{file_ext}"
         avatar_path = os.path.join(AVATAR_DIR, avatar_filename)
         with open(avatar_path, "wb") as buffer:
             buffer.write(await avatar.read())

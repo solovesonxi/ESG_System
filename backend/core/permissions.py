@@ -20,15 +20,15 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
             expire_time = datetime.fromtimestamp(expire_timestamp, timezone.utc)
             if expire_time - datetime.now(timezone.utc) < timedelta(minutes=0):
                 raise expired_exception
-        username: str = payload.get("username")
-        if username is None:
+        user_id = payload.get("id")
+        if user_id is None:
             raise credentials_exception
     except jwt.ExpiredSignatureError:
         raise expired_exception
     except JWTError:
         raise credentials_exception
-    user = db.query(User).filter(User.username == username).first()
+    user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise credentials_exception
-    return {"user": user, "role": payload.get("role"), "factory": payload.get("factory"),
-            "departments": payload.get("departments")}
+    return {"user": user, "id": user.id, "role": user.role, "factory": user.factory,
+            "departments": user.departments}

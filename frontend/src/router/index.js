@@ -23,16 +23,18 @@ import SocialQuantitativeOtherView from "@/views/SocialQuantitativeOtherView.vue
 import SocialQualitativeOtherView from "@/views/SocialQualitativeOtherView.vue";
 import GovernanceView from "@/views/GovernanceView.vue";
 import LoginView from "@/views/LoginView.vue";
-import AccountView from "@/views/AccountView.vue";
+import ProfileView from "@/views/ProfileView.vue";
 import Home from "@/views/Home.vue";
 import ReviewManagement from "@/views/ReviewManagement.vue";
+import AccountManagementView from "@/views/AccountManagementView.vue";
+import IndicatorLibraryView from "@/views/IndicatorLibraryView.vue";
+import AnnouncementBoardView from "@/views/AnnouncementBoardView.vue";
 import {showError} from "@/utils/toast.js";
 
 const routes = [{path: '/', redirect: '/login'}, {path: '/login', component: LoginView}, {
-    path: '/account', component: AccountView
+    path: '/profile', component: ProfileView
 }, {path: '/home', component: Home}, {path: '/material', component: MaterialView}, {
-    path: '/energy',
-    component: EnergyView
+    path: '/energy', component: EnergyView
 }, {
     path: '/water', component: WaterView
 }, {path: '/emission', component: EmissionView}, {path: '/waste', component: WasteView}, {
@@ -55,7 +57,13 @@ const routes = [{path: '/', redirect: '/login'}, {path: '/login', component: Log
     path: '/social-qual-other', component: SocialQualitativeOtherView
 }, {path: '/governance', component: GovernanceView}, {
     path: '/review-management', component: ReviewManagement
-},]
+}, {
+    path: '/account-management', component: AccountManagementView
+}, {
+    path: '/indicator-library', component: IndicatorLibraryView
+}, {
+    path: '/announcement-board', component: AnnouncementBoardView
+}]
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL), routes
@@ -63,7 +71,6 @@ const router = createRouter({
 
 const publicRoutes = ['/login']
 
-// 基于部门权限的页面访问控制
 const routePermissionMap = {
     '/material': 'material',
     '/energy': 'energy',

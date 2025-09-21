@@ -155,12 +155,15 @@ const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/');
 }
 
-const menuItems = computed(() => {
-  return authStore.isDataMode ? dataModeItems : analyzeModeItems
-})
+const adminMenuItem = {
+  name: 'admin-console', label: '管理控制台', children: [
+    {name: 'announcement-board', path: '/announcement-board', label: '公告发布'},
+    {name: 'account-management', path: '/account-management', label: '账号管理'},
+    {name: 'indicator-library', path: '/indicator-library', label: '指标库管理'},
+  ]
+}
 
 const dataModeItems = [
-  {name: 'home', path: '/home', label: '首页'},
   {
     name: 'environment', label: '环境',
     children: [
@@ -190,38 +193,47 @@ const dataModeItems = [
       {name: 'ip', path: '/ip', label: '知识产权'},
       {name: 'community', path: '/community', label: '社区参与与志愿活动'}
     ]
-  },
-  {name: 'review', path: '/review-management', label: '审核管理'},
-  {name: 'account', path: '/account', label: '账号管理'}
+  }
 ]
 
 const analyzeModeItems = [
-  {name: 'home', path: '/home', label: '首页'},
   {
     name: 'env', label: '环境', children: [{name: 'env-quant', path: '/env-quant', label: '定量'},
       {name: 'env-qual', path: '/env-qual', label: '定性'},
     ]
   },
   {
-    name: 'social', label: '社会',
+    name: 'social',
+    label: '社会',
     children: [{name: 'social-quant-labor', path: '/social-quant-labor', label: '定量-劳工'},
       {name: 'social-qual-labor', path: '/social-qual-labor', label: '定性-劳工'},
       {name: 'social-quant-other', path: '/social-quant-other', label: '定量-其他'},
       {name: 'social-qual-other', path: '/social-qual-other', label: '定性-其他'},
     ]
   },
-  {name: 'governance', path: '/governance', label: '治理'},
-  {name: 'review', path: '/review-management', label: '审核管理'},
-  {name: 'account', path: '/account', label: '账号管理'}
+  {name: 'governance', path: '/governance', label: '治理'}
 ]
+
+const menuItems = computed(() => {
+  const homeItem = {name: 'home', path: '/home', label: '首页'};
+  const dataItems = authStore.isDataMode ? dataModeItems : analyzeModeItems;
+  const reviewItem = {name: 'review', path: '/review-management', label: '审核管理'};
+  const profileItem = {name: 'profile', path: '/profile', label: '个人中心'};
+  let result = [homeItem, ...dataItems];
+  if (authStore.isAdmin) {
+    result.push(adminMenuItem);
+  }
+  result.push(reviewItem, profileItem);
+  return result;
+})
 
 // 监听路由变化并更新 localStorage
 watch(() => route.path, (newPath, oldPath) => {
   authStore.checkTokenValid()
   const currentMode = authStore.isDataMode ? 'data' : 'analyze';
-  if (newPath !== '/login' && newPath !== '/home' && newPath !== '/account') {
+  if (newPath !== '/login' && newPath !== '/home' && newPath !== '/profile') {
     localStorage.setItem(`lastPath_${currentMode}`, newPath);
-    console.log("路由变化，更新lastPath_" + currentMode + "由" + (oldPath || '未知') + "变为" + newPath)
+    console.log("模式反转，路由即将跳转，更新lastPath_" + currentMode + "由" + (oldPath || '未知') + "变为" + newPath)
   }
 });
 

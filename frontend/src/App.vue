@@ -1,5 +1,5 @@
 <template>
-  <NavBar v-if="isAuthedPage || route.path === '/account' || route.path === '/home'" ref="navBar"/>
+  <NavBar v-if="isAuthedPage || route.path === '/profile' || route.path === '/home'" ref="navBar"/>
   <main>
     <router-view v-slot="{ Component }">
       <component :is="Component" ref="currentComponent"/>
@@ -29,7 +29,7 @@ const isEditing = ref(false)
 const currentComponent = ref(null)
 const route = useRoute()
 const isAuthedPage = computed(() => route.path !== '/' && route.path !== '/login')
-const isEditPage = computed(() => isAuthedPage.value && route.path !== '/home' && route.path !== '/review-management' && route.path !== '/account')
+const isEditPage = computed(() => isAuthedPage.value && route.path !== '/home' && route.path !== '/review-management' && route.path !== '/profile')
 
 const handleStartEdit = () => {
   console.log('currentComponent:', currentComponent.value);

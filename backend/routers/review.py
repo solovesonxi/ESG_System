@@ -124,13 +124,4 @@ async def get_review_records(db: Session = Depends(get_db), current_user: dict =
                 and_(ReviewRecord.level2_comment != None, ReviewRecord.level2_comment.contains(comment_keyword))))
     total = query.count()
     records = query.order_by(ReviewRecord.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
-
-    # 转为dict，去除SQLAlchemy对象属性
-    def record_to_dict(r):
-        return {"id": r.id, "factory": r.factory, "data_type": r.data_type, "year": r.year, "month": r.month,
-                "is_submitted": r.is_submitted, "level1_status": r.level1_status, "level1_comment": r.level1_comment,
-                "level2_status": r.level2_status, "level2_comment": r.level2_comment,
-                "level1_reviewer": r.level1_reviewer, "level1_review_time": r.level1_review_time,
-                "level2_reviewer": r.level2_reviewer, "level2_review_time": r.level2_review_time}
-
-    return {"total": total, "records": [record_to_dict(r) for r in records]}
+    return {"total": total, "records": [r.__dict__  for r in records]}

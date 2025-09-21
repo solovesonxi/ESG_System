@@ -7,7 +7,8 @@ from core.dependencies import Base
 # 用户表更新
 class User(Base):
     __tablename__ = 'users'
-    username = Column(String(50), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(50), unique=True, nullable=False)
     hashed_password = Column(String(100), nullable=False)
     factory = Column(String(100), nullable=True)
     departments = Column(JSON, nullable=True)  # 新增：部门权限列表
@@ -577,4 +578,3 @@ class Governance(Base):
     current_text = Column(Text)
     comparison_text = Column(Text)
     reason = Column(Text)
-

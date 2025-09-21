@@ -37,7 +37,7 @@
           <input
               v-model="loginForm.username"
               type="text"
-              placeholder="请输入用户名"
+              placeholder="请输入用户名或ID"
               required
               :class="{'input-error': loginError}"
           >
@@ -244,10 +244,11 @@ export default {
 
 .form-label {
   width: 80px;
-  color: #fff;
-  font-weight: 500;
+  color: #1a1a34;
+  font-weight: 700;
   margin-right: 15px;
   flex-shrink: 0;
+  font-size: 20px;
 }
 
 input, select {
