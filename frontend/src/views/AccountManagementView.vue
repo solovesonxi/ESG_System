@@ -37,16 +37,31 @@
             <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
             <path
                 d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-          </svg> 重置
+          </svg>
+          重置
         </button>
       </div>
     </div>
 
     <!-- 账号表格区 -->
     <div class="records-section">
-      <h3>账号列表
-        <span class="text-muted">共 {{ accounts.length }} 个账号</span>
-      </h3>
+      <div class="records-header-row"
+           style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <h3 style="margin: 0;">账号列表 <span class="text-muted">共 {{ accounts.length }} 个账号</span></h3>
+        <div class="quick-actions">
+          <button class="btn btn-secondary" @click="openAddAccount" title="添加账号"><span class="icon-add"></span> 添加账号
+          </button>
+          <button class="btn btn-secondary" @click="triggerImport" title="批量导入"><span class="icon-upload"></span>
+            批量导入
+          </button>
+          <button class="btn btn-secondary" @click="handleExport" title="导出列表"><span class="icon-download"></span>
+            导出列表
+          </button>
+          <button class="btn btn-secondary" @click="refreshAccounts" title="刷新"><span class="icon-refresh"></span> 刷新
+          </button>
+          <input type="file" ref="importFile" style="display:none" @change="handleImport" accept=".csv"/>
+        </div>
+      </div>
       <div class="records-list-modern">
         <div class="record-header-row">
           <span class="header-cell">头像</span>
@@ -56,22 +71,45 @@
           <span class="header-cell">部门</span>
           <span class="header-cell">电话</span>
           <span class="header-cell">邮箱</span>
+          <span class="header-cell">状态</span>
         </div>
-        <div v-for="account in accounts" :key="account.username" class="record-row" @click="openDetail(account)">
-          <span class="cell">
-            <img :src="apiClient.defaults.baseURL + (account.avatar ? account.avatar : '/static/avatars/default-avatar.jpg')" class="avatar-img" alt="头像"/>
+        <div v-for="account in accounts" :key="account.username" class="record-row">
+          <span class="cell" @click="openDetail(account)">
+            <img
+                :src="apiClient.defaults.baseURL + (account.avatar ? account.avatar : '/static/avatars/default-avatar.jpg')"
+                class="avatar-img" alt="头像"/>
           </span>
-          <span class="cell">{{ account.username }}</span>
-          <span class="cell"><span :class="['role-badge', `role-${account.role}`]">{{ roleLabel(account.role) }}</span></span>
-          <span class="cell">{{ account.factory }}</span>
-          <span class="cell"><span v-for="(dep, idx) in account.departments" :key="dep" class="dept-tag">{{ CATEGORY[dep] || dep }}</span></span>
-          <span class="cell">{{ account.phone }}</span>
-          <span class="cell">{{ account.email }}</span>
+          <span class="cell" @click="openDetail(account)">{{ account.username }}</span>
+          <span class="cell" @click="openDetail(account)"><span
+              :class="['role-badge', `role-${account.role}`]">{{ roleLabel(account.role) }}</span></span>
+          <span class="cell" @click="openDetail(account)">{{ account.factory }}</span>
+          <span class="cell" @click="openDetail(account)"><span v-for="(dep, idx) in account.departments" :key="dep"
+                                                                class="dept-tag">{{
+              CATEGORY[dep] || dep
+            }}</span></span>
+          <span class="cell" @click="openDetail(account)">{{ account.phone }}</span>
+          <span class="cell" @click="openDetail(account)">{{ account.email }}</span>
+          <span class="cell">
+            <label class="switch">
+              <input type="checkbox" v-model="account.is_active" @click.stop="toggleAccountStatus(account)">
+              <span class="slider round"></span>
+            </label>
+          </span>
         </div>
         <div v-if="accounts.length === 0" class="empty-state">
           <div class="empty-icon">😢</div>
           <p>暂无账号数据</p>
         </div>
+      </div>
+
+      <!-- 分页条 -->
+      <div class="pagination-bar pagination-horizontal">
+        <button @click="goToPage(1)" :disabled="currentPage===1">首页</button>
+        <button @click="goToPage(currentPage-1)" :disabled="currentPage===1">上一页</button>
+        <span class="page-text">第 <input type="number" v-model.number="currentPage" min="1" :max="totalPages"
+                                          style="width:3em;"> 页 / 共 {{ totalPages }} 页</span>
+        <button @click="goToPage(currentPage+1)" :disabled="currentPage===totalPages">下一页</button>
+        <button @click="goToPage(totalPages)" :disabled="currentPage===totalPages">尾页</button>
       </div>
     </div>
 
@@ -79,67 +117,115 @@
     <teleport to="body">
       <div v-if="showDetail" class="modal-mask" @click.self="closeDetail">
         <div class="modal-content">
+          <div class="modal-header" style="text-align: center;margin-top: 5%;">
+            <h3>{{ detailAccount.value && detailAccount.value.id ? '编辑账号' : '注册账号' }}</h3>
+          </div>
           <div class="modal-body">
             <div class="form-group">
               <label class="form-label">头像</label>
-              <img :src="localAvatar || apiClient.defaults.baseURL + (tempAccount.avatar ? tempAccount.avatar : '/static/avatars/default-avatar.jpg')" class="avatar-img large" alt="头像"/>
+              <img
+                  :src="localAvatar || (apiClient.defaults.baseURL + (detailAccount.avatar || '/static/avatars/default-avatar.jpg'))"
+                  class="avatar-img large" alt="头像"/>
               <input type="file" id="avatar-upload" @change="uploadAvatar" accept="image/*" hidden>
               <label for="avatar-upload" class="btn btn-secondary">选择图片</label>
-              <button v-if="tempAccount.avatar" @click="handleRemoveAvatar" class="btn btn-secondary">使用默认头像</button>
+              <button v-if="detailAccount.avatar" @click="handleRemoveAvatar" class="btn btn-secondary">使用默认头像
+              </button>
             </div>
             <div class="form-group">
               <label class="form-label">用户名</label>
-              <input v-model="tempAccount.username" class="form-input" readonly>
+              <input v-model="detailAccount.username" class="form-input" placeholder="请输入用户名">
             </div>
             <div class="form-group">
               <label class="form-label">角色</label>
-              <select v-model="tempAccount.role" class="form-input">
+              <select v-model="detailAccount.role" class="form-input">
                 <option value="department">部门</option>
                 <option value="factory">工厂</option>
                 <option value="headquarter">总部</option>
                 <option value="admin">管理员</option>
               </select>
             </div>
-            <div class="form-group" v-if="tempAccount.role === 'department' || tempAccount.role === 'factory'">
+            <div class="form-group" v-if="detailAccount.role === 'department' || detailAccount.role === 'factory'">
               <label class="form-label">工厂</label>
-              <select v-model="tempAccount.factory" class="form-input">
+              <select v-model="detailAccount.factory" class="form-input">
                 <option value="">请选择工厂</option>
                 <option v-for="f in selectionStore.factories" :key="f" :value="f">{{ f }}</option>
               </select>
             </div>
-            <div class="form-group" v-if="tempAccount.role === 'department'">
+            <div class="form-group" v-if="detailAccount.role === 'department'">
               <label class="form-label">部门</label>
               <div class="departments-tags">
                 <div class="add-dept">
                   <select v-model="newDepartment" class="form-input">
                     <option value="">请选择部门</option>
-                    <option v-for="dep in availableDepartments" :key="dep" :value="dep">{{ CATEGORY[dep] || dep }}</option>
+                    <option v-for="dep in availableDepartments" :key="dep" :value="dep">{{
+                        CATEGORY[dep] || dep
+                      }}
+                    </option>
                   </select>
                   <button @click="addDepartment" class="btn btn-primary add-btn" :disabled="!newDepartment">＋</button>
                 </div>
               </div>
             </div>
-            <span v-for="dep in tempAccount.departments" :key="dep" class="dept-tag">
+            <span v-for="dep in detailAccount.departments" :key="dep" class="dept-tag"
+                  v-if="detailAccount.role === 'department'">
                   {{ CATEGORY[dep] || dep }}
                   <span class="tag-remove" @click.stop="removeDepartment(dep)">×</span>
             </span>
             <div class="form-group">
               <label class="form-label">电话</label>
-              <input v-model="tempAccount.phone" class="form-input">
+              <input v-model="detailAccount.phone" class="form-input">
             </div>
             <div class="form-group">
               <label class="form-label">邮箱</label>
-              <input v-model="tempAccount.email" class="form-input">
+              <input v-model="detailAccount.email" class="form-input">
             </div>
             <div class="form-group">
-              <label class="form-label">重置密码</label>
-              <input v-model="newPassword" type="password" class="form-input" placeholder="输入新密码">
-              <button @click="resetPassword" class="reset-btn">确认重置</button>
+              <label class="form-label">密码</label>
+              <input
+                  v-model="newPassword"
+                  :type="showPassword ? 'text' : 'password'"
+                  class="form-input"
+                  placeholder="设置密码"
+                  autocomplete="new-password"
+                  style="padding-right: 40px;"
+              >
+              <button
+                  type="button"
+                  class="password-toggle"
+                  @click="showPassword = !showPassword"
+                  tabindex="-1"
+              >
+                <svg v-if="showPassword" width="22" height="22" viewBox="0 0 22 22">
+                  <path d="M1 11C3.5 5 8.5 2 11 2C13.5 2 18.5 5 21 11C18.5 17 13.5 20 11 20C8.5 20 3.5 17 1 11Z"
+                        stroke="#764ba2" stroke-width="2"/>
+                  <path d="M4 4L18 18" stroke="#764ba2" stroke-width="2"/>
+                  <circle cx="11" cy="11" r="3" stroke="#764ba2" stroke-width="2"/>
+                </svg>
+                <svg v-else width="22" height="22" viewBox="0 0 22 22">
+                  <path d="M1 11C3.5 5 8.5 2 11 2C13.5 2 18.5 5 21 11C18.5 17 13.5 20 11 20C8.5 20 3.5 17 1 11Z"
+                        stroke="#764ba2" stroke-width="2"/>
+                  <circle cx="11" cy="11" r="3" stroke="#764ba2" stroke-width="2"/>
+                </svg>
+              </button>
             </div>
           </div>
           <div class="button-row">
-            <button class="btn btn-danger" @click="deleteAccount">注销账号</button>
-            <button class="btn btn-primary" @click="saveAccount">保存修改</button>
+            <button v-if="detailAccount.id" class="btn btn-danger" @click="deleteAccount">注销账号</button>
+            <button class="btn btn-primary" @click="saveAccount">{{
+                detailAccount.id ? '保存修改' : '确认添加'
+              }}
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- 确认注销弹窗 -->
+      <div v-if="showConfirmDelete" class="modal-mask" style="z-index:2000;" @click.self="cancelDeleteAccount">
+        <div class="modal-content" style="max-width:400px;">
+          <div class="modal-body" style="text-align:center;">
+            <p>确定要注销该账号吗？此操作不可恢复。</p>
+          </div>
+          <div class="button-row">
+            <button class="btn btn-danger" @click="confirmDeleteAccount">确认注销</button>
           </div>
         </div>
       </div>
@@ -154,7 +240,8 @@ import apiClient from '@/utils/axios'
 import {useAuthStore} from '@/stores/authStore.js'
 import {useSelectionStore} from '@/stores/selectionStore.js'
 import {CATEGORY} from '@/constants/indicators.js'
-import {removeToast, showWarning} from "@/utils/toast.js";
+import {handleError, showError, showInfo, showSuccess} from "@/utils/toast.js";
+import debounce from 'lodash/debounce';
 
 const authStore = useAuthStore()
 const selectionStore = useSelectionStore()
@@ -164,57 +251,32 @@ const filterFactory = ref('')
 const filterDepartment = ref('')
 const keyword = ref('')
 
-const detailAccount = ref({})
-const tempAccount = ref(null)
+const detailAccount = ref(null)
 const showDetail = ref(false)
 const newPassword = ref('')
 const newDepartment = ref('')
 const localAvatar = ref(null)
-
-const confirmDialog = async (title, message) => {
-  return new Promise((resolve) => {
-    const id = showWarning(message, 0)
-    const confirmBtn = document.createElement('button')
-    confirmBtn.textContent = '确认'
-    confirmBtn.className = 'toast-confirm-btn'
-    confirmBtn.onclick = () => {
-      removeToast(id)
-      resolve(true)
-    }
-
-    const cancelBtn = document.createElement('button')
-    cancelBtn.textContent = '取消'
-    cancelBtn.className = 'toast-cancel-btn'
-    cancelBtn.onclick = () => {
-      removeToast(id)
-      resolve(false)
-    }
-
-    const toastElement = document.querySelector(`.toast-container div[key=\"${id}\"]`)
-    if (toastElement) {
-      toastElement.appendChild(confirmBtn)
-      toastElement.appendChild(cancelBtn)
-    }
-  })
-}
+const showPassword = ref(false)
+const showConfirmDelete = ref(false)
+const importFile = ref(null);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const totalPages = ref(1);
 
 const handleRemoveAvatar = () => {
   localAvatar.value = null;
-  tempAccount.value.avatar = '/static/avatars/default-avatar.jpg';
+  detailAccount.value.avatar = '/static/avatars/default-avatar.jpg';
 }
 
 const availableDepartments = computed(() => {
-  console.log('availableDepartments computed')
-  console.log('detailAccount.departments:', detailAccount.value?.departments)
-  console.log('authStore.departments:', authStore.departments)
   if (!detailAccount.value || !detailAccount.value.departments) {
     return authStore.QUANT_TYPES;
   }
-  return authStore.QUANT_TYPES.filter(dep => !detailAccount.value.departments.includes(dep) && !tempAccount.value.departments.includes(dep));
+  return authStore.QUANT_TYPES.filter(dep => !detailAccount.value.departments.includes(dep));
 })
 
-watch(() => tempAccount.value?.role, (newRole, oldRole) => {
-  console.log(`tempAccount.role changed from ${oldRole} to ${newRole}`);
+watch(() => detailAccount.value?.role, (newRole, oldRole) => {
+  console.log(`detailAccount.role changed from ${oldRole} to ${newRole}`);
 });
 
 function deepClone(obj) {
@@ -242,71 +304,111 @@ function fetchAccounts() {
       role: filterRole.value,
       factory: filterFactory.value,
       department: filterDepartment.value,
-      keyword: keyword.value
+      keyword: keyword.value,
+      page: currentPage.value,
+      page_size: pageSize.value
     }
   }).then(res => {
-    accounts.value = res.data.accounts || []
-  })
+      accounts.value = res.data.accounts || []
+      totalPages.value = Math.ceil(res.data.total / pageSize.value)
+    }).catch(error => {
+      console.error('获取账号列表失败:', error)
+      handleError(error)
+    })
 }
+
 
 function resetFilters() {
   filterRole.value = ''
   filterFactory.value = ''
   filterDepartment.value = ''
   keyword.value = ''
+  currentPage.value = 1;
   fetchAccounts()
 }
 
 function openDetail(account) {
-  detailAccount.value = account;
-  tempAccount.value = deepClone(account);
+  detailAccount.value = deepClone(account);
+  newPassword.value = '';
   showDetail.value = true
 }
 
 function closeDetail() {
-  showDetail.value = false;
-  tempAccount.value = null;
+  localAvatar.value = null;
   newPassword.value = '';
   newDepartment.value = '';
+  detailAccount.value = null;
+  showDetail.value = false;
+}
+
+function openAddAccount() {
+  detailAccount.value = {
+    username: '',
+    role: '',
+    phone: '',
+    email: '',
+    factory: '',
+    departments: [],
+    avatar: '/static/avatars/default-avatar.jpg',
+  };
+  newPassword.value = '';
   localAvatar.value = null;
+  showDetail.value = true;
 }
 
 async function saveAccount() {
   try {
-    // 提交 tempAccount 到后端
-    await axios.post('/api/account/update', tempAccount.value);
-    // 同步到 detailAccount
-    Object.assign(detailAccount.value, tempAccount.value);
-    showDetail.value = false;
-    tempAccount.value = null;
-  } catch (e) {
-    alert('保存失败');
+    detailAccount.value.hashed_password = newPassword.value;
+    const submitData = {
+      ...detailAccount.value,
+      localAvatar: localAvatar.value
+    };
+    let response;
+    if (!detailAccount.value.id) {
+      // 注册账号
+      response = await axios.post('/admin/account/add', submitData);
+    } else {
+      // 更新账号
+      response = await axios.patch('/admin/account/update', submitData);
+    }
+    if (response.data.status === "success") {
+      showSuccess(detailAccount.value.id ? '修改成功' : '添加成功');
+      showDetail.value = false;
+      detailAccount.value = null;
+      fetchAccounts();
+    } else {
+      showInfo('操作失败，请稍后重试');
+    }
+  } catch (error) {
+    handleError(error);
   }
-}
-
-function resetPassword() {
-  if (!newPassword.value) {
-    alert('请输入新密码')
-    return
-  }
-  axios.post('/admin/account/reset-password', {
-    username: detailAccount.value.username,
-    newPassword: newPassword.value
-  }).then(() => {
-    newPassword.value = ''
-    alert('密码重置成功')
-  })
 }
 
 async function deleteAccount() {
-  const isConfirmed = await confirmDialog('注销账号', '确定要注销该账号吗？此操作不可恢复。')
-  if (!isConfirmed) return
-  axios.post('/admin/account/delete', {
-    username: detailAccount.value.username
-  }).then(() => {
-    fetchAccounts()
-    closeDetail()
-  })
+  showConfirmDelete.value = true;
+}
+
+async function confirmDeleteAccount() {
+  try {
+    const response = await axios.delete('/admin/account/delete', {
+      data: {id: detailAccount.value.id}
+    })
+    if (response.data.status === "success") {
+      fetchAccounts()
+      closeDetail()
+      showSuccess('注销成功')
+    } else {
+      showError('注销失败')
+    }
+  } catch (error) {
+    handleError(error)
+  } finally {
+    showConfirmDelete.value = false;
+  }
+}
+
+function cancelDeleteAccount() {
+  showConfirmDelete.value = false;
 }
 
 function uploadAvatar(e) {
@@ -321,23 +423,118 @@ function uploadAvatar(e) {
 
 
 function removeDepartment(dep) {
-  tempAccount.value.departments = tempAccount.value.departments.filter(d => d !== dep)
+  detailAccount.value.departments = detailAccount.value.departments.filter(d => d !== dep)
 }
 
 function addDepartment() {
-  if (newDepartment.value && tempAccount.value.departments && !tempAccount.value.departments.includes(newDepartment.value)) {
-    tempAccount.value.departments.push(newDepartment.value)
-    newDepartment.value = ''
+  if (newDepartment.value) {
+    if (!detailAccount.value.departments) {
+      detailAccount.value.departments = []
+    }
+    if (!detailAccount.value.departments.includes(newDepartment.value)) {
+      detailAccount.value.departments.push(newDepartment.value)
+      newDepartment.value = ''
+    }
   }
 }
 
+function triggerImport() {
+  importFile.value.click();
+}
 
-watch([filterRole, filterFactory, filterDepartment, keyword], fetchAccounts)
+async function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const content = e.target.result;
+    const lines = content.split('\n').filter(line => line.trim());
+    const dataLines = lines.slice(1);
+    const importedAccounts = dataLines.map(line => {
+      const [username, role, factory, departments, phone, email, is_active] = line.split(',');
+      return {
+        username, role, factory, departments: departments ? departments.split(';') : [],
+        phone, email, is_active: is_active === 'true', hashed_password: '123456'
+      };
+    });
+    showInfo('正在导入账号，请稍候...');
+    try {
+      const response = await apiClient.post('/admin/account/import', importedAccounts);
+      if (response.data.status === 'success') {
+        showSuccess(`导入成功 ${response.data.imported} 条，失败 ${response.data.failed.length} 条`);
+        fetchAccounts(); // 刷新账号列表
+      } else {
+        showError('导入失败');
+      }
+    } catch (error) {
+      handleError(error);
+    }
+  };
+  reader.readAsText(file);
+}
+
+
+function handleExport() {
+  const header = '用户名,角色,工厂,部门,电话,邮箱,启用';
+  const csvContent = accounts.value.map(account => {
+    return [account.username || '', account.role || '', account.factory || '', (account.departments || []).join(';') || '',
+      account.phone || '', account.email || '', account.is_active].join(',');
+  }).join('\n');
+  const blob = new Blob([header + '\n' + csvContent], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'accounts.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function refreshAccounts() {
+  fetchAccounts();
+  showInfo('账号列表已刷新');
+}
+
+async function toggleAccountStatus(account) {
+  try {
+    console.log('Toggling account status from', account.is_active);
+    console.log('1账号已', account.is_active ? '激活' : '禁用')
+    const response = await axios.post('/admin/account/toggle-status', {id: account.id, is_active: !account.is_active});
+    console.log(response)
+    if (response.data.status === 'success') {
+      showSuccess('账号已' + (account.is_active ? '激活' : '禁用'));
+      console.log('3账号已', account.is_active ? '激活' : '禁用')
+    } else {
+      account.is_active = !account.is_active;
+      showError('状态更新失败，请稍后重试');
+    }
+  } catch (error) {
+    account.is_active = !account.is_active;
+    showError('状态更新失败');
+  }
+  console.log('Toggled account status for', account, 'to', account.is_active);
+}
+
+function goToPage(page) {
+  if (page < 1 || page > totalPages.value) return;
+  currentPage.value = page;
+  fetchAccounts();
+}
+
+const debouncedFetchAccounts = debounce(() => {
+  fetchAccounts();
+}, 300);
+
+watch([filterRole, filterFactory, filterDepartment, keyword, currentPage], () => {
+  debouncedFetchAccounts();
+})
 
 onMounted(() => {
-  fetchAccounts();
   selectionStore.initSelection();
+  fetchAccounts();
 })
+
 </script>
 
 <style scoped>
@@ -429,6 +626,7 @@ onMounted(() => {
 .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.8);
 }
+
 .dark-theme .btn-secondary:hover {
   background: rgba(41, 41, 75, 0.9);
 }
@@ -438,7 +636,6 @@ onMounted(() => {
   color: white;
   width: fit-content;
   justify-self: center;
-  margin-right: 80px;
   margin-top: 0;
 }
 
@@ -492,7 +689,7 @@ onMounted(() => {
   font-size: 12px;
   font-weight: 500;
   margin-right: 6px;
-  margin-bottom:  6px;
+  margin-bottom: 6px;
   display: inline-block;
 }
 
@@ -564,6 +761,7 @@ onMounted(() => {
   align-items: center;
   width: 100%;
   margin-bottom: 30px;
+  gap: 10%;
 }
 
 .modal-mask {
@@ -580,6 +778,7 @@ onMounted(() => {
   padding: 20px;
   animation: fadeIn 0.3s ease;
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 @keyframes fadeIn {
@@ -595,8 +794,8 @@ onMounted(() => {
   background: #fff;
   color: #222;
   border-radius: 16px;
-  width: 100%;
-  max-width: 600px;
+  width: 60%;
+  max-width: 560px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
@@ -624,13 +823,14 @@ onMounted(() => {
 }
 
 .form-group {
+  margin-left: 24px;
   margin-bottom: 20px;
   display: flex;
   justify-content: flex-start;
   flex-wrap: wrap;
   flex-direction: row;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 }
 
 .form-label {
@@ -676,6 +876,153 @@ onMounted(() => {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.password-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper .form-input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #764ba2;
+  cursor: pointer;
+  font-size: 18px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.password-toggle:hover {
+  background: rgba(118, 75, 162, 0.08);
+}
+
+.dark-theme .password-toggle {
+  color: #b0d9ff;
+}
+
+.dark-theme .password-toggle:hover {
+  background: rgba(118, 75, 162, 0.18);
+}
+
+.add-account-btn {
+  color: #222;
+}
+
+.dark-theme .add-account-btn {
+  color: #fff;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.icon-add::before {
+  content: '\2795';
+  margin-right: 4px;
+}
+
+.icon-upload::before {
+  content: '\21E9';
+  margin-right: 4px;
+}
+
+.icon-download::before {
+  content: '\21E7';
+  margin-right: 4px;
+}
+
+.icon-refresh::before {
+  content: '\21BB';
+  margin-right: 4px;
+}
+
+.records-list-modern {
+  width: 100%;
+}
+
+.record-header-row .header-cell:last-child,
+.record-row .cell:last-child {
+  text-align: right;
+  padding-right: 30px;
+}
+
+.record-row .cell:last-child {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.record-row .cell {
+  display: flex;
+  width: 100%;
 }
 
 @media (max-width: 768px) {

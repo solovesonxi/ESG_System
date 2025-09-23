@@ -9,18 +9,21 @@
           <!-- 工厂名称 -->
           <div class="info-item">
             <label class="info-label">工厂名称</label>
-            <div class="custom-select">
-              <div class="selected" @click="selectionStore.toggleFactoryDropdown">
+            <div class="custom-select" :class="{ 'disabled':authStore.isDepartment}">
+              <div
+                class="selected"
+                @click="selectionStore.toggleFactoryDropdown"
+              >
                 <span class="value">{{ factory }}</span>
                 <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
               </div>
               <div class="options" v-show="selectionStore.showFactoryDropdown">
                 <div
-                    v-for="f in selectionStore.factories"
-                    :key="f"
-                    class="option"
-                    :class="{ 'selected-option': f === factory }"
-                    @click="selectionStore.selectFactory(f)"
+                  v-for="f in selectionStore.factories"
+                  :key="f"
+                  class="option"
+                  :class="{ 'selected-option': f === factory }"
+                  @click="selectionStore.selectFactory(f)"
                 >
                   {{ f }}
                 </div>
@@ -213,7 +216,7 @@ const emit = defineEmits(['selection-changed']);
 const factory = computed(() => selectionStore.selectedFactory);
 const year = computed(() => selectionStore.selectedYear);
 const month = computed(() => selectionStore.selectedMonth);
-
+const isDepartment = computed(() => authStore.isDepartment);
 // 审核编辑权限
 const canEditLevel1 = computed(() => authStore.canLevel1Review);
 const canEditLevel2 = computed(() => authStore.canLevel2Review);

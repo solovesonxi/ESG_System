@@ -36,7 +36,7 @@ export const useSelectionStore = defineStore('selection', () => {
                 selectedMonth.value = (new Date().getMonth() + 1).toString()
                 console.log("选择器首次初始化完成");
             } else {
-                console.log("选择器已初始化");
+                console.log("选择器已初始化，无需重复初始化");
             }
         } catch (error) {
             console.error('选择器初始化失败:', error);
@@ -114,6 +114,18 @@ export const useSelectionStore = defineStore('selection', () => {
         }
     }
 
+    const resetSelection = () => {
+        factories.value = [];
+        years.value = [];
+        months.value = [];
+        selectedFactory.value = null;
+        selectedYear.value = null;
+        selectedMonth.value = null;
+        showFactoryDropdown.value = false;
+        showYearDropdown.value = false;
+        showMonthDropdown.value = false;
+    };
+
     return {
         factories,
         years,
@@ -132,6 +144,7 @@ export const useSelectionStore = defineStore('selection', () => {
         selectYear,
         toggleMonthDropdown,
         selectMonth,
-        handleClickOutside
+        handleClickOutside,
+        resetSelection
     }
 });

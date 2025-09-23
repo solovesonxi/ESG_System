@@ -117,7 +117,7 @@ function goToAudit() {
   }
 }
 
-.modal-header {
+.m  {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -125,7 +125,7 @@ function goToAudit() {
   border-bottom: 1px solid #eee;
 }
 
-.modal-header h3 {
+.m  h3 {
   font-size: 1.3rem;
   font-weight: 700;
 }
@@ -219,7 +219,7 @@ label {
   color: #b0d9ff;
 }
 
-.dark-theme .modal-header {
+.dark-theme .m  {
   border-bottom: 1px solid #3a3f4b;
 }
 

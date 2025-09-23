@@ -195,7 +195,8 @@
             <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
             <path
                 d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-          </svg> 重置
+          </svg>
+          重置
         </button>
       </div>
     </div>
@@ -216,15 +217,20 @@
           <span class="cell">{{ record.factory }}</span>
           <span class="cell">{{ CATEGORY[record.data_type] }}</span>
           <span class="cell">{{ record.year }}年{{ record.month ? (record.month + '月') : '' }}</span>
-          <span class="cell status-badge" :class="record.is_submitted ? 'submitted' : 'not-submitted'">{{record.is_submitted ? '已提交' : '未提交' }}</span>
-          <span class="cell status-badge" :class="record.level1_status">{{getStatusLabel(record.level1_status) }}</span>
-          <span class="cell comment" :title="record.level1_comment">{{record.level1_comment?.slice(0, 12) || '' }}
+          <span class="cell status-badge" :class="record.is_submitted ? 'submitted' : 'not-submitted'">{{
+              record.is_submitted ? '已提交' : '未提交'
+            }}</span>
+          <span class="cell status-badge" :class="record.level1_status">{{
+              getStatusLabel(record.level1_status)
+            }}</span>
+          <span class="cell comment" :title="record.level1_comment">{{ record.level1_comment?.slice(0, 12) || '' }}
             <span v-if="record.level1_comment?.length > 12">...</span>
           </span>
           <span class="cell status-badge" v-if="!isAnnualType(record.data_type)"
-                :class="record.level2_status">{{ getStatusLabel(record.level2_status) }}
+                :class="record.level2_status || 'pending'">{{ getStatusLabel(record.level2_status) }}
           </span>
-          <span class="cell comment" v-if="!isAnnualType(record.data_type)" :title="record.level2_comment">{{ record.level2_comment?.slice(0, 12) || '' }}<span
+          <span class="cell comment" v-if="!isAnnualType(record.data_type)"
+                :title="record.level2_comment">{{ record.level2_comment?.slice(0, 12) || '' }}<span
               v-if="record.level2_comment?.length > 12">...</span></span>
         </div>
         <div v-if="filteredRecords.length === 0" class="no-records">暂无符合条件的审核记录</div>
@@ -250,6 +256,7 @@ import {useSelectionStore} from "@/stores/selectionStore.js";
 import {showError} from "@/utils/toast.js";
 import {CATEGORY} from '@/constants/indicators.js';
 import ReviewDetailsModal from "@/components/ReviewDetailsModal.vue";
+import debounce from 'lodash/debounce';
 
 const authStore = useAuthStore()
 const selectionStore = useSelectionStore()
@@ -304,7 +311,7 @@ const getStatusLabel = (status) => {
     'approved': '通过',
     'rejected': '不通过'
   }
-  return labels[status] || status
+  return labels[status] || '待审核'
 }
 
 // 过滤器相关
@@ -354,12 +361,15 @@ onMounted(() => {
 })
 
 // 统一监听筛选条件和 pageSize，变化时重置页码并刷新
+const debouncedFetchRecords = debounce(() => {
+  fetchRecords();
+}, 300);
+
 watch([
   filterFactory, filterDepartment, filterYear, filterMonth,
-  filterSubmitted, filterLevel1Status, filterLevel2Status, filterCommentKeyword, pageSize
+  filterSubmitted, filterLevel1Status, filterLevel2Status, filterCommentKeyword, currentPage, pageSize
 ], () => {
-  currentPage.value = 1
-  // 持久化筛选和分页状态到localStorage
+  currentPage.value = 1;
   const state = {
     filterFactory: filterFactory.value,
     filterDepartment: filterDepartment.value,
@@ -370,26 +380,10 @@ watch([
     filterLevel2Status: filterLevel2Status.value,
     filterCommentKeyword: filterCommentKeyword.value,
     currentPage: currentPage.value
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  fetchRecords()
-})
-// 监听页码变化，只刷新数据并持久化
-watch(currentPage, () => {
-  const state = {
-    filterFactory: filterFactory.value,
-    filterDepartment: filterDepartment.value,
-    filterYear: filterYear.value,
-    filterMonth: filterMonth.value,
-    filterSubmitted: filterSubmitted.value,
-    filterLevel1Status: filterLevel1Status.value,
-    filterLevel2Status: filterLevel2Status.value,
-    filterCommentKeyword: filterCommentKeyword.value,
-    currentPage: currentPage.value
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  fetchRecords()
-})
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  debouncedFetchRecords();
+});
 
 const totalPages = computed(() => Math.max(1, Math.ceil(totalRecords.value / pageSize.value)))
 

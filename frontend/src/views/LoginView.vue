@@ -85,7 +85,7 @@
 import router from "@/router/index.js";
 import {useAuthStore} from '@/stores/authStore';
 import apiClient from "@/utils/axios.js";
-import {showInfo} from "@/utils/toast.js";
+import {handleError, showError, showInfo} from "@/utils/toast.js";
 
 export default {
   name: 'LoginView',
@@ -112,11 +112,16 @@ export default {
       }
       try {
         const response = await apiClient.post('/auth/login', payload);
-        const {token, user} = response.data;
-        useAuthStore().initAuth(token, user);
-        await router.push('/home');
+        if (response.data.status === 'success') {
+          const {token, user} = response.data;
+          useAuthStore().initAuth(token, user);
+          await router.push('/home');
+        }else {
+          showError('登录失败: ' + response.data.message);
+        }
       } catch (error) {
         this.loginError = '用户名或密码错误';
+        handleError(error)
         console.error('登录失败:', error);
       }
     },

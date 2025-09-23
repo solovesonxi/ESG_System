@@ -69,15 +69,10 @@ watch(() => route.path, (newPath, oldPath) => {
       if (typeof currentComponent.value.fetchData === 'function') {
         try {
           currentComponent.value.fetchData();
-          console.log('切换到新路由：', newPath, '- fetchData 已调用');
         } catch (error) {
           console.error('调用 fetchData 时出错：', error);
         }
-      } else {
-        console.log('切换到新路由：', newPath, '- 组件没有 fetchData 方法');
       }
-    } else {
-      console.log('切换到新路由：', newPath, '- 当前组件不存在');
     }
   }, 10);
 }, {immediate: false});

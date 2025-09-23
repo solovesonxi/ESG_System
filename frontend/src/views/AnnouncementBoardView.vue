@@ -183,7 +183,7 @@ function closeViewModal() {
   transition: all 0.3s ease;
 }
 
-.dark-theme {
+.dark-theme .announcement-board{
   background: #1e1e2f;
   color: #ffffff;
 }
@@ -194,6 +194,13 @@ function closeViewModal() {
   align-items: center;
   margin-bottom: 24px;
 }
+.page-header h2{
+  color: #141418;
+}
+.dark-theme .page-header h2{
+  color: #eee8d8;
+}
+
 
 .btn {
   padding: 10px 18px;
@@ -231,6 +238,13 @@ function closeViewModal() {
 
 .dark-theme .card {
   background: #2e2e3e;
+}
+.card h3{
+  background: transparent;
+  color: #0a0a23;
+}
+.dark-theme .card h3{
+  color: #fff3e0;
 }
 
 .modal-overlay {

@@ -16,6 +16,7 @@ class User(Base):
     phone = Column(String(20), nullable=True)
     email = Column(String(50), nullable=True)
     avatar = Column(String(60), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)  # 新增：账号启用/禁用
 
 
 class Message(Base):

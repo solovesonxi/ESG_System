@@ -43,10 +43,12 @@ def login(username: str = Body(..., description="用户名或ID"), password: str
         user = db.query(User).filter(User.username == username).first()
     if not user or not pwd_context.verify(password, str(user.hashed_password)):
         raise HTTPException(status_code=400, detail="密码错误")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="账号已被禁用，请联系管理员解除封禁")
     # 在token中包含权限信息
     token_data = {"id": user.id, "role": user.role, "factory": user.factory, "departments": user.departments}
     access_token = create_access_token(data=token_data, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    return {"token": access_token,
+    return {"status": "success", "token": access_token,
             "user": {"id": user.id, "username": user.username, "factory": user.factory, "departments": user.departments,
                      "role": user.role, "phone": user.phone, "email": user.email, "avatar": user.avatar}}
 
@@ -88,15 +90,19 @@ def register(username: str = Body(..., description="用户名"), password: str =
         if db.query(User).filter(User.username == username).first():
             raise HTTPException(status_code=400, detail="用户名已存在")
         hashed_password = pwd_context.hash(password)
-        user = User(username=username, hashed_password=hashed_password, factory=factory, phone=phone, email=email)
-        db.add(user)
+        new_user = User(username=username, hashed_password=hashed_password, factory=factory, phone=phone, email=email,
+                        role="department", is_active=True)
+        db.add(new_user)
         db.commit()
-        db.refresh(user)
-        token_data = {"id": user.id, "role": user.role, "factory": user.factory, "departments": user.departments}
-        access_token = create_access_token(data=token_data, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        db.refresh(new_user)
+        token_data = {"id": new_user.id, "role": new_user.role, "factory": new_user.factory,
+                      "departments": new_user.departments}
+        access_token = create_access_token(data=token_data,
+                                           expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
         return {"token": access_token,
-                "user": {"id": user.id, "username": user.username, "factory": user.factory, "departments": user.departments,
-                         "role": user.role, "phone": user.phone, "email": user.email, "avatar": user.avatar}}
+                "user": {"id": new_user.id, "username": new_user.username, "factory": new_user.factory,
+                         "departments": new_user.departments, "role": new_user.role, "phone": new_user.phone,
+                         "email": new_user.email, "avatar": new_user.avatar}}
     except Exception as e:
         logger.error(f"注册异常: {e}")
         raise HTTPException(status_code=500, detail="注册失败")

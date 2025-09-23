@@ -25,7 +25,7 @@ async def update_avatar(avatar: UploadFile = File(..., description="用户头像
             raise HTTPException(status_code=400, detail="用户未登录")
         user = current_user["user"]
         file_ext = os.path.splitext(avatar.filename)[1].lower()
-        if file_ext not in [".png", ".jpg", ".jpeg", ".gif"]:
+        if file_ext not in [".png", ".jpg", ".jpeg", "webp", ".gif"]:
             raise HTTPException(status_code=400, detail="仅支持 PNG、JPG、JPEG 或 GIF 格式")
         # 检查用户是否已有头像，并删除旧头像文件
         if user.avatar:

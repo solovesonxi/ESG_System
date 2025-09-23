@@ -56,11 +56,11 @@
           <div class="departments-container">
             <div class="department-grid">
               <div
-                v-for="dept in departmentList"
-                :key="dept.value"
-                class="department-item"
-                :class="dept.class"
-                @click="navigateToDepartment(dept.value)"
+                  v-for="dept in departmentList"
+                  :key="dept.value"
+                  class="department-item"
+                  :class="dept.class"
+                  @click="navigateToDepartment(dept.value)"
               >
                 <div class="dept-icon">
                   <i :class="getDepartmentIcon(dept.value)"></i>
@@ -303,7 +303,9 @@
         </div>
         <div class="modal-content detail-content">
           <div class="message-meta">
-            <span class="message-type" :class="getMessageTypeClass(currentMessage?.type)">{{ currentMessage?.type }}</span>
+            <span class="message-type" :class="getMessageTypeClass(currentMessage?.type)">{{
+                currentMessage?.type
+              }}</span>
             <span class="message-date">{{ formatDate(currentMessage?.created_at) }}</span>
           </div>
           <div class="message-body">
@@ -355,29 +357,29 @@ const permissionErrorMessage = ref('');
 
 // 部门类型映射
 const departmentTypeMap = {
-  'material': { label: '物料', class: 'dept-material' },
-  'energy': { label: '能源', class: 'dept-energy' },
-  'water': { label: '水资源', class: 'dept-water' },
-  'waste': { label: '废弃物', class: 'dept-waste' },
-  'emission': { label: '排放', class: 'dept-emission' },
-  'investment': { label: '资金投入', class: 'dept-investment' },
-  'management': { label: '环境管理', class: 'dept-management' },
-  'employment': { label: '雇佣', class: 'dept-employment' },
-  'training': { label: '培训', class: 'dept-training' },
-  'ohs': { label: '职健与安全', class: 'dept-ohs' },
-  'satisfaction': { label: '员工满意度', class: 'dept-satisfaction' },
-  'supply': { label: '供应链', class: 'dept-supply' },
-  'responsibility': { label: '产品责任', class: 'dept-responsibility' },
-  'ip': { label: '知识产权', class: 'dept-ip' },
-  'community': { label: '社区参与与志愿活动', class: 'dept-community' },
-  'governance': { label: '治理', class: 'dept-governance' }
+  'material': {label: '物料', class: 'dept-material'},
+  'energy': {label: '能源', class: 'dept-energy'},
+  'water': {label: '水资源', class: 'dept-water'},
+  'waste': {label: '废弃物', class: 'dept-waste'},
+  'emission': {label: '排放', class: 'dept-emission'},
+  'investment': {label: '资金投入', class: 'dept-investment'},
+  'management': {label: '环境管理', class: 'dept-management'},
+  'employment': {label: '雇佣', class: 'dept-employment'},
+  'training': {label: '教育与培训', class: 'dept-training'},
+  'ohs': {label: '职健与安全', class: 'dept-ohs'},
+  'satisfaction': {label: '员工满意度', class: 'dept-satisfaction'},
+  'supply': {label: '供应链', class: 'dept-supply'},
+  'responsibility': {label: '产品责任', class: 'dept-responsibility'},
+  'ip': {label: '知识产权', class: 'dept-ip'},
+  'community': {label: '社区参与与志愿活动', class: 'dept-community'},
+  'governance': {label: '治理', class: 'dept-governance'}
 };
 
 // 部门权限列表
 const departmentList = computed(() => {
   return authStore.departments.map(dept => {
-    const map = departmentTypeMap[dept] || { label: dept, class: 'dept-default' }
-    return { value: dept, label: map.label, class: map.class }
+    const map = departmentTypeMap[dept] || {label: dept, class: 'dept-default'}
+    return {value: dept, label: map.label, class: map.class}
   })
 })
 
@@ -429,33 +431,8 @@ const hasSelectedNotifications = computed(() => selectedNotifications.value.size
 const hasSelectedOperations = computed(() => selectedOperations.value.size > 0);
 
 // 进度数据
-const analyticalProgressData = ref([
-  {title: '环境定量', percent: 0},
-  {title: '环境定性', percent: 0},
-  {title: '社会定量-劳工', percent: 0},
-  {title: '社会定性-劳工', percent: 0},
-  {title: '社会定量-其他', percent: 0},
-  {title: '社会定性-其他', percent: 0},
-  {title: '治理定性', percent: 0},
-  {title: '总进度', percent: 0},
-]);
-const quantitativeProgressData = ref([
-  {title: '物料', percent: 0},
-  {title: '能源', percent: 0},
-  {title: '水资源', percent: 0},
-  {title: '排放', percent: 0},
-  {title: '废弃物', percent: 0},
-  {title: '资金投入', percent: 0},
-  {title: '环境管理', percent: 0},
-  {title: '雇佣', percent: 0},
-  {title: '教育与培训', percent: 0},
-  {title: '职健与安全', percent: 0},
-  {title: '员工满意度', percent: 0},
-  {title: '供应链', percent: 0},
-  {title: '产品责任', percent: 0},
-  {title: '知识产权', percent: 0},
-  {title: '社区参与与志愿活动', percent: 0},
-]);
+const analyticalProgressData = ref([]);
+const quantitativeProgressData = ref([]);
 const currentProgressData = computed(() =>
     authStore.isDataMode ? quantitativeProgressData.value : analyticalProgressData.value
 );
@@ -685,7 +662,7 @@ const initTheme = () => {
 };
 
 // 获取定量进度数据
-const fetchQuantitativeProgress = async () => {
+const fetchProgress = async () => {
   try {
     const factory = selectionStore.selectedFactory;
     const year = selectionStore.selectedYear;
@@ -693,23 +670,27 @@ const fetchQuantitativeProgress = async () => {
     const response2 = await axios.get(`/progress/analytical?factory=${factory}&year=${year}`);
     const data1 = response1.data;
     const data2 = response2.data;
-    quantitativeProgressData.value = [
-      {title: '物料', percent: data1.material || 0},
-      {title: '能源', percent: data1.energy || 0},
-      {title: '水资源', percent: data1.water || 0},
-      {title: '排放', percent: data1.emission || 0},
-      {title: '废弃物', percent: data1.waste || 0},
-      {title: '资金投入', percent: data1.investment || 0},
-      {title: '环境管理', percent: data1.management || 0},
-      {title: '雇佣', percent: data1.employment || 0},
-      {title: '教育与培训', percent: data1.training || 0},
-      {title: '职健与安全', percent: data1.ohs || 0},
-      {title: '员工满意度', percent: data1.satisfaction || 0},
-      {title: '供应链', percent: data1.supply || 0},
-      {title: '产品责任', percent: data1.responsibility || 0},
-      {title: '知识产权', percent: data1.ip || 0},
-      {title: '社区参与与志愿活动', percent: data1.community || 0},
+    let quantData = [
+      {key: 'material', title: '物料', percent: data1.material || 0},
+      {key: 'energy', title: '能源', percent: data1.energy || 0},
+      {key: 'water', title: '水资源', percent: data1.water || 0},
+      {key: 'emission', title: '排放', percent: data1.emission || 0},
+      {key: 'waste', title: '废弃物', percent: data1.waste || 0},
+      {key: 'investment', title: '资金投入', percent: data1.investment || 0},
+      {key: 'management', title: '环境管理', percent: data1.management || 0},
+      {key: 'employment', title: '雇佣', percent: data1.employment || 0},
+      {key: 'training', title: '教育与培训', percent: data1.training || 0},
+      {key: 'ohs', title: '职健与安全', percent: data1.ohs || 0},
+      {key: 'satisfaction', title: '员工满意度', percent: data1.satisfaction || 0},
+      {key: 'supply', title: '供应链', percent: data1.supply || 0},
+      {key: 'responsibility', title: '产品责任', percent: data1.responsibility || 0},
+      {key: 'ip', title: '知识产权', percent: data1.ip || 0},
+      {key: 'community', title: '社区参与与志愿活动', percent: data1.community || 0},
     ];
+    if (authStore.isDepartment && Array.isArray(authStore.departments) && authStore.departments.length > 0) {
+      quantData = quantData.filter(item => authStore.departments.includes(item.key));
+    }
+    quantitativeProgressData.value = quantData;
     analyticalProgressData.value = [
       {title: '环境定量', percent: data2.env_quant || 0},
       {title: '环境定性', percent: data2.env_qual || 0},
@@ -779,7 +760,7 @@ const updateTime = () => {
 // 在 onMounted 中添加
 onMounted(() => {
   initTheme();
-  fetchQuantitativeProgress();
+  fetchProgress();
   fetchMessages();
   checkPermissionErrors();
   updateTime()
@@ -789,14 +770,14 @@ onMounted(() => {
 // 监听年份变化，更新进度数据
 watch(() => selectionStore.selectedYear, (newYear, oldYear) => {
   if (newYear !== oldYear) {
-    fetchQuantitativeProgress();
+    fetchProgress();
   }
 });
 
 // 监听工厂变化，管理员或总部账号时也更新进度数据
 watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   if ((authStore.isHeadquarter || authStore.isAdmin) && newFactory !== oldFactory) {
-    fetchQuantitativeProgress();
+    fetchProgress();
   }
 });
 </script>
@@ -1049,23 +1030,73 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   font-size: 1.2rem;
 }
 
-.dept-material .dept-icon { background: linear-gradient(135deg, #FF6B35 0%, #FF8E53 100%); }
-.dept-energy .dept-icon { background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%); }
-.dept-water .dept-icon { background: linear-gradient(135deg, #45B7D1 0%, #96C93D 100%); }
-.dept-waste .dept-icon { background: linear-gradient(135deg, #FFA07A 0%, #FA8072 100%); }
-.dept-emission .dept-icon { background: linear-gradient(135deg, #98D8C8 0%, #F093FB 100%); }
-.dept-investment .dept-icon { background: linear-gradient(135deg, #A8E6CF 0%, #DCEDC1 100%); }
-.dept-management .dept-icon { background: linear-gradient(135deg, #C7CEEA 0%, #B19CD9 100%); }
-.dept-employment .dept-icon { background: linear-gradient(135deg, #FFB6C1 0%, #FFA0AC 100%); }
-.dept-training .dept-icon { background: linear-gradient(135deg, #DDA0DD 0%, #D8BFD8 100%); }
-.dept-ohs .dept-icon { background: linear-gradient(135deg, #F0E68C 0%, #E6DB74 100%); }
-.dept-satisfaction .dept-icon { background: linear-gradient(135deg, #87CEEB 0%, #87CEFA 100%); }
-.dept-supply .dept-icon { background: linear-gradient(135deg, #D2B48C 0%, #DEB887 100%); }
-.dept-responsibility .dept-icon { background: linear-gradient(135deg, #F5DEB3 0%, #F0E68C 100%); }
-.dept-ip .dept-icon { background: linear-gradient(135deg, #E6E6FA 0%, #DDA0DD 100%); }
-.dept-community .dept-icon { background: linear-gradient(135deg, #AFEEEE 0%, #7FFFD4 100%); }
-.dept-governance .dept-icon { background: linear-gradient(135deg, #FAFAD2 0%, #F0E68C 100%); }
-.dept-default .dept-icon { background: linear-gradient(135deg, #999 0%, #777 100%); }
+.dept-material .dept-icon {
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8E53 100%);
+}
+
+.dept-energy .dept-icon {
+  background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+}
+
+.dept-water .dept-icon {
+  background: linear-gradient(135deg, #45B7D1 0%, #96C93D 100%);
+}
+
+.dept-waste .dept-icon {
+  background: linear-gradient(135deg, #FFA07A 0%, #FA8072 100%);
+}
+
+.dept-emission .dept-icon {
+  background: linear-gradient(135deg, #98D8C8 0%, #F093FB 100%);
+}
+
+.dept-investment .dept-icon {
+  background: linear-gradient(135deg, #A8E6CF 0%, #DCEDC1 100%);
+}
+
+.dept-management .dept-icon {
+  background: linear-gradient(135deg, #C7CEEA 0%, #B19CD9 100%);
+}
+
+.dept-employment .dept-icon {
+  background: linear-gradient(135deg, #FFB6C1 0%, #FFA0AC 100%);
+}
+
+.dept-training .dept-icon {
+  background: linear-gradient(135deg, #DDA0DD 0%, #D8BFD8 100%);
+}
+
+.dept-ohs .dept-icon {
+  background: linear-gradient(135deg, #F0E68C 0%, #E6DB74 100%);
+}
+
+.dept-satisfaction .dept-icon {
+  background: linear-gradient(135deg, #87CEEB 0%, #87CEFA 100%);
+}
+
+.dept-supply .dept-icon {
+  background: linear-gradient(135deg, #D2B48C 0%, #DEB887 100%);
+}
+
+.dept-responsibility .dept-icon {
+  background: linear-gradient(135deg, #F5DEB3 0%, #F0E68C 100%);
+}
+
+.dept-ip .dept-icon {
+  background: linear-gradient(135deg, #E6E6FA 0%, #DDA0DD 100%);
+}
+
+.dept-community .dept-icon {
+  background: linear-gradient(135deg, #AFEEEE 0%, #7FFFD4 100%);
+}
+
+.dept-governance .dept-icon {
+  background: linear-gradient(135deg, #FAFAD2 0%, #F0E68C 100%);
+}
+
+.dept-default .dept-icon {
+  background: linear-gradient(135deg, #999 0%, #777 100%);
+}
 
 .dept-info {
   flex: 1;
@@ -1563,11 +1594,11 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   background: linear-gradient(120deg, #d0e7f8 0%, #b7b2fd 100%);
 }
 
-.message-card:hover  {
+.message-card:hover {
   background: #bebdbd;
 }
 
-.message-card.unread:hover  {
+.message-card.unread:hover {
   background: linear-gradient(120deg, #b5cada 0%, #9994de 100%);
 }
 
@@ -1575,13 +1606,16 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   background: #2a2a2a;
   color: #fff;
 }
+
 .dark-theme .message-card.unread {
   background: linear-gradient(120deg, #3d082a 0%, #0c0633 100%);
 }
-.dark-theme .message-card:hover  {
+
+.dark-theme .message-card:hover {
   background: #414141;
 }
-.dark-theme .message-card.unread:hover  {
+
+.dark-theme .message-card.unread:hover {
   background: linear-gradient(120deg, #59103f 0%, #180d5e 100%);
 }
 

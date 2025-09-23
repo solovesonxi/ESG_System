@@ -1,23 +1,55 @@
 @import './base.css';
 
 #app {
-  max-width: 1920px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+    max-width: 1920px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-weight: normal;
 }
 
 a,
 .green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+    text-decoration: none;
+    color: hsla(160, 100%, 37%, 1);
+    transition: 0.4s;
+    padding: 3px;
 }
 
 @media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+    a:hover {
+        background-color: hsla(160, 100%, 37%, 0.2);
+    }
 }
 
+.announcement-table {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.dark-theme .announcement-table {
+    background-color: #1c1c1c;
+    color: #ffffff;
+}
+
+.announcement-table th {
+    background-color: #f5f5f5;
+    color: #333333;
+}
+
+.dark-theme .announcement-table th {
+    background-color: #383838;
+    color: #ffffff;
+}
+
+.announcement-table td {
+    border-bottom: 1px solid #dddddd;
+}
+
+.dark-theme .announcement-table td {
+    border-bottom: 1px solid #151515;
+    color: #00f6ff;
+}
+
+.dark-theme .announcement-table tr:hover {
+    background: #262626;
+}
