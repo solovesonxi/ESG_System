@@ -38,54 +38,26 @@
     </div>
 
     <!-- 部门权限卡片 -->
-    <div v-if="authStore.isDepartment && authStore.departments.length > 0" class="department-permissions-wrapper">
+    <div v-if="authStore.isDepartment && departmentList.length > 0" class="department-permissions-wrapper">
       <div class="department-info-card modern">
         <div class="card-content">
           <div class="permission-header">
             <div class="header-left">
-              <div class="permission-icon">
-                <i class="fas fa-shield-check"></i>
-              </div>
               <div class="permission-title">
                 <h3>您的访问权限</h3>
-                <p>您可以管理以下 {{ authStore.departments.length }} 个部门的数据</p>
+                <p>您可以管理以下 {{ departmentList.length }} 个类别的数据</p>
               </div>
             </div>
           </div>
 
           <div class="departments-container">
             <div class="department-grid">
-              <div
-                  v-for="dept in departmentList"
-                  :key="dept.value"
-                  class="department-item"
-                  :class="dept.class"
-                  @click="navigateToDepartment(dept.value)"
-              >
-                <div class="dept-icon">
-                  <i :class="getDepartmentIcon(dept.value)"></i>
-                </div>
+              <div v-for="dept in departmentList" :key="dept.id" class="department-item" :class="dept.name_en"
+                   @click="navigateToDepartment(dept.id)" :style="getDeptIconStyle(dept.name_en)">
                 <div class="dept-info">
-                  <span class="dept-name">{{ dept.label }}</span>
-                  <span class="dept-status">可访问</span>
-                </div>
-                <div class="dept-arrow">
-                  <i class="fas fa-chevron-right"></i>
+                  <span class="dept-name">{{ dept.name_zh }}</span>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div class="permission-footer">
-            <div class="permission-stats">
-              <span class="stat-item">
-                <i class="fas fa-database"></i>
-                {{ authStore.departments.length }} 个部门
-              </span>
-              <span class="stat-item">
-                <i class="fas fa-calendar"></i>
-                {{ '月度填报' }}
-              </span>
             </div>
           </div>
         </div>
@@ -328,7 +300,7 @@
             <p v-else-if="deleteMode === 'batch'">确定要删除选中的系统通知吗？共 {{ selectedNotifications.size }}
               条消息将被删除。</p>
             <p v-else-if="deleteMode === 'batch-operations'">确定要删除选中的操作记录吗？共 {{ selectedOperations.size }}
-              条记录将被删除。</p>
+              条记录将被删���。</p>
             <p v-else-if="deleteMode === 'clear-all'">确定要清空所有操作记录吗？共 {{ operations.length }}
               条记录将被删除。</p>
             <p class="warning-text">此操作不可撤销！</p>
@@ -355,32 +327,13 @@ const router = useRouter();
 const permissionError = ref(false);
 const permissionErrorMessage = ref('');
 
-// 部门类型映射
-const departmentTypeMap = {
-  'material': {label: '物料', class: 'dept-material'},
-  'energy': {label: '能源', class: 'dept-energy'},
-  'water': {label: '水资源', class: 'dept-water'},
-  'waste': {label: '废弃物', class: 'dept-waste'},
-  'emission': {label: '排放', class: 'dept-emission'},
-  'investment': {label: '资金投入', class: 'dept-investment'},
-  'management': {label: '环境管理', class: 'dept-management'},
-  'employment': {label: '雇佣', class: 'dept-employment'},
-  'training': {label: '教育与培训', class: 'dept-training'},
-  'ohs': {label: '职健与安全', class: 'dept-ohs'},
-  'satisfaction': {label: '员工满意度', class: 'dept-satisfaction'},
-  'supply': {label: '供应链', class: 'dept-supply'},
-  'responsibility': {label: '产品责任', class: 'dept-responsibility'},
-  'ip': {label: '知识产权', class: 'dept-ip'},
-  'community': {label: '社区参与与志愿活动', class: 'dept-community'},
-  'governance': {label: '治理', class: 'dept-governance'}
-};
 
 // 部门权限列表
 const departmentList = computed(() => {
-  return authStore.departments.map(dept => {
-    const map = departmentTypeMap[dept] || {label: dept, class: 'dept-default'}
-    return {value: dept, label: map.label, class: map.class}
-  })
+  const deptIds = Array.isArray(authStore.departments?.ids) ? authStore.departments.ids : [];
+  if (!deptIds || deptIds.length === 0) return [];
+  return (authStore.monthCategories || [])
+      .filter(item => item && (deptIds.includes(item.id) || deptIds.includes(item.name_en)));
 })
 
 
@@ -666,41 +619,10 @@ const fetchProgress = async () => {
   try {
     const factory = selectionStore.selectedFactory;
     const year = selectionStore.selectedYear;
-    const response1 = await axios.get(`/progress/quantitative?factory=${factory}&year=${year}`);
-    const response2 = await axios.get(`/progress/analytical?factory=${factory}&year=${year}`);
-    const data1 = response1.data;
-    const data2 = response2.data;
-    let quantData = [
-      {key: 'material', title: '物料', percent: data1.material || 0},
-      {key: 'energy', title: '能源', percent: data1.energy || 0},
-      {key: 'water', title: '水资源', percent: data1.water || 0},
-      {key: 'emission', title: '排放', percent: data1.emission || 0},
-      {key: 'waste', title: '废弃物', percent: data1.waste || 0},
-      {key: 'investment', title: '资金投入', percent: data1.investment || 0},
-      {key: 'management', title: '环境管理', percent: data1.management || 0},
-      {key: 'employment', title: '雇佣', percent: data1.employment || 0},
-      {key: 'training', title: '教育与培训', percent: data1.training || 0},
-      {key: 'ohs', title: '职健与安全', percent: data1.ohs || 0},
-      {key: 'satisfaction', title: '员工满意度', percent: data1.satisfaction || 0},
-      {key: 'supply', title: '供应链', percent: data1.supply || 0},
-      {key: 'responsibility', title: '产品责任', percent: data1.responsibility || 0},
-      {key: 'ip', title: '知识产权', percent: data1.ip || 0},
-      {key: 'community', title: '社区参与与志愿活动', percent: data1.community || 0},
-    ];
-    if (authStore.isDepartment && Array.isArray(authStore.departments) && authStore.departments.length > 0) {
-      quantData = quantData.filter(item => authStore.departments.includes(item.key));
+    quantitativeProgressData.value = (await axios.get(`/progress/month?factory=${factory}&year=${year}`)).data;
+    if (!authStore.isDepartment) {
+      analyticalProgressData.value = (await axios.get(`/progress/year?factory=${factory}&year=${year}`)).data;
     }
-    quantitativeProgressData.value = quantData;
-    analyticalProgressData.value = [
-      {title: '环境定量', percent: data2.env_quant || 0},
-      {title: '环境定性', percent: data2.env_qual || 0},
-      {title: '社会定量-劳工', percent: data2.social_quant_labor || 0},
-      {title: '社会定性-劳工', percent: data2.social_qual_labor || 0},
-      {title: '社会定量-其他', percent: data2.social_quant_other || 0},
-      {title: '社会定性-其他', percent: data2.social_qual_other || 0},
-      {title: '治理定性', percent: data2.governance || 0},
-      {title: '总进度', percent: data2.total || 0},
-    ];
   } catch (error) {
     console.error('获取进度数据失败:', error);
   }
@@ -708,7 +630,7 @@ const fetchProgress = async () => {
 // 获取角色显示名称
 const getRoleDisplayName = () => {
   const roleMap = {
-    'department': '部门管理员',
+    'department': authStore.departments.name,
     'factory': '工厂管理员',
     'headquarter': '总部管理员',
     'admin': '系统管理员'
@@ -716,32 +638,24 @@ const getRoleDisplayName = () => {
   return roleMap[authStore.user?.role] || '用户'
 }
 
-// 获取部门图标
-const getDepartmentIcon = (deptType) => {
-  const iconMap = {
-    'material': 'fas fa-boxes',
-    'energy': 'fas fa-bolt',
-    'water': 'fas fa-tint',
-    'waste': 'fas fa-trash',
-    'emission': 'fas fa-smog',
-    'investment': 'fas fa-coins',
-    'management': 'fas fa-cogs',
-    'employment': 'fas fa-users',
-    'training': 'fas fa-graduation-cap',
-    'ohs': 'fas fa-shield-alt',
-    'satisfaction': 'fas fa-smile',
-    'supply': 'fas fa-truck',
-    'responsibility': 'fas fa-handshake',
-    'ip': 'fas fa-copyright',
-    'community': 'fas fa-heart',
-    'governance': 'fas fa-balance-scale'
+// 返回用于内联样式的对象（只包含背景图片 URL，叠层由 CSS 负责）
+const getDeptIconStyle = (name_en) => {
+  const url = `${axios?.defaults?.baseURL}/static/icons/${name_en}.png?t=${new Date().getTime()}`;
+  if (!url) return {backgroundColor: '#eee'};
+  console.log('url:', url)
+  return {
+    backgroundImage: `url('${url}')`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    backgroundColor: '#f3f4f6',
+    backgroundWidth: '100%',
+    backgroundOpacity: '0.1'
   }
-  return iconMap[deptType] || 'fas fa-folder'
 }
 
 // 导航到部门
 const navigateToDepartment = (deptType) => {
-  // 这里可以添加导航逻辑
   console.log('导航到部门:', deptType)
   router.push(`/${deptType}`)
 }
@@ -1003,148 +917,46 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
 
 .department-item {
   display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: rgba(248, 249, 250, 0.8);
-  border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark-theme .department-item {
+  opacity: 85%;
 }
 
 .department-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border-color: rgba(102, 126, 234, 0.3);
-}
-
-.dept-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.2rem;
-}
-
-.dept-material .dept-icon {
-  background: linear-gradient(135deg, #FF6B35 0%, #FF8E53 100%);
-}
-
-.dept-energy .dept-icon {
-  background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
-}
-
-.dept-water .dept-icon {
-  background: linear-gradient(135deg, #45B7D1 0%, #96C93D 100%);
-}
-
-.dept-waste .dept-icon {
-  background: linear-gradient(135deg, #FFA07A 0%, #FA8072 100%);
-}
-
-.dept-emission .dept-icon {
-  background: linear-gradient(135deg, #98D8C8 0%, #F093FB 100%);
-}
-
-.dept-investment .dept-icon {
-  background: linear-gradient(135deg, #A8E6CF 0%, #DCEDC1 100%);
-}
-
-.dept-management .dept-icon {
-  background: linear-gradient(135deg, #C7CEEA 0%, #B19CD9 100%);
-}
-
-.dept-employment .dept-icon {
-  background: linear-gradient(135deg, #FFB6C1 0%, #FFA0AC 100%);
-}
-
-.dept-training .dept-icon {
-  background: linear-gradient(135deg, #DDA0DD 0%, #D8BFD8 100%);
-}
-
-.dept-ohs .dept-icon {
-  background: linear-gradient(135deg, #F0E68C 0%, #E6DB74 100%);
-}
-
-.dept-satisfaction .dept-icon {
-  background: linear-gradient(135deg, #87CEEB 0%, #87CEFA 100%);
-}
-
-.dept-supply .dept-icon {
-  background: linear-gradient(135deg, #D2B48C 0%, #DEB887 100%);
-}
-
-.dept-responsibility .dept-icon {
-  background: linear-gradient(135deg, #F5DEB3 0%, #F0E68C 100%);
-}
-
-.dept-ip .dept-icon {
-  background: linear-gradient(135deg, #E6E6FA 0%, #DDA0DD 100%);
-}
-
-.dept-community .dept-icon {
-  background: linear-gradient(135deg, #AFEEEE 0%, #7FFFD4 100%);
-}
-
-.dept-governance .dept-icon {
-  background: linear-gradient(135deg, #FAFAD2 0%, #F0E68C 100%);
-}
-
-.dept-default .dept-icon {
-  background: linear-gradient(135deg, #999 0%, #777 100%);
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .dept-info {
-  flex: 1;
+  margin-top: auto;
+  padding: 0.2rem 1.6rem;
+  border-radius: 10px;
+  background: rgba(245, 237, 237, 0.7);
+}
+
+.dark-theme .dept-info {
+  background: rgba(16, 15, 15, 0.7);
 }
 
 .dept-name {
-  display: block;
-  font-weight: 600;
-  color: #2c3e50;
   font-size: 1rem;
-  margin-bottom: 0.2rem;
-}
-
-.dept-status {
-  display: block;
-  font-size: 0.8rem;
-  color: #28a745;
+  color: rgba(26, 26, 26, 1);
   font-weight: 500;
 }
 
-.dept-arrow {
-  color: #6c757d;
-  font-size: 0.9rem;
+.dark-theme .dept-name {
+  color: #fff;
 }
 
-.permission-footer {
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-  padding-top: 1rem;
-}
-
-.permission-stats {
-  display: flex;
-  gap: 2rem;
-  justify-content: center;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #6c757d;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.stat-item i {
-  color: #4CAF50;
-}
 
 /* 深色模式适配 */
 .dark-theme .top-section .theme-toggle {

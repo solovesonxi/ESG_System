@@ -19,12 +19,7 @@ export const useSelectionStore = defineStore('selection', () => {
                 setTimeout(initSelection, 100);
                 return;
             }
-            if (factories.value.length === 0 && years.value.length === 0 && months.value.length === 0) {
-                if (authStore.isDepartment || authStore.isFactory) {
-                    factories.value = [authStore.factory];
-                } else if (authStore.isHeadquarter || authStore.isAdmin) {
-                    factories.value = ["安徽光大美科", "安徽光大同创", "昆山一", "昆山二", "成都厂", "惠阳厂", "厦门奔方", "武汉厂", "南昌厂", "越南", "墨西哥", "深圳光大", "沃普智选", "青岛音诺", "天津茂创", "合肥山秀", "苏州领新", "东莞美科同创", "重庆致贯", "苏州致贯"];
-                }
+            if (years.value.length === 0 && months.value.length === 0) {
                 const currentYear = new Date().getFullYear()
                 years.value = []
                 for (let y = 2020; y <= currentYear; y++) {

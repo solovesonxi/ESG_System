@@ -24,8 +24,8 @@
         <div class="filter-item">
           <label>部门</label>
           <select v-model="filterDepartment">
-            <option value="">全部</option>
-            <option v-for="d in authStore.QUANT_TYPES" :key="d" :value="d">{{ CATEGORY[d] }}</option>
+            <option value=0>全部</option>
+            <option v-for="d in authStore.monthCategories" :key="d.id" :value="d.id">{{ d.name_zh }}</option>
           </select>
         </div>
         <div class="filter-item">
@@ -83,10 +83,9 @@
           <span class="cell" @click="openDetail(account)"><span
               :class="['role-badge', `role-${account.role}`]">{{ roleLabel(account.role) }}</span></span>
           <span class="cell" @click="openDetail(account)">{{ account.factory }}</span>
-          <span class="cell" @click="openDetail(account)"><span v-for="(dep, idx) in account.departments" :key="dep"
-                                                                class="dept-tag">{{
-              CATEGORY[dep] || dep
-            }}</span></span>
+          <span class="cell" @click="openDetail(account)">
+            <span v-if="account.departments && account.departments.ids" v-for="dep in account.departments.ids || []" :key="dep" class="dept-tag">{{ authStore.getCategoryMapping(dep).name_zh }}</span>
+          </span>
           <span class="cell" @click="openDetail(account)">{{ account.phone }}</span>
           <span class="cell" @click="openDetail(account)">{{ account.email }}</span>
           <span class="cell">
@@ -157,8 +156,8 @@
                 <div class="add-dept">
                   <select v-model="newDepartment" class="form-input">
                     <option value="">请选择部门</option>
-                    <option v-for="dep in availableDepartments" :key="dep" :value="dep">{{
-                        CATEGORY[dep] || dep
+                    <option v-for="dep in availableDepartments" :key="dep.id" :value="dep.id">{{
+                        dep.name_zh || dep.name_en
                       }}
                     </option>
                   </select>
@@ -166,9 +165,9 @@
                 </div>
               </div>
             </div>
-            <span v-for="dep in detailAccount.departments" :key="dep" class="dept-tag"
+            <span v-for="dep in detailAccount.departments.ids" :key="dep" class="dept-tag"
                   v-if="detailAccount.role === 'department'">
-                  {{ CATEGORY[dep] || dep }}
+                  {{ authStore.getCategoryMapping(dep).name_zh }}
                   <span class="tag-remove" @click.stop="removeDepartment(dep)">×</span>
             </span>
             <div class="form-group">
@@ -239,7 +238,6 @@ import axios from '@/utils/axios'
 import apiClient from '@/utils/axios'
 import {useAuthStore} from '@/stores/authStore.js'
 import {useSelectionStore} from '@/stores/selectionStore.js'
-import {CATEGORY} from '@/constants/indicators.js'
 import {handleError, showError, showInfo, showSuccess} from "@/utils/toast.js";
 import debounce from 'lodash/debounce';
 
@@ -248,13 +246,13 @@ const selectionStore = useSelectionStore()
 const accounts = ref([])
 const filterRole = ref('')
 const filterFactory = ref('')
-const filterDepartment = ref('')
+const filterDepartment = ref(0)
 const keyword = ref('')
 
 const detailAccount = ref(null)
 const showDetail = ref(false)
 const newPassword = ref('')
-const newDepartment = ref('')
+const newDepartment = ref(0)
 const localAvatar = ref(null)
 const showPassword = ref(false)
 const showConfirmDelete = ref(false)
@@ -269,10 +267,10 @@ const handleRemoveAvatar = () => {
 }
 
 const availableDepartments = computed(() => {
-  if (!detailAccount.value || !detailAccount.value.departments) {
-    return authStore.QUANT_TYPES;
+  if (detailAccount.value && detailAccount.value.departments) {
+    return authStore.monthCategories.filter(dep => !detailAccount.value.departments.ids.includes(dep.id));
   }
-  return authStore.QUANT_TYPES.filter(dep => !detailAccount.value.departments.includes(dep));
+  return authStore.monthCategories;
 })
 
 watch(() => detailAccount.value?.role, (newRole, oldRole) => {
@@ -309,19 +307,20 @@ function fetchAccounts() {
       page_size: pageSize.value
     }
   }).then(res => {
-      accounts.value = res.data.accounts || []
-      totalPages.value = Math.ceil(res.data.total / pageSize.value)
-    }).catch(error => {
-      console.error('获取账号列表失败:', error)
-      handleError(error)
-    })
+    console.log(res.data)
+    accounts.value = res.data.accounts || []
+    totalPages.value = Math.ceil(res.data.total / res.data.page_size)
+  }).catch(error => {
+    console.error('获取账号列表失败:', error)
+    handleError(error)
+  })
 }
 
 
 function resetFilters() {
   filterRole.value = ''
   filterFactory.value = ''
-  filterDepartment.value = ''
+  filterDepartment.value = 0
   keyword.value = ''
   currentPage.value = 1;
   fetchAccounts()
@@ -329,6 +328,7 @@ function resetFilters() {
 
 function openDetail(account) {
   detailAccount.value = deepClone(account);
+  console.log(detailAccount.value)
   newPassword.value = '';
   showDetail.value = true
 }
@@ -428,12 +428,12 @@ function removeDepartment(dep) {
 
 function addDepartment() {
   if (newDepartment.value) {
-    if (!detailAccount.value.departments) {
-      detailAccount.value.departments = []
+    if (!detailAccount.value.departments || !detailAccount.value.departments.ids) {
+      detailAccount.value.departments.ids = {"name": "", "ids": []}
     }
-    if (!detailAccount.value.departments.includes(newDepartment.value)) {
-      detailAccount.value.departments.push(newDepartment.value)
-      newDepartment.value = ''
+    if (!detailAccount.value.departments.ids.includes(newDepartment.value)) {
+      detailAccount.value.departments.ids.push(newDepartment.value)
+      newDepartment.value = 0
     }
   }
 }

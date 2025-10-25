@@ -14,6 +14,7 @@
 import {onMounted, onUnmounted, ref} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
 import {useAuthStore} from "@/stores/authStore.js";
+import {commonRoutes} from "@/router/index.js";
 
 const authStore = useAuthStore();
 
@@ -60,18 +61,19 @@ const stopDrag = (e) => {
 };
 
 // 切换模式
-const commonRoutes = ['/home', '/account-management', '/indicator-library', '/announcement-board', '/review-management', '/profile'];
 const toggleMode = () => {
-  if (commonRoutes.includes(route.path)) {
-    authStore.isDataMode = !authStore.isDataMode;
-  } else {
+  if (!commonRoutes.includes(route.path)) {
     const currentMode = authStore.isDataMode ? 'data' : 'analyze';
     localStorage.setItem(`lastPath_${currentMode}`, route.path);
-    authStore.isDataMode = !authStore.isDataMode;
-    const targetPath = localStorage.getItem(`lastPath_${authStore.isDataMode ? 'data' : 'analyze'}`) ||
-        (authStore.isDataMode ? '/material' : '/env-quant');
+    const localPath = localStorage.getItem(`lastPath_${authStore.isDataMode ? 'analyze' : 'data'}`)
+    console.log(authStore.yearCategories[0], authStore.monthCategories[0])
+    const defaultPath = authStore.isDataMode ? `/year/${authStore.yearCategories[0].id}` : `/month/${authStore.monthCategories[0].id}`;
+    const targetPath = localPath || defaultPath;
+        (authStore.isDataMode ? authStore.yearCategories[0].path : authStore.monthCategories[0].path);
+    console.log('原来的模式: ', currentMode, '本地路径: ', localPath, '目标路径: ', targetPath);
     router.push(targetPath);
   }
+  authStore.isDataMode = !authStore.isDataMode;
 };
 
 const updatePosition = () => {

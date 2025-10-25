@@ -9,7 +9,8 @@
           <h4>基本信息</h4>
           <div class="info-grid">
             <div class="info-item"><label>工厂：</label><span>{{ record.factory }}</span></div>
-            <div class="info-item"><label>数据类型：</label><span>{{ CATEGORY[record.data_type] }}</span></div>
+            <div class="info-item">
+              <label>数据类型：</label><span>{{ authStore.getCategoryMapping(record.category).name_zh }}</span></div>
             <div class="info-item"><label>年份：</label><span>{{ record.year }}</span></div>
             <div class="info-item" v-if="record.month"><label>月份：</label><span>{{ record.month }}</span></div>
             <div class="info-item"><label>提交状态：</label><span>{{ record.is_submitted ? '已提交' : '未提交' }}</span>
@@ -17,8 +18,8 @@
           </div>
         </div>
         <div class="audit-section">
-          <h4>一级审核</h4>
-          <div class="audit-grid">
+          <h4 v-if="record.level1_status">工厂审核</h4>
+          <div v-if="record.level1_status" class="audit-grid">
             <div class="audit-item"><label>状态：</label><span
                 :class="['status-badge', record.level1_status]">{{ getStatusLabel(record.level1_status) }}</span></div>
             <div class="audit-item"><label>审核人：</label><span>{{ record.level1_reviewer || '' }}</span></div>
@@ -26,7 +27,7 @@
             </div>
             <div class="audit-item"><label>评论：</label><span>{{ record.level1_comment || '' }}</span></div>
           </div>
-          <h4>二级审核</h4>
+          <h4>总部审核</h4>
           <div class="audit-grid">
             <div class="audit-item"><label>状态：</label><span
                 :class="['status-badge', record.level2_status]">{{ getStatusLabel(record.level2_status) }}</span></div>
@@ -37,7 +38,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="audit-btn" @click="goToAudit">前往审核</button>
+          <button class="audit-btn" @click="goToAudit">查看详情</button>
         </div>
       </div>
     </div>
@@ -46,7 +47,6 @@
 
 <script setup>
 import {useRouter} from 'vue-router'
-import {CATEGORY} from "@/constants/indicators.js";
 import {useSelectionStore} from "@/stores/selectionStore.js";
 import {useAuthStore} from "@/stores/authStore.js";
 
@@ -72,10 +72,11 @@ function formatDateTime(dt) {
 }
 
 function goToAudit() {
-  if (props.record?.data_type) {
-    authStore.setDataMode(props.record.data_type)
+  if (props.record?.category) {
+    console.log('goToAudit', props.record.category, authStore.getCategoryMapping(props.record.category))
+    authStore.setDataMode(props.record.category)
     selectionStore.setSelection(props.record.factory, props.record.year, props.record.month || null)
-    router.push('/' + props.record.data_type.replaceAll('_', '-'))
+    router.push(authStore.getCategoryRoute(props.record.category).path)
     closeModal()
   }
 }
@@ -117,7 +118,7 @@ function goToAudit() {
   }
 }
 
-.m  {
+.m {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -125,7 +126,7 @@ function goToAudit() {
   border-bottom: 1px solid #eee;
 }
 
-.m  h3 {
+.m h3 {
   font-size: 1.3rem;
   font-weight: 700;
 }
@@ -219,7 +220,7 @@ label {
   color: #b0d9ff;
 }
 
-.dark-theme .m  {
+.dark-theme .m {
   border-bottom: 1px solid #3a3f4b;
 }
 

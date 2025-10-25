@@ -1,165 +1,121 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from core.dependencies import indicators, get_db
-from core.models import EnvQualData, LaborReason, ReviewRecord, OtherReason, OtherQualitative, Governance, \
-    LaborQualitative
-from core.models import EnvQuantData
-from core.utils import QUANT_MODEL_MAP
+from core.dependencies import get_db, logger
+from core.dynamic_mapping import get_quant_map, get_analy_map
+from core.models import ReviewRecord, FieldData, Category
+from core.permission import get_current_user
 
 router = APIRouter(prefix="/progress", tags=["进度查询"])
 
 
-@router.get("/quantitative")
-def calc_quantitative_progress(factory: str, year: int, db: Session = Depends(get_db)):
-    data_dict = {}
-    for category, model in QUANT_MODEL_MAP.items():
-        data_dict[category] = db.query(model).filter_by(factory=factory, year=year).first()
-
-    def is_json_field(model_cls, field):
-        column = getattr(model_cls, field, None)
+@router.get("/month")
+def calc_quantitative_progress(factory: str, year: int, db: Session = Depends(get_db),
+                               current_user: dict = Depends(get_current_user)):
+    def is_json_field(model_cls, f):
+        column = getattr(model_cls, f, None)
         return column is not None and hasattr(column, 'type') and 'JSON' in str(column.type)
 
-    def count_json_field_progress(value, is_submitted):
-        if not isinstance(value, list):
-            return 0, 0
-        submitted = 0
-        for i, v in enumerate(value):
-            if v not in [None, "", 0]:
-                submitted += 1
-            elif is_submitted and isinstance(is_submitted, list) and i < len(is_submitted) and is_submitted[i]:
-                submitted += 1
-        return len(value), submitted
+    def count_json_field_progress(v, months):
+        logger.info("月度数据：{}, 还未提交月份： {}".format(v, months))
+        valid = 0
+        if isinstance(v, list):
+            for month in months:
+                if v[month] not in [None, "", 0]:
+                    valid += 1
+        return valid
 
-    def count_submit_fields(c):
-        total, submitted = 0, 0
-        submit_fields = indicators[c]["submit"].values()
-        data = data_dict.get(c)
-        model_cls = QUANT_MODEL_MAP.get(c)
-        is_submitted = getattr(data, "is_submitted", None) if data else None
-        for field in submit_fields:
-            if is_json_field(model_cls, field):
-                value = getattr(data, field, []) if data else []
-                t, s = count_json_field_progress(value, is_submitted)
-                total += t if t else 12
-                submitted += s if s else 0
-            else:
-                value = getattr(data, field, None) if data else None
-                total += 1
-                if value not in [None, "", 0]:
-                    submitted += 1
-        return round(submitted / total * 100, 2) if total else 0
+    progress = []
+    total_fields, total_filled = 0, 0
+    quant_map = get_quant_map(db)
+    if current_user.get("role", None) == "department":
+        quant_map = {k: v for k, v in quant_map.items() if k in current_user.get("departments", {}).get("ids", [])}
+    for category_id, model in quant_map.items():
+        title_row = db.query(Category.name_zh).filter_by(id=category_id).first()
+        title = title_row.name_zh if title_row else ""
 
-    progress = {category: count_submit_fields(category) for category in QUANT_MODEL_MAP.keys()}
+        fields = db.query(FieldData.name_en).filter_by(category=category_id, is_active=True).all()
+        months_rows = db.query(ReviewRecord.month).filter_by(category=category_id, factory=factory, year=year,
+                                                             is_submitted=True).all()
+        total, filled = len(fields) * 12, 0
+        row = db.query(model).filter_by(factory=factory, year=year).first()
+        logger.info("工厂 {} 年度 {} 月度{}数据填写进度：{}  {} {}".format(factory, year, category_id, row, fields, months_rows))
+        if row:
+            submitted_months = set()
+            for r in months_rows:
+                submitted_months.add(int(r.month))
+            logger.info("工厂 {} 年度 {} 月度{}数据填写进度：{}  {}".format(factory, year, category_id, submitted_months,
+                                                                           fields))
+            for field in fields:
+                field_name = getattr(field, 'name_en', field if isinstance(field, str) else None)
+                if field_name is None:
+                    try:
+                        field_name = field[0]
+                    except ValueError:
+                        continue
+                if is_json_field(model, field_name):
+                    value = getattr(row, field_name, []) if row else []
+                    logger.info(field_name)
+                    if value:
+                        filled += len(submitted_months) + count_json_field_progress(value, [i for i in range(12) if
+                                                                                      (i + 1) not in submitted_months])
+        total_fields += total
+        total_filled += filled
+        logger.info("工厂 {} 年度 {} 月度{}数据填写进度：{}  {}".format(factory, year, category_id, filled, total))
+        progress.append({"title": title, "percent": round(filled / total * 100, 2) if total else 0})
+    progress.append({"title": "总计", "percent": round(total_filled / total_fields * 100, 2) if total_fields else 0})
+    logger.info("计算工厂 {} 年度 {} 月度数据填写进度：{}".format(factory, year, progress))
     return progress
 
 
-@router.get("/analytical")
+@router.get("/year")
 def calc_analytical_progress(factory: str, year: int, db: Session = Depends(get_db)):
-    result = {}
+    def count_field(r, f, cnt):
+        value = getattr(r, f, None)
+        if value and isinstance(value, str) and value.strip():
+            return cnt + 1
+        return cnt
+
+    progress = []
     total_fields, total_filled = 0, 0
-    analytical_types = ["env_quant", "env_qual", "social_quant_labor", "social_qual_labor", "social_quant_other",
-        "social_qual_other", "governance"]
-    for idx, data_type in enumerate(analytical_types):
-        review_record = db.query(ReviewRecord).filter_by(factory=factory, year=year, data_type=data_type).first()
-        if review_record and review_record.is_submitted:
-            result[data_type] = 100.00
+    analytical_map = get_analy_map(db)
+    for category_id, model in analytical_map.items():
+        category = db.query(Category).filter_by(id=category_id).first()
+        rows = db.query(model).filter_by(factory=factory, year=year).all()
+        review_record = db.query(ReviewRecord).filter_by(factory=factory, year=year, category=category_id).first()
+        if review_record and getattr(review_record, 'is_submitted', False):
+            progress.append({"title": category.domain + category.name_zh, "percent": 100.00})
             continue
         # 未提交，统计填写进度
-        if data_type == "env_quant":
-            all_fields = [field for category in indicators["env_quant"].values() for field in category]
-            total = len(all_fields)
-            reasons_rows = db.query(EnvQuantData).filter(EnvQuantData.factory == factory,
-                                                         EnvQuantData.year == year).all()
-            reasons_map = {row.indicator: row.reason for row in reasons_rows}
-            filled = sum(1 for field in all_fields if reasons_map.get(field, "").strip())
-            result[data_type] = round(filled / total * 100, 2) if total else 0
-            total_fields += total
-            total_filled += filled
-        elif data_type == "env_qual":
-            data = db.query(EnvQualData).filter_by(factory=factory, year=year).first()
-            if data:
-                exclude = {"factory", "year", "comparison", "reasons"}
-                fields = [c.name for c in EnvQualData.__table__.columns.values() if c.name not in exclude]
-                total = len(fields) * 3
-                filled = sum(1 for f in fields if getattr(data, f, None) not in [None, ""])
-                comparison = getattr(data, "comparison", None)
-                reasons = getattr(data, "reasons", None)
-                if comparison and isinstance(comparison, dict):
-                    filled += sum(1 for (_, v) in comparison.items() if v not in [None, ""])
-                if reasons and isinstance(reasons, dict):
-                    filled += sum(1 for (_, v) in reasons.items() if v not in [None, ""])
-                result[data_type] = round(filled / total * 100, 2) if total else 0
-                total_fields += total
-                total_filled += filled
-            else:
-                result[data_type] = 0
-        elif data_type == "social_quant_labor":
-            labor_keys = indicators["social_quant_labor"]
-            total = len(labor_keys)
-            reasons_rows = db.query(LaborReason).filter(LaborReason.factory == factory, LaborReason.year == year).all()
-            reasons_map = {row.indicator: row.reason for row in reasons_rows}
-            filled = sum(1 for key in labor_keys if reasons_map.get(key, None) not in (None, ""))
-            result[data_type] = round(filled / total * 100, 2) if total else 0
-            total_fields += total
-            total_filled += filled
-        elif data_type == "social_qual_labor":
-            all_indicators = []
-            for category_indicators in indicators["social_qual_labor"].values():
-                all_indicators.extend(category_indicators)
-            total = len(all_indicators) * 3
-            qualitative_rows = db.query(LaborQualitative).filter(LaborQualitative.factory == factory,
-                                                                 LaborQualitative.year == year).all()
-            filled = 0
-            for row in qualitative_rows:
-                if row.current_text and row.current_text.strip():
-                    filled += 1
-                if row.comparison_text and row.comparison_text.strip():
-                    filled += 1
-                if row.reason and row.reason.strip():
-                    filled += 1
-            result[data_type] = round(filled / total * 100, 2) if total else 0
-            total_fields += total
-            total_filled += filled
-        elif data_type == "social_quant_other":
-            all_fields = [field for category in indicators["social_quant_other"].values() for field in category]
-            total = len(all_fields)
-            reasons_rows = db.query(OtherReason).filter(OtherReason.factory == factory, OtherReason.year == year).all()
-            reasons_map = {row.indicator: row.reason for row in reasons_rows}
-            filled = sum(1 for field in all_fields if reasons_map.get(field, "").strip())
-            result[data_type] = round(filled / total * 100, 2) if total else 0
-            total_fields += total
-            total_filled += filled
-        elif data_type == "social_qual_other":
-            all_indicators = [ind for category in indicators["social_qual_other"].values() for ind in category]
-            total = len(all_indicators) * 3
-            rows = db.query(OtherQualitative).filter(OtherQualitative.factory == factory,
-                                                     OtherQualitative.year == year).all()
-            filled = 0
+        fields = db.query(FieldData.name_en).filter_by(category=category_id, is_active=True).all()
+        active_fields = set()
+        for field in fields:
+            field_name = getattr(field, 'name_en', field if isinstance(field, str) else None)
+            if field_name is None:
+                try:
+                    field_name = field[0]
+                except Exception:
+                    continue
+            active_fields.add(field_name)
+        total = len(fields) * 3
+        filled = 0
+        cname = category.name_zh
+        if category and "定量" in cname:
             for row in rows:
-                if row.current_text and row.current_text.strip():
-                    filled += 1
-                if row.comparison_text and row.comparison_text.strip():
-                    filled += 1
-                if row.reason and row.reason.strip():
-                    filled += 1
-            result[data_type] = round(filled / total * 100, 2) if total else 0
-            total_fields += total
-            total_filled += filled
-        elif data_type == "governance":
-            all_indicators = [ind for category in indicators["governance"].values() for ind in category]
-            total = len(all_indicators) * 3
-            rows = db.query(Governance).filter(Governance.factory == factory, Governance.year == year).all()
-            filled = 0
+                if getattr(row, "indicator", None) in active_fields:
+                    filled = count_field(row, "reason", filled)
+            title = category.domain + cname if category else cname
+            progress.append({"title": title, "percent": round(filled / total * 100, 2) if total else 0})
+        else:
             for row in rows:
-                if row.current_text and row.current_text.strip():
-                    filled += 1
-                if row.comparison_text and row.comparison_text.strip():
-                    filled += 1
-                if row.reason and row.reason.strip():
-                    filled += 1
-            result[data_type] = round(filled / total * 100, 2) if total else 0
-            total_fields += total
-            total_filled += filled
-    result["total"] = round(total_filled / total_fields * 100, 2) if total_fields else 0
-    return result
+                if getattr(row, "indicator", None) in active_fields:
+                    filled = count_field(row, "current_text", filled)
+                    filled = count_field(row, "comparison_text", filled)
+                    filled = count_field(row, "reason", filled)
+            title = category.domain + cname if category else cname
+            progress.append({"title": title, "percent": round(filled / total * 100, 2) if total else 0})
+        total_fields += total
+        total_filled += filled
+    progress.append({"title": "总计", "percent": round(total_filled / total_fields * 100, 2) if total_fields else 0})
+    logger.info("计算工厂 {} 年度 {} 年度数据填写进度：{}".format(factory, year, progress))
+    return progress

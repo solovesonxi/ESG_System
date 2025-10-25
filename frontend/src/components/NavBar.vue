@@ -70,6 +70,7 @@
 import {useRoute, useRouter} from 'vue-router'
 import {computed, onMounted, onUnmounted, ref, watch} from 'vue';
 import {useAuthStore} from '@/stores/authStore';
+import {commonRoutes} from "@/router/index.js";
 
 const authStore = useAuthStore();
 const showLogout = ref(false);
@@ -163,60 +164,46 @@ const adminMenuItem = {
   ]
 }
 
-const dataModeItems = [
-  {
-    name: 'environment', label: '环境',
-    children: [
-      {name: 'material', path: '/material', label: '物料'},
-      {name: 'energy', path: '/energy', label: '能源'},
-      {name: 'water', path: '/water', label: '水资源'},
-      {name: 'emission', path: '/emission', label: '排放'},
-      {name: 'waste', path: '/waste', label: '废弃物'},
-      {name: 'investment', path: '/investment', label: '资金投入'},
-      {name: 'management', path: '/management', label: '环境管理'}
-    ]
-  },
-  {
-    name: 'social', label: '社会-劳工',
-    children: [
-      {name: 'employment', path: '/employment', label: '雇佣'},
-      {name: 'training', path: '/training', label: '教育与培训'},
-      {name: 'ohs', path: '/ohs', label: '职健与安全'},
-      {name: 'satisfaction', path: '/satisfaction', label: '员工满意度'}
-    ]
-  },
-  {
-    name: 'governance', label: '社会-其他',
-    children: [
-      {name: 'supply', path: '/supply', label: '供应链'},
-      {name: 'responsibility', path: '/responsibility', label: '产品责任'},
-      {name: 'ip', path: '/ip', label: '知识产权'},
-      {name: 'community', path: '/community', label: '社区参与与志愿活动'}
-    ]
-  }
-]
+// dataModeItems/analyzeModeItems 使用 ref，可被登录后注入的 categories 更新
+const dataModeItems = ref([]);
+const analyzeModeItems = ref([]);
 
-const analyzeModeItems = [
-  {
-    name: 'env', label: '环境', children: [{name: 'env-quant', path: '/env-quant', label: '定量'},
-      {name: 'env-qual', path: '/env-qual', label: '定性'},
-    ]
-  },
-  {
-    name: 'social',
-    label: '社会',
-    children: [{name: 'social-quant-labor', path: '/social-quant-labor', label: '定量-劳工'},
-      {name: 'social-qual-labor', path: '/social-qual-labor', label: '定性-劳工'},
-      {name: 'social-quant-other', path: '/social-quant-other', label: '定量-其他'},
-      {name: 'social-qual-other', path: '/social-qual-other', label: '定性-其他'},
-    ]
-  },
-  {name: 'governance', path: '/governance', label: '治理'}
-]
+// 构建菜单项的辅助方法
+function buildItemsFromCategories(categoriesObj, periodType) {
+  // categoriesObj 形如 { month: { domain1: [ {id,name_en,name_zh,domain,period_type}, ...], ...}, year: {...} }
+  if (!categoriesObj || !categoriesObj[periodType]) return [];
+  const periodData = categoriesObj[periodType];
+  return Object.entries(periodData).map(([domain, items]) => ({
+    name: domain,
+    label: domain,
+    children: (Array.isArray(items) ? items : []).map(item => ({
+      id: item.id,
+      name: item.name_en || String(item.id || item.name),
+      path: periodType === 'month' ? `/month/${item.id}` : `/year/${item.id}`,
+      label: item.name_zh || item.name_en || String(item.name || item.id)
+    }))
+  }));
+}
+
+watch(() => authStore.categories, (cats) => {
+  if (cats) {
+    try {
+      const builtData = buildItemsFromCategories(cats, 'month');
+      const builtAnalyze = buildItemsFromCategories(cats, 'year');
+      if (builtData && builtData.length) dataModeItems.value = builtData;
+      if (builtAnalyze && builtAnalyze.length) analyzeModeItems.value = builtAnalyze;
+    } catch (e) {
+      console.error('处理 categories 数据失败', e);
+    }
+  } else {
+    dataModeItems.value = [];
+    analyzeModeItems.value = [];
+  }
+}, {immediate: true});
 
 const menuItems = computed(() => {
   const homeItem = {name: 'home', path: '/home', label: '首页'};
-  const dataItems = authStore.isDataMode ? dataModeItems : analyzeModeItems;
+  const dataItems = authStore.isDataMode ? dataModeItems.value : analyzeModeItems.value;
   const reviewItem = {name: 'review', path: '/review-management', label: '审核管理'};
   const profileItem = {name: 'profile', path: '/profile', label: '个人中心'};
   let result = [homeItem, ...dataItems];
@@ -231,9 +218,9 @@ const menuItems = computed(() => {
 watch(() => route.path, (newPath, oldPath) => {
   authStore.checkTokenValid()
   const currentMode = authStore.isDataMode ? 'data' : 'analyze';
-  if (newPath !== '/login' && newPath !== '/home' && newPath !== '/profile') {
+  if (!newPath in commonRoutes) {
     localStorage.setItem(`lastPath_${currentMode}`, newPath);
-    console.log("模式反转，路由即将跳转，更新lastPath_" + currentMode + "由" + (oldPath || '未知') + "变为" + newPath)
+    console.log("路由即将跳转，更新lastPath_" + currentMode + "由" + (oldPath || '未知') + "变为" + newPath)
   }
 });
 

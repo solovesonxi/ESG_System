@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db, logger
 from core.models import Message
-from core.permissions import get_current_user
+from core.permission import get_current_user
 from core.utils import send_message
 
 router = APIRouter(prefix="/messages", tags=["消息"])

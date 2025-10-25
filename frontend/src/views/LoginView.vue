@@ -113,8 +113,8 @@ export default {
       try {
         const response = await apiClient.post('/auth/login', payload);
         if (response.data.status === 'success') {
-          const {token, user} = response.data;
-          useAuthStore().initAuth(token, user);
+          const { token, user, categories, factories} = response.data;
+          useAuthStore().initAuth(token, user, categories, factories);
           await router.push('/home');
         }else {
           showError('登录失败: ' + response.data.message);

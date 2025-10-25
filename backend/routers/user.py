@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db, get_redis, SECRET_KEY, ALGORITHM, logger, pwd_context
 from core.models import User
-from core.permissions import get_current_user
+from core.permission import get_current_user
 
 router = APIRouter(prefix="/user", tags=["用户信息"])
 
@@ -69,12 +69,12 @@ def update_username(new_username: str = Body(..., description="新用户名"), d
                     user.avatar = f"/{AVATAR_DIR}/user_{new_username}{file_ext}"
         user.username = new_username
         db.commit()
-        payload = {"username": new_username, "role": current_user["role"],
-                   "factory": current_user["factory"], "exp": datetime.now(timezone.utc) + timedelta(minutes=15)}
+        payload = {"username": new_username, "role": current_user["role"], "factory": current_user["factory"],
+                   "exp": datetime.now(timezone.utc) + timedelta(minutes=15)}
         new_token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
         return {"status": "success", "new_token": new_token,
-                "user": {"username": new_username, "factory": user.factory, "role": user.role,
-                         "phone": user.phone, "email": user.email, "avatar": user.avatar}}
+                "user": {"username": new_username, "factory": user.factory, "role": user.role, "phone": user.phone,
+                         "email": user.email, "avatar": user.avatar}}
     except Exception as e:
         db.rollback()
         logger.error(e)

@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import or_, and_
 from sqlalchemy.orm import Session
 
-from core.dependencies import get_db, indicators, logger
+from core.dependencies import get_db, indicators
 from core.models import ReviewRecord
-from core.permissions import get_current_user
+from core.permission import get_current_user
 from core.utils import send_message
 
 router = APIRouter(prefix="/review", tags=["审核"])
@@ -28,7 +28,7 @@ async def update_review_status(request: ReviewUpdateRequest, db: Session = Depen
     if not record:
         raise HTTPException(status_code=404, detail="数据暂未提交，无法审核")
     factory = str(record.factory)
-    department = str(record.data_type)
+    department = str(record.category)
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     action = '审核通过' if request.status == "approved" else '驳回' if request.status == "rejected" else '反审核'
     record.is_submitted = True if request.status == "approved" else False if request.status == "rejected" else record.is_submitted
@@ -84,30 +84,27 @@ async def update_review_status(request: ReviewUpdateRequest, db: Session = Depen
 @router.get("/")
 async def get_review_records(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user),
                              page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=10),
-                             factory: str = Query(None), department: str = Query(None), year: int = Query(None),
+                             factory: str = Query(None), category: int = Query(None), year: int = Query(None),
                              month: int = Query(None), is_submitted: bool = Query(None),
                              level1_status: str = Query(None), level2_status: str = Query(None),
                              comment_keyword: str = Query(None)):
     role = current_user["role"]
     user_factory = current_user.get("factory")
-    departments = current_user.get("departments", [])
+    departments = current_user.get("departments", {}).get("ids", []) if role == "department" else []
     query = db.query(ReviewRecord)
 
     # 权限过滤
     if role == "factory":
         query = query.filter(ReviewRecord.factory == user_factory)
     elif role == "department":
-        query = query.filter(ReviewRecord.factory == user_factory, ReviewRecord.data_type.in_(departments))
+        query = query.filter(ReviewRecord.factory == user_factory, ReviewRecord.category.in_(departments))
     elif role not in ["admin", "headquarter"]:
         raise HTTPException(status_code=403, detail="无权限访问审核记录")
-    logger.info(f"get_review_records: {role}, {user_factory}, {departments}")
-    logger.info(
-        f"筛选 - factory: {factory}, department: {department}, year: {year}, month: {month}, is_submitted: {is_submitted}, level1_status: {level1_status}, level2_status: {level2_status}, comment_keyword: {comment_keyword}")
     # 筛选条件
+    if category and category >0:
+        query = query.filter(ReviewRecord.category == category)
     if factory:
         query = query.filter(ReviewRecord.factory == factory)
-    if department:
-        query = query.filter(ReviewRecord.data_type == department)
     if year:
         query = query.filter(ReviewRecord.year == year)
     if month is not None:
@@ -124,4 +121,4 @@ async def get_review_records(db: Session = Depends(get_db), current_user: dict =
                 and_(ReviewRecord.level2_comment != None, ReviewRecord.level2_comment.contains(comment_keyword))))
     total = query.count()
     records = query.order_by(ReviewRecord.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
-    return {"total": total, "records": [r.__dict__  for r in records]}
+    return {"total": total, "records": [r.__dict__ for r in records]}

@@ -1,7 +1,8 @@
 import base64
+import json
 import os
 import re
-from typing import Optional
+from typing import Optional, Union, List, Dict
 
 from fastapi import APIRouter, Depends, Query, HTTPException, Body
 from pydantic import BaseModel
@@ -10,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db, pwd_context, logger
 from core.models import User
-from core.permissions import get_current_user
+from core.permission import get_current_user
 
 router = APIRouter(prefix="/admin", tags=["管理控制台"])
 
@@ -21,7 +22,7 @@ class UserUpdateRequest(BaseModel):
     hashed_password: Optional[str] = None
     role: Optional[str] = None
     factory: Optional[str] = None
-    departments: Optional[list] = None
+    departments: Optional[Dict[str, Union[str, List[int]]]] = None
     phone: Optional[str] = None
     email: Optional[str] = None
     avatar: Optional[str] = None
@@ -30,11 +31,11 @@ class UserUpdateRequest(BaseModel):
 
 
 def create_or_update_user(user: User, data: UserUpdateRequest, db: Session, is_new: bool = False):
-    if data.username is not None:
+    if data.username:
         user.username = data.username
-    if data.hashed_password is not None and data.hashed_password != "":
+    if data.hashed_password and data.hashed_password != "":
         user.hashed_password = pwd_context.hash(data.hashed_password)
-    if data.role is not None:
+    if data.role:
         user.role = data.role
         if data.role in ["headquarter", "admin"]:
             user.factory = None
@@ -45,11 +46,11 @@ def create_or_update_user(user: User, data: UserUpdateRequest, db: Session, is_n
         elif data.role == "department":
             user.factory = data.factory
             user.departments = data.departments
-    if data.email is not None:
+    if data.email:
         user.email = data.email
-    if data.phone is not None:
+    if data.phone:
         user.phone = data.phone
-    if data.is_active is not None:
+    if data.is_active:
         user.is_active = data.is_active
     AVATAR_DIR = "static/avatars"
     if data.localAvatar:
@@ -80,7 +81,7 @@ def create_or_update_user(user: User, data: UserUpdateRequest, db: Session, is_n
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=500, detail=f"头像保存失败: {e}")
-    elif data.avatar is not None:
+    elif data.avatar:
         user.avatar = data.avatar
     if is_new:
         db.add(user)
@@ -89,13 +90,10 @@ def create_or_update_user(user: User, data: UserUpdateRequest, db: Session, is_n
     return user
 
 
-import json
-
-
 @router.get("/account")
-def get_accounts(role: str = Query(None), factory: str = Query(None), department: str = Query(None),
-        keyword: str = Query(None), page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100),
-        db: Session = Depends(get_db)):
+def get_accounts(role: str = Query(None), factory: str = Query(None), department: int = Query(None),
+                 keyword: str = Query(None), page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100),
+                 db: Session = Depends(get_db)):
     try:
         # 基础查询
         query = db.query(User)
@@ -106,13 +104,13 @@ def get_accounts(role: str = Query(None), factory: str = Query(None), department
         if keyword:
             query = query.filter(
                 or_(User.username.contains(keyword), User.email.contains(keyword), User.phone.contains(keyword)))
-        if department:
+        if department and department > 0:
             all_accounts = query.all()
             filtered_accounts = []
             for account in all_accounts:
-                if not account.departments:
+                if not (account.departments and account.departments["ids"]):
                     continue
-                departments = account.departments
+                departments = account.departments["ids"]
                 if isinstance(departments, str):
                     try:
                         departments = json.loads(departments)

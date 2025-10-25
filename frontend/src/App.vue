@@ -32,7 +32,6 @@ const isAuthedPage = computed(() => route.path !== '/' && route.path !== '/login
 const isEditPage = computed(() => isAuthedPage.value && route.path !== '/home' && route.path !== '/review-management' && route.path !== '/profile')
 
 const handleStartEdit = () => {
-  console.log('currentComponent:', currentComponent.value);
   if (currentComponent.value && currentComponent.value.startEditing) {
     console.log('开始编辑');
     currentComponent.value.startEditing();

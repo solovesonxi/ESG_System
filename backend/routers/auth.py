@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, pwd_context, get_redis, logger
-from core.models import User
+from core.models import User, Category, Factory
 
 router = APIRouter(prefix="/auth", tags=["用户认证"])
 
@@ -45,12 +45,32 @@ def login(username: str = Body(..., description="用户名或ID"), password: str
         raise HTTPException(status_code=400, detail="密码错误")
     if not user.is_active:
         raise HTTPException(status_code=403, detail="账号已被禁用，请联系管理员解除封禁")
-    # 在token中包含权限信息
+
+    # 查询所有激活的分类，并按id升序排序
+    categories = db.query(Category.id, Category.name_en, Category.name_zh, Category.domain,
+                          Category.period_type).filter(Category.is_active == True).order_by(Category.id).all()
+    categorized_data = {"month": {}, "year": {}}
+    for category in categories:
+        if category.period_type in ["month", "year"]:
+            if category.domain not in categorized_data[category.period_type]:
+                categorized_data[category.period_type][category.domain] = []
+            categorized_data[category.period_type][category.domain].append(
+                {"id": category.id, "name_en": category.name_en, "name_zh": category.name_zh, "domain": category.domain,})
+
+    # 在 token 中包含权限信息
     token_data = {"id": user.id, "role": user.role, "factory": user.factory, "departments": user.departments}
     access_token = create_access_token(data=token_data, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+
+    if user.role == "department" or user.role == "factory":
+        factories = [user.factory]
+    else:
+        factories = db.query(Factory.id, Factory.name).filter(Factory.is_active == True).distinct().order_by(
+            Factory.id).all()
+        factories = [name for (_, name) in factories]
     return {"status": "success", "token": access_token,
             "user": {"id": user.id, "username": user.username, "factory": user.factory, "departments": user.departments,
-                     "role": user.role, "phone": user.phone, "email": user.email, "avatar": user.avatar}}
+                     "role": user.role, "phone": user.phone, "email": user.email, "avatar": user.avatar},
+            "categories": categorized_data, "factories": factories}
 
 
 @router.post("/refresh", summary="刷新令牌")

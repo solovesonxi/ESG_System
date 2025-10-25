@@ -16,15 +16,10 @@ DB_PASSWORD = "000000"
 DB_HOST = "localhost"
 DB_PORT = "5432"
 DB_NAME = "esg_db"
-
 encoded_password = quote_plus(DB_PASSWORD)
-
 SQLALCHEMY_DATABASE_URL = f"postgresql://{DB_USER}:{encoded_password}@{DB_HOST}:{DB_PORT}/{DB_NAME}?client_encoding=utf8"
-
 engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True, connect_args={"options": "-c client_encoding=utf8"})
-
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
 
@@ -43,6 +38,7 @@ REDIS_DB = 0
 redis_pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True,
                                   max_connections=20, retry_on_timeout=True, socket_connect_timeout=5, socket_timeout=5,
                                   health_check_interval=30)
+
 
 def get_redis():
     redis_client = redis.Redis(connection_pool=redis_pool)

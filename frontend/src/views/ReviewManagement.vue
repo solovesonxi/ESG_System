@@ -130,17 +130,20 @@
       <h3>筛选审核记录</h3>
       <div class="filter-grid-modern">
         <div class="filter-item">
+          <label>数据类型</label>
+          <select v-model="filterCategory">
+            <option value=0>全部</option>
+            <option v-for="dept in departmentsList" :key="dept.id" :value="dept.id">{{
+                dept.name_zh
+              }}
+            </option>
+          </select>
+        </div>
+        <div class="filter-item">
           <label>工厂</label>
           <select v-model="filterFactory">
             <option value="">全部</option>
             <option v-for="factory in factoryList" :key="factory" :value="factory">{{ factory }}</option>
-          </select>
-        </div>
-        <div class="filter-item">
-          <label>数据类型</label>
-          <select v-model="filterDepartment">
-            <option value="">全部</option>
-            <option v-for="dept in departmentsList" :key="dept" :value="dept">{{ CATEGORY[dept] }}</option>
           </select>
         </div>
         <div class="filter-item">
@@ -169,7 +172,7 @@
           </select>
         </div>
         <div class="filter-item">
-          <label>一级审核</label>
+          <label>工厂审核状态</label>
           <select v-model="filterLevel1Status">
             <option value="">全部</option>
             <option value="pending">待审核</option>
@@ -178,7 +181,7 @@
           </select>
         </div>
         <div class="filter-item">
-          <label>二级审核</label>
+          <label>总部审核状态</label>
           <select v-model="filterLevel2Status">
             <option value="">全部</option>
             <option value="pending">待审核</option>
@@ -204,18 +207,18 @@
       <h3>审核记录列表</h3>
       <div class="records-list-modern">
         <div class="record-header-row">
-          <span class="header-cell">工厂</span>
           <span class="header-cell">数据类型</span>
+          <span class="header-cell">工厂</span>
           <span class="header-cell">年份/月份</span>
           <span class="header-cell">提交状态</span>
-          <span class="header-cell">一级审核</span>
-          <span class="header-cell">一级评论</span>
-          <span class="header-cell" v-if="filteredRecords.some(r => !isAnnualType(r.data_type))">二级审核</span>
-          <span class="header-cell" v-if="filteredRecords.some(r => !isAnnualType(r.data_type))">二级评论</span>
+          <span class="header-cell">工厂审核状态</span>
+          <span class="header-cell">工厂评论</span>
+          <span class="header-cell" v-if="filteredRecords.some(r => !isAnnualType(r.data_type))">总部审核状态</span>
+          <span class="header-cell" v-if="filteredRecords.some(r => !isAnnualType(r.data_type))">总部评论</span>
         </div>
         <div v-for="record in filteredRecords" :key="record.id" class="record-row" @click="openDetails(record)">
+          <span class="cell">{{ authStore.getCategoryMapping(record.category).name_zh }}</span>
           <span class="cell">{{ record.factory }}</span>
-          <span class="cell">{{ CATEGORY[record.data_type] }}</span>
           <span class="cell">{{ record.year }}年{{ record.month ? (record.month + '月') : '' }}</span>
           <span class="cell status-badge" :class="record.is_submitted ? 'submitted' : 'not-submitted'">{{
               record.is_submitted ? '已提交' : '未提交'
@@ -252,9 +255,8 @@
 import {computed, onMounted, ref, watch} from 'vue'
 import {useAuthStore} from '@/stores/authStore'
 import apiClient from '@/utils/axios'
-import {useSelectionStore} from "@/stores/selectionStore.js";
-import {showError} from "@/utils/toast.js";
-import {CATEGORY} from '@/constants/indicators.js';
+import {useSelectionStore} from '@/stores/selectionStore.js';
+import {showError} from '@/utils/toast.js';
 import ReviewDetailsModal from "@/components/ReviewDetailsModal.vue";
 import debounce from 'lodash/debounce';
 
@@ -263,8 +265,8 @@ const selectionStore = useSelectionStore()
 
 const showPermissionDetails = ref(false)
 const factoryList = computed(() => (authStore.isDepartment || authStore.isFactory) ? [authStore.factory] : selectionStore.factories)
-const departmentsList = computed(() => authStore.getReviewableDataTypes)
-const departmentsListZh = computed(() => departmentsList.value.map(dep => CATEGORY[dep] || dep))
+const departmentsList = computed(() => authStore.getReviewableDataTypes || [])
+const departmentsListZh = computed(() => (departmentsList.value || []).map(dep => dep.name_zh))
 
 // 分页相关
 const currentPage = ref(1)
@@ -287,8 +289,8 @@ const fetchRecords = async () => {
     const params = {
       page: currentPage.value,
       page_size: pageSize.value,
+      category: filterCategory.value || undefined,
       factory: filterFactory.value || undefined,
-      department: filterDepartment.value || undefined,
       year: filterYear.value || undefined,
       month: filterMonth.value || undefined,
       is_submitted: filterSubmitted.value !== '' ? filterSubmitted.value : undefined,
@@ -299,6 +301,7 @@ const fetchRecords = async () => {
     const response = await apiClient.get('/review/', {params})
     filteredRecords.value = response.data.records
     totalRecords.value = response.data.total
+    console.log('filteredRecords:', response)
   } catch (error) {
     showError(error)
   }
@@ -311,13 +314,13 @@ const getStatusLabel = (status) => {
     'approved': '通过',
     'rejected': '不通过'
   }
-  return labels[status] || '待审核'
+  return labels[status] || ''
 }
 
 // 过滤器相关
 const filteredRecords = ref([])
 const filterFactory = ref('')
-const filterDepartment = ref('')
+const filterCategory = ref(0)
 const filterYear = ref('')
 const filterMonth = ref('')
 const filterSubmitted = ref('')
@@ -327,7 +330,7 @@ const filterCommentKeyword = ref('')
 
 function resetFilters() {
   filterFactory.value = ''
-  filterDepartment.value = ''
+  filterCategory.value = 0
   filterYear.value = ''
   filterMonth.value = ''
   filterSubmitted.value = ''
@@ -348,7 +351,7 @@ onMounted(() => {
   if (saved) {
     const state = JSON.parse(saved)
     filterFactory.value = state.filterFactory || ''
-    filterDepartment.value = state.filterDepartment || ''
+    filterCategory.value = state.filterCategory || 0
     filterYear.value = state.filterYear || ''
     filterMonth.value = state.filterMonth || ''
     filterSubmitted.value = state.filterSubmitted || ''
@@ -358,6 +361,7 @@ onMounted(() => {
     currentPage.value = state.currentPage || 1
   }
   fetchRecords()
+  console.log(departmentsList.value)
 })
 
 // 统一监听筛选条件和 pageSize，变化时重置页码并刷新
@@ -365,14 +369,31 @@ const debouncedFetchRecords = debounce(() => {
   fetchRecords();
 }, 300);
 
+
 watch([
-  filterFactory, filterDepartment, filterYear, filterMonth,
-  filterSubmitted, filterLevel1Status, filterLevel2Status, filterCommentKeyword, currentPage, pageSize
+  filterFactory, filterCategory, filterYear, filterMonth,
+  filterSubmitted, filterLevel1Status, filterLevel2Status, filterCommentKeyword, pageSize
 ], () => {
   currentPage.value = 1;
   const state = {
     filterFactory: filterFactory.value,
-    filterDepartment: filterDepartment.value,
+    filterCategory: filterCategory.value,
+    filterYear: filterYear.value,
+    filterMonth: filterMonth.value,
+    filterSubmitted: filterSubmitted.value,
+    filterLevel1Status: filterLevel1Status.value,
+    filterLevel2Status: filterLevel2Status.value,
+    filterCommentKeyword: filterCommentKeyword.value,
+    currentPage: currentPage.value
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  debouncedFetchRecords();
+});
+
+watch(currentPage, () => {
+  const state = {
+    filterFactory: filterFactory.value,
+    filterCategory: filterCategory.value,
     filterYear: filterYear.value,
     filterMonth: filterMonth.value,
     filterSubmitted: filterSubmitted.value,
@@ -391,6 +412,7 @@ function goToPage(page) {
   if (page < 1) page = 1
   if (page > totalPages.value) page = totalPages.value
   currentPage.value = page
+  console.log(currentPage.value)
 }
 
 const showDetailsModal = ref(false)
