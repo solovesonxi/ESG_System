@@ -213,17 +213,6 @@ const departmentList = computed(() => {
       .filter(item => item && (deptIds.includes(item.id) || deptIds.includes(item.name_en)));
 })
 
-// 方法
-const getRoleLabel = (role) => {
-  const labels = {
-    'department': '部门账号',
-    'factory': '工厂账号',
-    'headquarter': '总部账号',
-    'admin': '管理员'
-  }
-  return labels[role] || role
-}
-
 // 检查URL参数中的错误信息
 const checkPermissionErrors = () => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -444,19 +433,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   font-weight: 700;
 }
 
-.user-role-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-  border: 1px solid rgba(102, 126, 234, 0.2);
-  border-radius: 20px;
-  color: #495057;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
 .user-role-badge i {
   color: #667eea;
 }
@@ -612,12 +588,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-
-.dark-theme .user-role-badge {
-  background: linear-gradient(135deg, rgba(255, 107, 157, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
-  border-color: rgba(255, 107, 157, 0.2);
-  color: #e2e8f0;
 }
 
 .dark-theme .user-role-badge i {

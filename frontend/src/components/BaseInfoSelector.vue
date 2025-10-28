@@ -441,6 +441,9 @@ watch([category, factory, year, month], () => {
   color: #495057;
   font-size: 0.875rem;
 }
+.dark-theme .info-label {
+  color: #b0d9ff;
+}
 
 .custom-select {
   position: relative;
