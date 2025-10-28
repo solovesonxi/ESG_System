@@ -145,7 +145,6 @@ def submit_data(payload: dict, db: Session = Depends(get_db), current_user: dict
                      receiver_role='headquarter')
         send_message(db, "年报", msg_title, msg_content, sender_role='factory', sender_factory=factory,
                      receiver_role='admin')
-    send_message(db, "最近操作", msg_title, sender_role='factory', receiver_factory=factory)
     logger.info(f"消息推送完成")
 
     return {"status": "success"}

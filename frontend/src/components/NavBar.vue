@@ -1,84 +1,52 @@
 <template>
   <div class="navbar-wrapper">
-    <nav class="navbar" :class="{ 'navbar-hidden': isNavbarHidden }" @mouseenter="handleNavbarEnter"
-         @mouseleave="handleNavbarLeave">
+    <nav class="navbar" :class="{ 'navbar-hidden': isNavbarHidden }">
       <div class="esg-logo" @click="navigateToDashboard">
         ESG
       </div>
       <ul class="nav-list">
         <li v-for="route in menuItems" :key="route.name">
-          <template v-if="!route.children">
-            <router-link
-                :to="route.path"
-                :class="{ 'router-link-active': isActive(route.path) }"
-            >
-              <span class="link-text">{{ route.label }}</span>
+          <template  v-if="!route.children">
+            <router-link :to="route.path" :class="{ 'router-link-active': isActive(route.path)}" >
+              <font-awesome-icon :icon="route.icon" :class="{'dark-icon': !isDarkTheme, 'light-icon': isDarkTheme }"/>
               <div class="link-hover-effect"></div>
             </router-link>
           </template>
-          <template v-else>
-            <div
-                class="dropdown-trigger"
-                :class="{ 'router-link-active': isDropdownActive(route) }"
-                @mouseenter="handleDropdownEnter(route.name)"
-                @mouseleave="handleDropdownLeave"
-            >
-              <span class="link-text">{{ route.label }}</span>
-              <i class="arrow-down"></i>
-              <div class="link-hover-effect"></div>
-            </div>
-            <ul class="dropdown-menu"
-                :class="{ 'show': activeDropdown === route.name }"
-                @mouseenter="handleMenuEnter"
-                @mouseleave="handleMenuLeave">
-              <li v-for="child in route.children" :key="child.name">
-                <router-link
-                    :to="child.path"
-                    :class="{ 'router-link-active': isActive(child.path) }"
-                >
-                  <span class="link-text">{{ child.label }}</span>
-                </router-link>
-              </li>
-            </ul>
-          </template>
+        </li>
+        <li>
+          <a
+            href="javascript:void(0)"
+            class="logout-link"
+            @click.prevent="handleLogout"
+          >
+            <font-awesome-icon :icon="'sign-out-alt'"  :class="{ 'dark-icon': !isDarkTheme, 'light-icon': isDarkTheme }" />
+            <div class="link-hover-effect"></div>
+          </a>
         </li>
       </ul>
     </nav>
-
-    <transition name="dropdown">
-      <div class="logout-dropdown" v-if="showLogout" @mouseenter="handleDropdownEnter"
-           @mouseleave="handleDropdownLeave">
-        <div class="user-avatar">
-          <img :src="authStore.user?.avatar" alt="用户头像" class="avatar-image"
-               style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%;"/>
-        </div>
-        <span class="welcome-text">你好, {{ authStore.user?.username }}</span>
-        <button class="logout-btn" @click="handleLogout">
-          <span>退出登录</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path
-                d="M17 7L21 12M21 12L17 17M21 12H9M13 16V17C13 18.6569 11.6569 20 10 20H7C5.34315 20 4 18.6569 4 17V7C4 5.34315 5.34315 4 7 4H10C11.6569 4 13 5.34315 13 7V8"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </div>
-    </transition>
   </div>
 </template>
 
 <script setup>
 import {useRoute, useRouter} from 'vue-router'
-import {computed, onMounted, onUnmounted, ref, watch} from 'vue';
+import {computed, onMounted, onUnmounted, ref} from 'vue';
 import {useAuthStore} from '@/stores/authStore';
-import {commonRoutes} from "@/router/index.js";
+import { useThemeStore } from '@/stores/themeStore';
+
+const themeStore = useThemeStore();
+const isDarkTheme = computed(() => {
+  if (themeStore.mode === 'auto') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  return themeStore.mode === 'dark';
+});
 
 const authStore = useAuthStore();
 const showLogout = ref(false);
 const isNavbarHidden = ref(false);
-const activeDropdown = ref(null);
 const lastScrollY = ref(0);
-let hideTimeout = null;
-let dropdownTimeout = null;
+
 
 // 滚轮监听逻辑
 const handleScroll = () => {
@@ -113,39 +81,7 @@ onUnmounted(() => {
   window.removeEventListener('mousemove', handleMouseMove);
 });
 
-const handleDropdownEnter = (dropdownName = null) => {
-  clearTimeout(dropdownTimeout);
-  clearTimeout(hideTimeout);
-  if (dropdownName) {
-    activeDropdown.value = dropdownName;
-  }
-};
-
-const handleDropdownLeave = () => {
-  dropdownTimeout = setTimeout(() => {
-    if (!document.querySelector('.logout-dropdown:hover')) {
-      showLogout.value = false;
-      activeDropdown.value = null;
-    }
-  }, 100);
-};
-
-// 下拉菜单容器的鼠标事件
-const handleMenuEnter = () => {
-  clearTimeout(dropdownTimeout);
-};
-
-const handleMenuLeave = () => {
-  dropdownTimeout = setTimeout(() => {
-    activeDropdown.value = null;
-  }, 100);
-};
-
-const handleLogout = () => {
-  authStore.logout();
-};
 const route = useRoute()
-
 const router = useRouter();
 
 const navigateToDashboard = () => {
@@ -156,79 +92,25 @@ const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/');
 }
 
-const adminMenuItem = {
-  name: 'admin-console', label: '管理控制台', children: [
-    {name: 'announcement-board', path: '/announcement-board', label: '公告发布'},
-    {name: 'account-management', path: '/account-management', label: '账号管理'},
-    {name: 'indicator-library', path: '/indicator-library', label: '指标库管理'},
-  ]
-}
-
-// dataModeItems/analyzeModeItems 使用 ref，可被登录后注入的 categories 更新
-const dataModeItems = ref([]);
-const analyzeModeItems = ref([]);
-
-// 构建菜单项的辅助方法
-function buildItemsFromCategories(categoriesObj, periodType) {
-  // categoriesObj 形如 { month: { domain1: [ {id,name_en,name_zh,domain,period_type}, ...], ...}, year: {...} }
-  if (!categoriesObj || !categoriesObj[periodType]) return [];
-  const periodData = categoriesObj[periodType];
-  return Object.entries(periodData).map(([domain, items]) => ({
-    name: domain,
-    label: domain,
-    children: (Array.isArray(items) ? items : []).map(item => ({
-      id: item.id,
-      name: item.name_en || String(item.id || item.name),
-      path: periodType === 'month' ? `/month/${item.id}` : `/year/${item.id}`,
-      label: item.name_zh || item.name_en || String(item.name || item.id)
-    }))
-  }));
-}
-
-watch(() => authStore.categories, (cats) => {
-  if (cats) {
-    try {
-      const builtData = buildItemsFromCategories(cats, 'month');
-      const builtAnalyze = buildItemsFromCategories(cats, 'year');
-      if (builtData && builtData.length) dataModeItems.value = builtData;
-      if (builtAnalyze && builtAnalyze.length) analyzeModeItems.value = builtAnalyze;
-    } catch (e) {
-      console.error('处理 categories 数据失败', e);
-    }
-  } else {
-    dataModeItems.value = [];
-    analyzeModeItems.value = [];
+const handleLogout = async () => {
+  try {
+    await authStore.logout();
+  } catch (e) {
+    console.error('退出登录过程中出错：', e);
+    router.push('/login').catch(() => {});
   }
-}, {immediate: true});
+};
 
 const menuItems = computed(() => {
-  const homeItem = {name: 'home', path: '/home', label: '首页'};
-  const dataItems = authStore.isDataMode ? dataModeItems.value : analyzeModeItems.value;
-  const reviewItem = {name: 'review', path: '/review-management', label: '审核管理'};
-  const profileItem = {name: 'profile', path: '/profile', label: '个人中心'};
-  let result = [homeItem, ...dataItems];
-  if (authStore.isAdmin) {
-    result.push(adminMenuItem);
-  }
-  result.push(reviewItem, profileItem);
-  return result;
+  return [
+    {name: 'home', path: '/home', label: '首页', icon: 'home'},
+    {name: 'notifications', path: '/notifications', label: '通知', icon: 'bell'},
+    {name: 'settings', path: '/settings', label: '设置', icon: 'cog'},
+    {name: 'profile', path: '/profile', label: '个人中心', icon: 'user'}
+  ];
 })
 
-// 监听路由变化并更新 localStorage
-watch(() => route.path, (newPath, oldPath) => {
-  authStore.checkTokenValid()
-  const currentMode = authStore.isDataMode ? 'data' : 'analyze';
-  if (!newPath in commonRoutes) {
-    localStorage.setItem(`lastPath_${currentMode}`, newPath);
-    console.log("路由即将跳转，更新lastPath_" + currentMode + "由" + (oldPath || '未知') + "变为" + newPath)
-  }
-});
 
-// 新增方法：判断下拉父项是否激活
-const isDropdownActive = (route) => {
-  if (!route.children) return false;
-  return route.children.some(child => isActive(child.path));
-};
 </script>
 
 <style scoped>
@@ -243,7 +125,7 @@ const isDropdownActive = (route) => {
   left: 0;
   width: 100%;
   height: 60px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: linear-gradient(135deg, #b1bfe5 0%, #fffcfc 50%, #e8e0ae 100%);
   z-index: 1000;
   overflow: visible;
   transform: translateY(0);
@@ -253,8 +135,11 @@ const isDropdownActive = (route) => {
   display: flex;
   align-items: center;
 }
+.dark-theme .navbar {
+  background: linear-gradient(135deg, #3e1617 0%, #1a1542 50%, #052142 100%);
+}
 
-/* NavBar隐藏状态 */
+  /* NavBar隐藏状态 */
 .navbar-hidden {
   transform: translateY(-100%);
 }
@@ -263,12 +148,15 @@ const isDropdownActive = (route) => {
   font-family: 'Playfair Display', serif;
   font-weight: 800;
   font-size: 1.5rem;
-  color: #ffffff;
+  color: #141415;
   cursor: pointer;
   margin-right: 2rem;
   margin-left: 2rem;
   transition: all 0.3s ease;
   text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}
+.dark-theme .esg-logo {
+  color: #ffffff;
 }
 
 .esg-logo:hover {
@@ -291,10 +179,9 @@ const isDropdownActive = (route) => {
   position: relative;
   display: flex;
   align-items: center;
-  /* 统一所有导航项的宽度 */
   flex: 1;
-  min-width: 120px;
-  max-width: 150px;
+  min-width: 45px;
+  max-width: 60px;
 }
 
 .nav-list a {
@@ -322,89 +209,14 @@ const isDropdownActive = (route) => {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
-
-.dropdown-trigger {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: rgba(255, 255, 255, 0.9);
-  text-decoration: none;
-  font-weight: 500;
-  padding: 0 15px;
-  height: 100%;
-  transition: all 0.3s ease;
-  font-size: 1rem;
-  position: relative;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  cursor: pointer;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
+.dark-icon {
+  color: #333; /* 浅色模式下的深色图标 */
 }
 
-.dropdown-trigger:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+.light-icon {
+  color: #fff; /* 深色模式下的浅色图标 */
 }
 
-/* 下拉箭头 */
-.arrow-down {
-  width: 0;
-  height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 6px solid currentColor;
-  transition: transform 0.3s ease;
-}
-
-.dropdown-trigger:hover .arrow-down,
-.dropdown-menu.show + .dropdown-trigger .arrow-down {
-  transform: rotate(180deg);
-}
-
-/* 改进的下拉菜单 */
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(-10px) scale(0.95);
-  background: linear-gradient(145deg, #2b2b85 0%, #4b052f 100%);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1001;
-  width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  padding: 0;
-  list-style: none;
-  margin: 0;
-  overflow: hidden; /* 防止子元素溢出 */
-}
-
-.dropdown-menu.show {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(0) scale(1);
-}
-
-.dropdown-menu::before {
-  content: '';
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-bottom: 8px solid #1e1e3f;
-}
 
 .dropdown-menu li {
   padding: 0;
@@ -478,32 +290,25 @@ const isDropdownActive = (route) => {
 }
 
 .link-text {
-  color: inherit;
+  color: #000;
   text-shadow: none;
   transition: all 0.3s ease;
   overflow: hidden;
   word-break: break-all;
   white-space: normal
 }
+.dark-theme .link-text {
+  color: #fff;
+}
 
 .nav-list a.router-link-active .link-text {
-  color: #bb7df5;
-  text-shadow: 0 0 15px #8a2be2;
+  color: #2b084d;
+  text-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
+}
+.dark-theme .nav-list a.router-link-active .link-text {
+  color: #e5d56d;
 }
 
-.nav-list a.router-link-active {
-  background: linear-gradient(135deg, rgba(138, 43, 226, 0.3), rgba(75, 0, 130, 0.3));
-  border: 1px solid rgba(187, 125, 245, 0.4);
-  color: #fff;
-  box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
-}
-
-.dropdown-trigger.router-link-active {
-  background: linear-gradient(135deg, rgba(138, 43, 226, 0.3), rgba(75, 0, 130, 0.3));
-  border: 1px solid rgba(187, 125, 245, 0.4);
-  color: #fff;
-  box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
-}
 
 .link-hover-effect {
   position: absolute;
@@ -523,83 +328,6 @@ const isDropdownActive = (route) => {
   opacity: 1;
 }
 
-/* 登出下拉菜单 */
-.logout-dropdown {
-  position: fixed;
-  top: 65px;
-  right: 5px;
-  background: linear-gradient(145deg, #1e1e3f 0%, #2a2a5a 100%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 1rem;
-  border-radius: 12px;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3),
-  0 0 0 1px rgba(255, 255, 255, 0.1);
-  z-index: 1001;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 160px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dropdown-enter-active,
-.dropdown-leave-active {
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.dropdown-enter-from,
-.dropdown-leave-to {
-  opacity: 0;
-  transform: translateY(-15px) scale(0.95);
-}
-
-.user-avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #4776E6, #8E54E9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 25px rgba(71, 118, 230, 0.6);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-.user-avatar svg {
-  width: 65%;
-  height: 65%;
-}
-
-.welcome-text {
-  color: #fff;
-  font-size: 1rem;
-  text-align: center;
-  font-weight: 500;
-}
-
-.logout-btn {
-  background: linear-gradient(135deg, #fd8383, #e53a30);
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 30px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: all 0.5s ease;
-  box-shadow: 0 8px 25px rgba(238, 90, 82, 0.4);
-}
-
-.logout-btn:hover {
-  transform: translateY(-3px);
-  background: linear-gradient(135deg, #f5dc8a, #c5065c);
-}
-
-.logout-btn:active {
-  transform: translateY(-1px);
-}
-
 
 @media (max-width: 576px) {
   .navbar {
@@ -615,28 +343,9 @@ const isDropdownActive = (route) => {
     min-width: 75px;
   }
 
-  .nav-list a,
-  .dropdown-trigger {
-    font-size: 0.75rem;
-    padding: 0 8px;
-  }
-
-  .dropdown-menu {
-    width: 120px;
-  }
-
   .dropdown-menu a {
     padding: 10px 15px;
     font-size: 0.8rem;
-  }
-
-  .welcome-text {
-    font-size: 0.85rem;
-  }
-
-  .logout-btn {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.85rem;
   }
 }
 </style>

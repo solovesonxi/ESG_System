@@ -50,14 +50,12 @@ async def update_review_status(request: ReviewUpdateRequest, db: Session = Depen
                              receiver_role='headquarter')
                 send_message(db, "审核", msg_title, msg_content + "，请管理员审核。", sender_role=role,
                              receiver_role='admin')
-            send_message(db, "最近操作", msg_title, sender_role=role, receiver_role=role)
         # 总部审核工厂年度数据
         else:
             msg_title = f"{action}了{factory}{record.year}年的{indicators['categories'][department]}数据"
             msg_content = f"{username}于{now_str}{msg_title}"
             send_message(db, "审核", msg_title, msg_content, sender_role=role, receiver_role='factory',
                          receiver_factory=factory)
-            send_message(db, "最近操作", msg_title, sender_role=role, receiver_role=role)
     elif request.level == 2:
         if role != "headquarter" and role != "admin":
             raise HTTPException(status_code=403, detail="只有总部和管理员账号有二级审核权限")
@@ -75,8 +73,6 @@ async def update_review_status(request: ReviewUpdateRequest, db: Session = Depen
                          receiver_factory=factory)
             send_message(db, "审核", msg_title, msg_content, sender_role=role, receiver_role='department',
                          receiver_factory=factory, receiver_department=department)
-            send_message(db, "最近操作", msg_title, sender_role=role, receiver_role=role)
-
     db.commit()
     return {"status": "success", "id": request.id, "message": "审核状态已更新"}
 

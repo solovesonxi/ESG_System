@@ -6,6 +6,24 @@
       <div class="basic-info">
         <h3 class="section-title">基础信息</h3>
         <div class="info-grid">
+          <!-- 数据类型 -->
+          <div class="info-item">
+            <label class="info-label">数据类型</label>
+            <div class="custom-select" :class="{ 'disabled': authStore.isDepartment }">
+              <div class="selected" @click="selectionStore.toggleCategoryDropdown">
+                <span class="value">{{ category?.name_zh || '—' }}</span>
+                <i class="arrow" :class="{ 'up': selectionStore.showCategoryDropdown }"></i>
+              </div>
+              <div class="options" v-show="selectionStore.showCategoryDropdown">
+                <div v-for="c in (isYear ? selectionStore.categoriesYearly : selectionStore.categoriesMonthly)" :key="c?.id || c?.name_en" class="option"
+                     :class="{ 'selected-option': c.id === category.id }"
+                     @click="isYear ? selectionStore.selectCategoryYearly(c) : selectionStore.selectCategoryMonthly(c)">
+                  {{ c?.name_zh || c?.name_en || '—' }}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- 工厂名称 -->
           <div class="info-item">
             <label class="info-label">工厂名称</label>
@@ -16,7 +34,7 @@
               </div>
               <div class="options" v-show="selectionStore.showFactoryDropdown">
                 <div v-for="f in selectionStore.factories" :key="f" class="option"
-                    :class="{ 'selected-option': f === factory }" @click="selectionStore.selectFactory(f)">
+                     :class="{ 'selected-option': f === factory }" @click="selectionStore.selectFactory(f)">
                   {{ f }}
                 </div>
               </div>
@@ -46,7 +64,7 @@
           </div>
 
           <!-- 统计月份 (仅在DataMode下显示) -->
-          <div class="info-item" v-if="authStore.isDataMode">
+          <div class="info-item" v-if="!isYear">
             <label class="info-label">统计月份</label>
             <div class="custom-select">
               <div class="selected" @click="selectionStore.toggleMonthDropdown">
@@ -84,22 +102,19 @@
       <h3 class="section-title">审核信息</h3>
       <div class="review">
         <div class="review-item">
-          <div class="review-header" v-if="isMonthlyData">
-            <span class="month-label">{{ month }}月审核状态</span>
-          </div>
           <div class="review-grid">
             <!-- 一级审核 -->
-            <div class="review-column">
+            <div class="review-column" v-if="!isYear">
               <div class="review-title">
                 <i class="fas fa-check-circle"></i>
-                {{ authStore.isDataMode ? '工厂' : '总部/管理员' }}审核
+                工厂审核
               </div>
               <div class="status-display">
                 <span class="status-badge" :class="getStatusClass(currentLevel1Status)">
                   {{ getStatusLabel(currentLevel1Status) }}
                 </span>
                 <!-- 编辑控制 -->
-                <div class="edit-control" v-if="canEditLevel1 && currentLevel1Status === 'pending'">
+                <div class="edit-control" v-if="authStore.isFactory && currentLevel1Status === 'pending'">
                   <select
                       :value="currentLevel1Status"
                       @change="handleLevel1StatusChange($event.target.value)"
@@ -118,17 +133,18 @@
             </div>
 
             <!-- 二级审核 -->
-            <div class="review-column" v-if="authStore.isDataMode">
+            <div class="review-column">
               <div class="review-title">
                 <i class="fas fa-shield-alt"></i>
-                {{ '总部/管理员' }}审核
+                总部审核
               </div>
               <div class="status-display">
                 <span class="status-badge" :class="getStatusClass(currentLevel2Status)">
                   {{ getStatusLabel(currentLevel2Status) }}
                 </span>
                 <!-- 编辑控制 -->
-                <div class="edit-control" v-if="canEditLevel2 && currentLevel2Status === 'pending'">
+                <div class="edit-control"
+                     v-if="(authStore.isHeadquarter || authStore.isAdmin) && currentLevel2Status === 'pending'">
                   <select
                       :value="currentLevel2Status"
                       @change="handleLevel2StatusChange($event.target.value)"
@@ -193,25 +209,17 @@ const authStore = useAuthStore();
 // Props - 接收来自父组件的审核数据
 const props = defineProps({
   review: {
-    type: Object,
-    default: () => ({})
+    type: Object, default: () => {
+    }
   },
-  formType: {
-    type: String,
-    required: true,
-    default: 'material'
-  }
+  isYear: {type: Boolean, default: () => false}
 });
 
 const emit = defineEmits(['selection-changed']);
-
+const category = computed(() => props.isYear ? selectionStore.selectedCategoryYearly : selectionStore.selectedCategoryMonthly);
 const factory = computed(() => selectionStore.selectedFactory);
 const year = computed(() => selectionStore.selectedYear);
 const month = computed(() => selectionStore.selectedMonth);
-
-// 审核编辑权限
-const canEditLevel1 = computed(() => authStore.canLevel1Review);
-const canEditLevel2 = computed(() => authStore.canLevel2Review);
 
 // 审核状态选项
 const auditStatusOptions = [
@@ -226,10 +234,6 @@ const newComment = ref('');
 const pendingStatus = ref('');
 const pendingLevel = ref(0);
 
-// 判断是否为月度数据
-const isMonthlyData = computed(() => {
-  return authStore.isDataMode && props.review.is_submitted && Array.isArray(props.review.is_submitted);
-});
 
 // 判断是否有审核数据
 const hasReviewData = computed(() => {
@@ -238,9 +242,9 @@ const hasReviewData = computed(() => {
 
 // 提交状态相关计算属性
 const currentSubmissionStatus = computed(() => {
-  if (isMonthlyData.value && props.review.is_submitted) {
+  if (!props.isYear && props.review && props.review.is_submitted) {
     return props.review.is_submitted[month.value - 1] || false;
-  } else if (!isMonthlyData.value && props.review.is_submitted !== undefined) {
+  } else if (props.isYear && props.review && props.review.is_submitted !== undefined) {
     return props.review.is_submitted || false;
   }
   return false;
@@ -260,37 +264,33 @@ const submissionStatusText = computed(() => {
 
 // 一级审核状态
 const currentLevel1Status = computed(() => {
-  if (isMonthlyData.value && props.review.status1) {
+  if (!props.isYear && props.review && props.review.status1) {
     return props.review.status1[month.value - 1] || 'pending';
-  } else if (!isMonthlyData.value && props.review.status1) {
-    return props.review.status1 || 'pending';
   }
   return 'pending';
 });
 
 const currentLevel1Comment = computed(() => {
-  if (isMonthlyData.value && props.review.comment1) {
+  if (!props.isYear && props.review && props.review.comment1) {
     return props.review.comment1[month.value - 1] || '';
-  } else if (!isMonthlyData.value && props.review.comment1) {
-    return props.review.comment1 || '';
   }
   return '';
 });
 
 // 二级审核状态
 const currentLevel2Status = computed(() => {
-  if (isMonthlyData.value && props.review.status2) {
+  if (!props.isYear && props.review && props.review.status2) {
     return props.review.status2[month.value - 1] || 'pending';
-  } else if (!isMonthlyData.value && props.review.status2) {
+  } else if (props.isYear && props.review && props.review.status2) {
     return props.review.status2 || 'pending';
   }
   return 'pending';
 });
 
 const currentLevel2Comment = computed(() => {
-  if (isMonthlyData.value && props.review.comment2) {
+  if (!props.isYear && props.review && props.review.comment2) {
     return props.review.comment2[month.value - 1] || '';
-  } else if (!isMonthlyData.value && props.review.comment2) {
+  } else if (props.isYear && props.review && props.review.comment2) {
     return props.review.comment2 || '';
   }
   return '';
@@ -328,7 +328,7 @@ const handleLevel2StatusChange = (status) => {
 // 提交审核
 const submitAudit = async () => {
   const auditData = {
-    id: authStore.isDataMode ? props.review.id[month.value - 1] : props.review.id,
+    id: props.isYear ? props.review.id : props.review.id[month.value - 1],
     level: pendingLevel.value,
     status: pendingStatus.value,
     comment: newComment.value
@@ -347,7 +347,7 @@ const submitAudit = async () => {
   } finally {
     showCommentModal.value = false;
     pendingStatus.value = '';
-    pendingLevel.value = '';
+    pendingLevel.value = 0;
     newComment.value = '';
   }
 };
@@ -355,7 +355,7 @@ const submitAudit = async () => {
 const cancelAudit = () => {
   showCommentModal.value = false;
   pendingStatus.value = '';
-  pendingLevel.value = '';
+  pendingLevel.value = 0;
   newComment.value = '';
 };
 
@@ -386,7 +386,7 @@ const getStatusLabel = (status) => {
 };
 
 // 监听选择变化
-watch([factory, year, month], () => {
+watch([category, factory, year, month], () => {
   emit('selection-changed');
 });
 </script>
@@ -478,7 +478,7 @@ watch([factory, year, month], () => {
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
   z-index: 1000;
-  max-height: 200px;
+  max-height: 300px;
   overflow-y: auto;
   margin-top: 0.25rem;
 }
@@ -558,16 +558,6 @@ watch([factory, year, month], () => {
   margin-top: 1rem;
 }
 
-.review-header {
-  margin-bottom: 1rem;
-}
-
-.month-label {
-  font-weight: 600;
-  color: #495057;
-  font-size: 1rem;
-}
-
 .review-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -638,7 +628,7 @@ watch([factory, year, month], () => {
   color: #6c757d;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   margin-bottom: 0.5rem;
 }
 

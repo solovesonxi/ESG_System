@@ -1,26 +1,32 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import {useAuthStore} from '@/stores/authStore'
+import {useSelectionStore} from "@/stores/selectionStore.js";
+import {pinia} from "../main";
 import LoginView from "@/views/LoginView.vue";
 import ProfileView from "@/views/ProfileView.vue";
 import Home from "@/views/Home.vue";
 import ReviewManagement from "@/views/ReviewManagement.vue";
 import AccountManagementView from "@/views/AccountManagementView.vue";
-import IndicatorLibraryView from "@/views/IndicatorLibraryView.vue";
+import CategoryManagement from "@/views/CategoryManagement.vue";
+import FieldManagement from "@/views/FieldManagement.vue";
 import AnnouncementBoardView from "@/views/AnnouncementBoardView.vue";
 import MonthlyDataView from '@/views/MonthlyDataView.vue';
 import YearlyDataView from '@/views/YearlyDataView.vue';
-import {showError} from "@/utils/toast.js";
+import NotificationsView from "@/views/NotificationsView.vue";
+import SettingsView from "@/views/SettingsView.vue";
 
-const routes = [{path: '/', redirect: '/login'}, {path: '/login', component: LoginView}, {
+const routes = [{path: '/', redirect: '/home'}, {path: '/login', component: LoginView}, {
+    path: '/home', component: Home
+}, {path: '/notifications', component: NotificationsView}, {
     path: '/profile', component: ProfileView
-}, {path: '/home', component: Home}, {path: '/month', component: MonthlyDataView}, {
-    path: '/year', component: YearlyDataView
-}, {path: '/year/:category_id', component: YearlyDataView}, {path: '/month/:category_id', component: MonthlyDataView}, {
+}, {path: '/settings', component: SettingsView}, {
+    path: '/monthly-data', component: MonthlyDataView
+}, {path: '/yearly-data', component: YearlyDataView}, {
     path: '/review-management', component: ReviewManagement
+}, {path: '/account-management', component: AccountManagementView}, {
+    path: '/category-management', component: CategoryManagement
 }, {
-    path: '/account-management', component: AccountManagementView
-}, {
-    path: '/indicator-library', component: IndicatorLibraryView
+    path: '/field-management', component: FieldManagement
 }, {
     path: '/announcement-board', component: AnnouncementBoardView
 }]
@@ -28,34 +34,48 @@ const routes = [{path: '/', redirect: '/login'}, {path: '/login', component: Log
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL), routes
 })
+const publicRoutes = ['/login', '/docs']
 
-const publicRoutes = ['/login']
-export const commonRoutes = ['/home', '/account-management', '/indicator-library', '/announcement-board', '/review-management', '/profile'];
 
 // 路由守卫 - 保护需要认证的路由
 router.beforeEach((to, from, next) => {
-    const authStore = useAuthStore()
+    const authStore = useAuthStore(pinia);
+    const selectionStore = useSelectionStore(pinia);
+
     if (to.path === '' || publicRoutes.includes(to.path)) {
         return next();
     }
     if (!authStore.isAuthenticated) {
         return next('/login');
     }
+    try {
+        if (from.path === '/monthly-data') {
+            localStorage.setItem('monthly_path', selectionStore.selectedCategoryMonthly?.id || 0);
+        } else if (from.path === '/yearly-data') {
+            localStorage.setItem('yearly_path', selectionStore.selectedCategoryYearly?.id || 0);
+        }
 
-    if (authStore.isDepartment) {
-        let requiredDepartment = null;
-        const monthMatch = to.path.match(/^\/month\/(\d+)(?:\/|$)/);
-        if (monthMatch) {
-            const id = Number(monthMatch[1]);
-            const monthList = authStore.monthCategories;
-            requiredDepartment = monthList.find(i => Number(i.id) === id);
-            if (requiredDepartment) {
-                if (!authStore.hasDepartmentAccess(id)) {
-                    showError(`无权限访问${requiredDepartment.name_zh}页面, 需要${requiredDepartment.name_zh}部门权限`);
-                    return next(false);
+        let categoryId;
+        let localCategory;
+        if (to.path === '/monthly-data') {
+            categoryId = localStorage.getItem('monthly_path');
+            if (categoryId) {
+                localCategory = authStore.monthCategories.find(c => c.id === Number(categoryId))
+                if (localCategory && localCategory.length) {
+                    selectionStore.selectCategoryMonthly(localCategory);
+                }
+            }
+        } else if (to.path === '/yearly-data') {
+            categoryId = localStorage.getItem('yearly_path');
+            if (categoryId) {
+                localCategory = authStore.yearCategories.find(c => c.id === Number(categoryId))
+                if (localCategory && localCategory.length) {
+                    selectionStore.selectCategoryYearly(localCategory);
                 }
             }
         }
+    } catch (e) {
+        console.warn('路由变化时无法初始化数据类型选择器:', e);
     }
     next();
 })

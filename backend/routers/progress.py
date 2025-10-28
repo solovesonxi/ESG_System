@@ -17,7 +17,6 @@ def calc_quantitative_progress(factory: str, year: int, db: Session = Depends(ge
         return column is not None and hasattr(column, 'type') and 'JSON' in str(column.type)
 
     def count_json_field_progress(v, months):
-        logger.info("月度数据：{}, 还未提交月份： {}".format(v, months))
         valid = 0
         if isinstance(v, list):
             for month in months:
@@ -39,13 +38,10 @@ def calc_quantitative_progress(factory: str, year: int, db: Session = Depends(ge
                                                              is_submitted=True).all()
         total, filled = len(fields) * 12, 0
         row = db.query(model).filter_by(factory=factory, year=year).first()
-        logger.info("工厂 {} 年度 {} 月度{}数据填写进度：{}  {} {}".format(factory, year, category_id, row, fields, months_rows))
         if row:
             submitted_months = set()
             for r in months_rows:
                 submitted_months.add(int(r.month))
-            logger.info("工厂 {} 年度 {} 月度{}数据填写进度：{}  {}".format(factory, year, category_id, submitted_months,
-                                                                           fields))
             for field in fields:
                 field_name = getattr(field, 'name_en', field if isinstance(field, str) else None)
                 if field_name is None:
@@ -55,13 +51,11 @@ def calc_quantitative_progress(factory: str, year: int, db: Session = Depends(ge
                         continue
                 if is_json_field(model, field_name):
                     value = getattr(row, field_name, []) if row else []
-                    logger.info(field_name)
                     if value:
                         filled += len(submitted_months) + count_json_field_progress(value, [i for i in range(12) if
                                                                                       (i + 1) not in submitted_months])
         total_fields += total
         total_filled += filled
-        logger.info("工厂 {} 年度 {} 月度{}数据填写进度：{}  {}".format(factory, year, category_id, filled, total))
         progress.append({"title": title, "percent": round(filled / total * 100, 2) if total else 0})
     progress.append({"title": "总计", "percent": round(total_filled / total_fields * 100, 2) if total_fields else 0})
     logger.info("计算工厂 {} 年度 {} 月度数据填写进度：{}".format(factory, year, progress))
@@ -94,7 +88,7 @@ def calc_analytical_progress(factory: str, year: int, db: Session = Depends(get_
             if field_name is None:
                 try:
                     field_name = field[0]
-                except Exception:
+                except ValueError:
                     continue
             active_fields.add(field_name)
         total = len(fields) * 3

@@ -352,8 +352,8 @@ const submitPassword = async () => {
   display: flex;
   flex-direction: row;
   width: 100%;
-  height: 72vh;
-  background: rgba(30, 30, 40, 0.7);
+  height: 100%;
+  background: rgba(30, 30, 40, 0.85);
   border-radius: 0;
   box-shadow: none;
   padding: 0;
@@ -373,7 +373,7 @@ const submitPassword = async () => {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 48px 0 48px 0;
+  padding: 12% 0 12% 0;
   width: auto;
   height: 100%;
   position: relative;
@@ -710,31 +710,6 @@ const submitPassword = async () => {
   box-shadow: 0 7px 20px rgba(71, 118, 230, 0.6);
 }
 
-.notification {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  background: rgba(30, 30, 40, 0.9);
-  border-left: 4px solid #2ecc71;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  z-index: 2000;
-  transform: translateX(120%);
-  transition: transform 0.4s ease;
-}
-
-.notification.show {
-  transform: translateX(0);
-}
-
-.notification.error {
-  border-left-color: #e74c3c;
-}
-
 .notification i {
   font-size: 1.5rem;
 }
@@ -807,22 +782,12 @@ const submitPassword = async () => {
   border-color: #bb86fc;
   box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.2);
 }
-.dark-theme .cancel-btn {
-  background: rgba(187, 134, 252, 0.08);
-  color: #bb86fc;
-  border: 1px solid rgba(187, 134, 252, 0.15);
-}
 .dark-theme .submit-btn {
   background: linear-gradient(135deg, #3700b3, #8E54E9);
   color: #fff;
 }
 .dark-theme .submit-btn:hover {
   background: linear-gradient(135deg, #6200ea, #bb86fc);
-}
-.dark-theme .notification {
-  background: rgba(30, 30, 40, 0.95);
-  border-left-color: #bb86fc;
-  color: #e0e0e0;
 }
 
 /* 响应式设计 */

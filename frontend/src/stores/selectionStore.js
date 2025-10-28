@@ -4,22 +4,47 @@ import {useAuthStore} from "@/stores/authStore.js";
 
 export const useSelectionStore = defineStore('selection', () => {
     const authStore = useAuthStore();
+    const categoriesMonthly = ref([])
+    const categoriesYearly = ref([])
     const factories = ref([])
     const years = ref([])
     const months = ref([])
+    const selectedCategoryMonthly = ref({})
+    const selectedCategoryYearly = ref({})
     const selectedFactory = ref(null)
     const selectedYear = ref(null)
     const selectedMonth = ref(null)
+    const showCategoryDropdown = ref(false)
     const showFactoryDropdown = ref(false)
     const showYearDropdown = ref(false)
     const showMonthDropdown = ref(false)
+
+    const toggleCategoryDropdown = () => {
+        showCategoryDropdown.value = !showCategoryDropdown.value;
+    }
+
+    const selectCategoryMonthly = (item) => {
+        authStore.checkTokenValid();
+        selectedCategoryMonthly.value = item || {};
+        showCategoryDropdown.value = false;
+    }
+    const selectCategoryYearly = (item) => {
+        authStore.checkTokenValid();
+        selectedCategoryYearly.value = item || {};
+        showCategoryDropdown.value = false;
+    }
+
     const initSelection = () => {
         try {
             if (!authStore.user) {
                 setTimeout(initSelection, 100);
                 return;
             }
-            if (years.value.length === 0 && months.value.length === 0) {
+            if (categoriesMonthly.value.length === 0 && categoriesYearly.value.length === 0 && years.value.length === 0 && months.value.length === 0) {
+                categoriesMonthly.value = authStore.monthCategories || [];
+                selectedCategoryMonthly.value = categoriesMonthly.value[0] || {};
+                categoriesYearly.value = authStore.yearCategories || [];
+                selectedCategoryYearly.value = categoriesYearly.value[0] || {};
                 const currentYear = new Date().getFullYear()
                 years.value = []
                 for (let y = 2020; y <= currentYear; y++) {
@@ -110,36 +135,49 @@ export const useSelectionStore = defineStore('selection', () => {
     }
 
     const resetSelection = () => {
+        categoriesMonthly.value = [];
+        categoriesYearly.value = [];
         factories.value = [];
         years.value = [];
         months.value = [];
+        selectedCategoryMonthly.value = null;
+        selectedCategoryYearly.value = null;
         selectedFactory.value = null;
         selectedYear.value = null;
         selectedMonth.value = null;
+        showCategoryDropdown.value = false;
         showFactoryDropdown.value = false;
         showYearDropdown.value = false;
         showMonthDropdown.value = false;
     };
 
     return {
+        categoriesMonthly,
+        categoriesYearly,
         factories,
         years,
         months,
+        selectedCategoryMonthly,
+        selectedCategoryYearly,
         selectedFactory,
         selectedYear,
         selectedMonth,
+        showCategoryDropdown,
         showFactoryDropdown,
         showYearDropdown,
         showMonthDropdown,
-        initSelection,
         setSelection,
-        toggleFactoryDropdown,
+        selectCategoryMonthly,
+        selectCategoryYearly,
         selectFactory,
-        toggleYearDropdown,
         selectYear,
-        toggleMonthDropdown,
         selectMonth,
+        toggleCategoryDropdown,
+        toggleFactoryDropdown,
+        toggleYearDropdown,
+        toggleMonthDropdown,
         handleClickOutside,
+        initSelection,
         resetSelection
     }
 });

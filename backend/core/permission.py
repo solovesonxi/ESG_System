@@ -1,4 +1,5 @@
 from datetime import timedelta, datetime, timezone
+from typing import Dict
 
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -31,3 +32,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     if user is None:
         raise credentials_exception
     return {"user": user, "id": user.id, "role": user.role, "factory": user.factory, "departments": user.departments}
+
+def admin_required(current_user: Dict = Depends(get_current_user)):
+    if not current_user or "admin" != current_user.get("role"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="没有权限")
+    return current_user

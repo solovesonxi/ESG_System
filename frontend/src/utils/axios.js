@@ -41,7 +41,7 @@ apiClient.interceptors.response.use(
             } catch (refreshError) {
                 console.error('刷新 Token 失败:', refreshError);
             }
-            authStore.clearAuth();
+            authStore.logout();
             window.location.href = '/login';
         }
         return Promise.reject(error);

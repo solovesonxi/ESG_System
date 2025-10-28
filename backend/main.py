@@ -8,7 +8,7 @@ from starlette.staticfiles import StaticFiles
 
 from core.dependencies import engine
 from core.models import Base
-from routers import auth, user, progress, message, review, admin, monthly_data, yearly_data
+from routers import auth, user, monthly_data, yearly_data, progress, message, review, account, category, field
 
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -33,4 +33,6 @@ app.include_router(yearly_data.router)
 app.include_router(progress.router)
 app.include_router(message.router)
 app.include_router(review.router)
-app.include_router(admin.router)
+app.include_router(account.router)
+app.include_router(category.router)
+app.include_router(field.router)

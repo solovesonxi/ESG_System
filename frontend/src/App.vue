@@ -1,35 +1,46 @@
 <template>
-  <NavBar v-if="isAuthedPage || route.path === '/profile' || route.path === '/home'" ref="navBar"/>
-  <main>
-    <router-view v-slot="{ Component }">
-      <component :is="Component" ref="currentComponent"/>
-    </router-view>
-  </main>
-  <FloatingBall v-if="isAuthedPage && !authStore.isDepartment"/>
-  <EditControls v-if="isEditPage && (authStore.isDepartment || (authStore.isFactory && !authStore.isDataMode))"
-                :is-editing="isEditing" @start-edit="handleStartEdit"
-                @cancel-edit="handleCancelEdit"
-                @save-edit="handleSubmitEdit(false)" @submit-edit="handleSubmitEdit(true)"/>
-  <ToastContainer/>
-  <canvas id="starry-bg"></canvas>
+  <NavBar v-if="showSidebar && !isFullPage" ref="navBar"/>
+  <div class="app-layout">
+    <Siderbar v-if="showSidebar" ref="siderBar"/>
+    <div :class="'content-wrapper'">
+      <router-view v-slot="{ Component }">
+        <component :is="Component" ref="currentComponent"/>
+      </router-view>
+    </div>
+    <EditControls
+        v-if="isEditPage && (authStore.isDepartment || authStore.isFactory)"
+        :is-editing="isEditing"
+        @start-edit="handleStartEdit"
+        @cancel-edit="handleCancelEdit"
+        @save-edit="handleSubmitEdit(false)"
+        @submit-edit="handleSubmitEdit(true)"
+    />
+    <ToastContainer/>
+  </div>
 </template>
 
 <script setup>
-import {RouterView, useRoute} from 'vue-router'
-import NavBar from '@/components/NavBar.vue'
-import FloatingBall from '@/components/FloatingBall.vue'
-import EditControls from '@/components/EditControls.vue'
-import ToastContainer from '@/components/ToastContainer.vue'
-import {computed, onMounted, ref, watch} from 'vue'
+import {RouterView, useRoute} from 'vue-router';
+import NavBar from '@/components/NavBar.vue';
+import Siderbar from '@/components/Siderbar.vue';
+import EditControls from '@/components/EditControls.vue';
+import ToastContainer from '@/components/ToastContainer.vue';
+import {computed, ref, watch} from 'vue';
 import {useAuthStore} from '@/stores/authStore';
 
 const authStore = useAuthStore();
-const navBar = ref(null)
-const isEditing = ref(false)
-const currentComponent = ref(null)
-const route = useRoute()
-const isAuthedPage = computed(() => route.path !== '/' && route.path !== '/login')
-const isEditPage = computed(() => isAuthedPage.value && route.path !== '/home' && route.path !== '/review-management' && route.path !== '/profile')
+const navBar = ref(null);
+const isEditing = ref(false);
+const currentComponent = ref(null);
+const route = useRoute();
+const isAuthedPage = computed(() => route.path !== '/' && route.path !== '/login');
+// treat root and /login as full-page routes (no sidebar / constrained main)
+const isFullPage = computed(() => route.path === '/' || route.path === '/login');
+const isEditPage = computed(
+    () => isAuthedPage.value && route.path !== '/home' && route.path !== '/review-management' && route.path !== '/profile'
+);
+// showSidebar mirrors the conditions used previously for Siderbar/NavBar visibility
+const showSidebar = computed(() => isAuthedPage.value || route.path === '/profile' || route.path === '/home');
 
 const handleStartEdit = () => {
   if (currentComponent.value && currentComponent.value.startEditing) {
@@ -76,54 +87,19 @@ watch(() => route.path, (newPath, oldPath) => {
   }, 10);
 }, {immediate: false});
 
-// 动态星空背景（保持不变）
-onMounted(() => {
-  console.log('App mounted, currentComponent:', currentComponent.value);
-  const canvas = document.getElementById('starry-bg')
-  const ctx = canvas.getContext('2d')
 
-  canvas.width = window.innerWidth
-  canvas.height = window.innerHeight
-
-  const stars = []
-  const numStars = 100
-
-  for (let i = 0; i < numStars; i++) {
-    stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      radius: Math.random() * 1.5 + 0.5,
-      speed: Math.random() * 0.5 + 0.2,
-    })
-  }
-
-  function animateStars() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'
-
-    stars.forEach(star => {
-      ctx.beginPath()
-      ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2)
-      ctx.fill()
-      star.y += star.speed
-      if (star.y > canvas.height) star.y = 0
-    })
-
-    requestAnimationFrame(animateStars)
-  }
-
-  window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
-  })
-
-  animateStars()
-})
 </script>
 
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Playfair+Display:wght@600;800&display=swap');
+
+/* Ensure the document and root app element fill the viewport so children using 100vh/dvh behave correctly */
+html, body, #app {
+  height: 100%;
+  width: 100vw;
+  overflow-x: hidden;
+}
 
 * {
   box-sizing: border-box;
@@ -142,41 +118,30 @@ body {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-
-#starry-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: -1;
-  pointer-events: none;
+.app-layout {
+  display: flex;
+  min-height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-header {
-  background: linear-gradient(135deg, rgba(52, 152, 219, 0.8), rgba(44, 62, 80, 0.8));
-  color: #ffffff;
-  padding: 1.5rem;
-  text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  position: relative;
-  backdrop-filter: blur(5px);
-}
-
-h1 {
-  font-family: 'Playfair Display', serif;
-  font-weight: 800;
-  font-size: 3rem;
-  letter-spacing: 2px;
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+.content-wrapper {
+  flex: 1;
+  margin-left: 0; /* default no sidebar */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 main {
-  padding: 2rem;
   flex: 1;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
-  margin: 1rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   position: relative;
+  width: 100%;
+  max-width: 1200px; /* keep content centered and readable */
 }
 
 /* 表格样式（保持不变） */

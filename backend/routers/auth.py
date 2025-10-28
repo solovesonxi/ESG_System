@@ -46,20 +46,23 @@ def login(username: str = Body(..., description="用户名或ID"), password: str
     if not user.is_active:
         raise HTTPException(status_code=403, detail="账号已被禁用，请联系管理员解除封禁")
 
+    # 在 token 中包含权限信息
+    token_data = {"id": user.id, "role": user.role, "factory": user.factory, "departments": user.departments}
+    access_token = create_access_token(data=token_data,
+                                       expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     # 查询所有激活的分类，并按id升序排序
     categories = db.query(Category.id, Category.name_en, Category.name_zh, Category.domain,
                           Category.period_type).filter(Category.is_active == True).order_by(Category.id).all()
     categorized_data = {"month": {}, "year": {}}
     for category in categories:
         if category.period_type in ["month", "year"]:
+            if user.role == "department":
+                if category.id not in user.departments.get("ids", []):
+                    continue
             if category.domain not in categorized_data[category.period_type]:
                 categorized_data[category.period_type][category.domain] = []
             categorized_data[category.period_type][category.domain].append(
                 {"id": category.id, "name_en": category.name_en, "name_zh": category.name_zh, "domain": category.domain,})
-
-    # 在 token 中包含权限信息
-    token_data = {"id": user.id, "role": user.role, "factory": user.factory, "departments": user.departments}
-    access_token = create_access_token(data=token_data, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
 
     if user.role == "department" or user.role == "factory":
         factories = [user.factory]

@@ -71,14 +71,28 @@ function formatDateTime(dt) {
   return dt
 }
 
-function goToAudit() {
-  if (props.record?.category) {
-    console.log('goToAudit', props.record.category, authStore.getCategoryMapping(props.record.category))
-    authStore.setDataMode(props.record.category)
-    selectionStore.setSelection(props.record.factory, props.record.year, props.record.month || null)
-    router.push(authStore.getCategoryRoute(props.record.category).path)
-    closeModal()
+async function goToAudit() {
+  const categoryId = props.record?.category
+  if (!categoryId) return
+  try {
+    const foundMonth = authStore.monthCategories.find(c => c && c.id === categoryId)
+    const foundYear = authStore.yearCategories.find(c => c && c.id === categoryId)
+    if (foundMonth) {
+      selectionStore.selectCategoryMonthly(foundMonth)
+      selectionStore.setSelection(props.record.factory, props.record.year, props.record.month || null)
+      await router.push(`/monthly-data`).catch(() => {})
+    }
+    if (foundYear) {
+      selectionStore.selectCategoryYearly(foundYear)
+      selectionStore.setSelection(props.record.factory, props.record.year, null)
+      await router.push(`/yearly-data`).catch(() => {})
+    }
+  } catch (e) {
+    console.error('跳转到数据页面失败：', e)
+    await router.push('/home').catch(() => {
+    })
   }
+  closeModal()
 }
 </script>
 
@@ -118,13 +132,6 @@ function goToAudit() {
   }
 }
 
-.m {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.2rem 1.5rem 0.5rem 1.5rem;
-  border-bottom: 1px solid #eee;
-}
 
 .m h3 {
   font-size: 1.3rem;
@@ -218,10 +225,6 @@ label {
 .dark-theme .modal-container {
   background: #191d25;
   color: #b0d9ff;
-}
-
-.dark-theme .m {
-  border-bottom: 1px solid #3a3f4b;
 }
 
 .dark-theme .info-section h4, .dark-theme .audit-section h4 {
