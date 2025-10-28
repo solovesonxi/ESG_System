@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector :review="review" form-type="env_qual" @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" :isYear="true" @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset" v-for="setObj in sets || []" :key="setObj.set">
         <legend>{{ setObj.set }}</legend>
         <div class="form-row">
@@ -97,17 +97,17 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref} from 'vue';
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
 import {useSelectionStore} from "@/stores/selectionStore.js";
 import apiClient from "@/utils/axios.js";
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 import {handleError, showError, showInfo, showSuccess} from "@/utils/toast.js";
-import {useRoute} from 'vue-router'
 
-const route = useRoute();
-const selectionStore = useSelectionStore()
-const factory = computed(() => selectionStore.selectedFactory)
-const year = computed(() => selectionStore.selectedYear)
+
+const selectionStore = useSelectionStore();
+const category = computed(() => selectionStore.selectedCategoryYearly);
+const factory = computed(() => selectionStore.selectedFactory);
+const year = computed(() => selectionStore.selectedYear);
 const isEditing = ref(false);
 const sets = ref([]);
 const review = ref({});
@@ -116,18 +116,26 @@ const descDialogVisible = ref(false);
 const currentDescription = ref('');
 const currentItem = ref(null);
 
-const getCategoryId = () => {
-  const pid = route.params.category_id ?? route.query.category_id;
-  const n = Number(pid);
-  return Number.isFinite(n) && n > 0 ? n : null;
+onMounted(() => {
+  document.addEventListener('click', selectionStore.handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", selectionStore.handleClickOutside);
+});
+
+const resetFormData = () => {
+  sets.value = []
+  review.value = {id: -1, is_submitted: false, status1: "pending", comment1: '', status2: "pending", comment22: ''}
 }
 
 const fetchData = async () => {
   try {
-    const categoryId = getCategoryId() || 1;
+    resetFormData();
+    // console.log("请求参数：", category.value, factory.value, year.value)
     const response = await apiClient.get('/year', {
       params: {
-        category_id: categoryId,
+        category_id: category.value.id,
         factory: factory.value,
         year: year.value
       }
@@ -136,8 +144,8 @@ const fetchData = async () => {
       isQuantitative.value = response.data.is_quant
       sets.value = response.data.sets
       review.value = response.data.review;
+      console.log("年度结果：", response.data)
     } else {
-      review.value = {id: -1, is_submitted: false, status1: "pending", comment1: '', status2: "pending", comment22: ''};
       showInfo('未找到数据')
     }
   } catch (error) {
@@ -145,22 +153,17 @@ const fetchData = async () => {
     handleError(error);
   }
 }
-onMounted(() => {
-  document.addEventListener('click', selectionStore.handleClickOutside)
-})
-
 
 const submitEdit = async (ifSubmit) => {
   try {
-    const categoryId = getCategoryId() || 1
     const payload = {
-      category_id: categoryId,
+      category_id: category.value.id,
       factory: factory.value,
       year: parseInt(year.value),
       sets: sets.value,
       isSubmitted: ifSubmit
     }
-    console.log(payload)
+    // console.log(payload)
     const response = await apiClient.post(`/year`, payload);
     const operation = ifSubmit ? '提交' : '保存';
     if (response.data && response.data.status === 'success') {
@@ -196,8 +199,6 @@ defineExpose({
 </script>
 
 <style>
-/* Reworked modal styles to match ReviewDetailsModal.vue so the YearlyData modal
-   matches the app-wide audit modal styling (light + dark theme friendly). */
 .modal-overlay {
   position: fixed;
   left: 0;

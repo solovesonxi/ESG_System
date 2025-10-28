@@ -23,9 +23,13 @@
       </div>
       <div class="welcome-section">
         <h1 class="welcome-text">欢迎回来, {{ authStore.user?.username }}!</h1>
-        <div class="user-role-badge">
-          <i class="fas fa-user-shield"></i>
-          <span>{{ getRoleDisplayName() }}</span>
+
+        <div class="user-role-controls">
+          <span class="role-badge" :class="authStore.user?.role">{{ getRoleDisplayName() }}</span>
+          <button class="permission-toggle-btn" @click="showPermissionDetails = !showPermissionDetails"
+                  :class="{ 'active': showPermissionDetails }">
+            {{ showPermissionDetails ? '隐藏权限' : '查看权限' }}
+          </button>
         </div>
       </div>
       <div class="user-info-section">
@@ -33,6 +37,66 @@
         <div class="online-status">
           <div class="status-dot"></div>
           <span>在线</span>
+        </div>
+      </div>
+    </div>
+
+    <div v-show="showPermissionDetails" class="permission-card">
+      <div class="permission-details">
+        <h4>系统角色权限说明</h4>
+        <div class="roles-grid">
+          <!-- 部门账号 -->
+          <div class="role-card" :class="{ 'current-user': authStore.isDepartment }">
+            <div class="role-card-header">
+              <span class="role-badge department">部门</span>
+              <span v-if="authStore.isDepartment" class="current-label">您当前角色</span>
+            </div>
+            <div class="role-permissions">
+              <div class="permission-item">查看管辖部门每月的定量数据以及审核结果</div>
+              <div class="permission-item">每月填写管辖部门的数据</div>
+            </div>
+          </div>
+
+          <!-- 工厂账号 -->
+          <div class="role-card" :class="{ 'current-user': authStore.isFactory }">
+            <div class="role-card-header">
+              <span class="role-badge factory">工厂</span>
+              <span v-if="authStore.isFactory" class="current-label">您当前角色</span>
+            </div>
+            <div class="role-permissions">
+              <div class="permission-item">查看所有部门的定量数据以及审核结果</div>
+              <div class="permission-item">审核所有部门的月度数据</div>
+              <div class="permission-item">填写本工厂的年度数据</div>
+            </div>
+          </div>
+
+          <!-- 总部账号 -->
+          <div class="role-card" :class="{ 'current-user': authStore.isHeadquarter }">
+            <div class="role-card-header">
+              <span class="role-badge headquarter">总部</span>
+              <span v-if="authStore.isHeadquarter" class="current-label">您当前角色</span>
+            </div>
+            <div class="role-permissions">
+              <div class="permission-item">查看所有工厂月度和年度数据以及审核结果
+              </div>
+              <div class="permission-item">最终审核确认所有工厂所有部门的定量数据</div>
+              <div class="permission-item">最终审核确认所有工厂的年度数据</div>
+            </div>
+          </div>
+
+          <!-- 管理员账号 -->
+          <div class="role-card" :class="{ 'current-user': authStore.isAdmin }">
+            <div class="role-card-header">
+              <span class="role-badge admin">管理员</span>
+              <span v-if="authStore.isAdmin" class="current-label">您当前角色</span>
+            </div>
+            <div class="role-permissions">
+              <div class="permission-item">访问所有数据和审核结果</div>
+              <div class="permission-item">账号管理和权限分配</div>
+              <div class="permission-item">指标库管理</div>
+              <div class="permission-item">系统维护和公告发布</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -53,7 +117,7 @@
           <div class="departments-container">
             <div class="department-grid">
               <div v-for="dept in departmentList" :key="dept.id" class="department-item" :class="dept.name_en"
-                   @click="navigateToDepartment(dept.id)" :style="getDeptIconStyle(dept.name_en)">
+                   @click="navigateToDepartment(dept)" :style="getDeptIconStyle(dept.name_en)">
                 <div class="dept-info">
                   <span class="dept-name">{{ dept.name_zh }}</span>
                 </div>
@@ -64,249 +128,64 @@
       </div>
     </div>
 
-    <!-- 主内容区（填报进度、系统通知、最近操作） -->
+    <!-- 主内容区（填报进度） -->
     <div class="main-layout">
       <div class="main-half">
-        <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
-          <h2 style="margin: 0;">{{ authStore.isDataMode ? '月度填报' : '年度分析' }}进度</h2>
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <div class="small-select" v-if="authStore.isHeadquarter || authStore.isAdmin">
-              <div class="selected" @click="selectionStore.toggleFactoryDropdown()">
-                {{ selectionStore.selectedFactory }}
-                <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showFactoryDropdown"
-                   :style="{ maxHeight: '200px', overflowY: 'auto' }">
-                <div v-for="factory in selectionStore.factories" :key="factory" class="option"
-                     :class="{ 'selected-option': factory === selectionStore.selectedFactory }"
-                     @click="selectionStore.selectFactory(factory)">
-                  {{ factory }}
-                </div>
+        <div style="display: flex; flex-direction: row; justify-content: flex-start;">
+          <div class="small-select" v-if="authStore.isHeadquarter || authStore.isAdmin" style="margin-right: 20px;">
+            <div class="selected" @click="selectionStore.toggleFactoryDropdown()">
+              {{ selectionStore.selectedFactory }}
+              <i class="arrow" :class="{ 'up': selectionStore.showFactoryDropdown }"></i>
+            </div>
+            <div class="options" v-show="selectionStore.showFactoryDropdown"
+                 :style="{ maxHeight: '200px', overflowY: 'auto' }">
+              <div v-for="factory in selectionStore.factories" :key="factory" class="option"
+                   :class="{ 'selected-option': factory === selectionStore.selectedFactory }"
+                   @click="selectionStore.selectFactory(factory)">
+                {{ factory }}
               </div>
             </div>
-            <div class="small-select">
-              <div class="selected" @click="selectionStore.toggleYearDropdown()">
-                {{ selectionStore.selectedYear }}年
-                <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
-              </div>
-              <div class="options" v-show="selectionStore.showYearDropdown">
-                <div v-for="year in selectionStore.years" :key="year" class="option"
-                     :class="{ 'selected-option': year === selectionStore.selectedYear }"
-                     @click="selectionStore.selectYear(year)">
-                  {{ year }}年
-                </div>
+          </div>
+          <div class="small-select">
+            <div class="selected" @click="selectionStore.toggleYearDropdown()">
+              {{ selectionStore.selectedYear }}年
+              <i class="arrow" :class="{ 'up': selectionStore.showYearDropdown }"></i>
+            </div>
+            <div class="options" v-show="selectionStore.showYearDropdown">
+              <div v-for="year in selectionStore.years" :key="year" class="option"
+                   :class="{ 'selected-option': year === selectionStore.selectedYear }"
+                   @click="selectionStore.selectYear(year)">
+                {{ year }}年
               </div>
             </div>
           </div>
         </div>
-        <div class="progress-list">
-          <div class="progress-card" v-for="item in currentProgressData" :key="item.title">
-            <div class="progress-title">{{ item.title }}</div>
-            <div class="progress-bar-bg">
-              <div class="progress-bar" :style="{ width: item.percent + '%' }"></div>
-            </div>
-            <div class="progress-percent">{{ item.percent }}%</div>
-          </div>
-        </div>
-      </div>
-      <div class="main-half">
-        <!-- 系统通知区 -->
-        <div class="message-section">
-          <div class="section-header">
-            <h2>系统通知</h2>
-            <div class="message-actions">
-              <span v-if="unreadCount > 0" class="unread-badge">{{ unreadCount }}</span>
-              <button class="view-all-btn" @click="showAllMessagesModal = true">查看全部</button>
-            </div>
-          </div>
-          <div class="message-preview">
-            <div v-if="notifications.length === 0" class="empty-message">暂无通知</div>
-            <div v-for="msg in previewMessages" :key="msg.id" class="message-card"
-                 :class="{ unread: !msg.is_read }" @click="openMessageDetail(msg)">
-              <div class="message-header">
-                <span class="message-type" :class="getMessageTypeClass(msg.type)">{{ msg.type }}</span>
-                <span v-if="!msg.is_read" class="red-dot"></span>
+        <div>
+          <h2>月度数据进度</h2>
+          <div class="progress-list">
+            <div class="progress-card" v-for="item in quantitativeProgressData" :key="item.title">
+              <div class="progress-title">{{ item.title }}</div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar" :style="{ width: item.percent + '%' }"></div>
               </div>
-              <span class="message-title">{{ msg.title }}</span>
-              <span class="message-date">{{ formatDate(msg.created_at) }}</span>
+              <div class="progress-percent">{{ item.percent }}%</div>
             </div>
           </div>
         </div>
 
-        <!-- 最近操作区 -->
-        <div class="message-section">
-          <div class="section-header">
-            <h2>最近操作</h2>
-            <div class="message-actions">
-              <button class="view-all-btn" @click="showAllHistoryModal = true">查看全部</button>
-            </div>
-          </div>
-          <div class="message-preview">
-            <div v-if="operations.length === 0" class="empty-message">暂无操作记录</div>
-            <div v-for="record in previewHistory" :key="record.id" class="message-card" :class="{ unread: false }">
-              <span class="message-title">{{ record.title }}</span>
-              <span class="message-date">{{ record.date }}</span>
+        <div v-if="!authStore.isDepartment">
+          <h2>年度数据进度</h2>
+          <div class="progress-list">
+            <div class="progress-card" v-for="item in analyticalProgressData" :key="item.title">
+              <div class="progress-title">{{ item.title }}</div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar" :style="{ width: item.percent + '%' }"></div>
+              </div>
+              <div class="progress-percent">{{ item.percent }}%</div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- 弹窗：查看所有通知 -->
-    <div v-if="showAllMessagesModal" class="modal-mask" @click.self="closeAllModals">
-      <div class="modal-container list-modal">
-        <div class="modal-header">
-          <h3>所有系统通知</h3>
-          <div v-if="!isSelectMode" class="header-actions">
-            <button v-if="!isSelectMode" class="action-btn" @click="markAllAsRead"
-                    :disabled="unreadCount === 0">一键已读
-            </button>
-            <button v-if="!isSelectMode" class="action-btn" @click="deleteReadMessages"
-                    :disabled="readMessagesCount === 0">删除已读
-            </button>
-            <button v-if="!isSelectMode" class="action-btn" @click="enterSelectMode"
-                    :disabled="notifications.length === 0">批量删除
-            </button>
-          </div>
-          <div v-else class="header-actions">
-            <div class="selection-buttons">
-              <button class="action-btn" @click="exitSelectMode">取消
-              </button>
-              <button class="confirm-delete-btn" @click="confirmBatchDelete"
-                      :disabled="!hasSelectedNotifications">删除选中 ({{ selectedNotifications.size }})
-              </button>
-            </div>
-            <div class="select-all-container" @click="toggleAllNotifications">
-              <span class="select-all-text">全选</span>
-              <div class="custom-checkbox" :class="{ checked: allNotificationsSelected }">
-                <i class="icon-check" v-if="allNotificationsSelected"></i>
-              </div>
-            </div>
-          </div>
-          <button class="modal-close" @click="closeAllModals">×</button>
-        </div>
-        <div class="modal-content list-content">
-          <div v-if="notifications.length === 0" class="empty-list">暂无消息通知</div>
-          <div v-else class="message-list">
-            <div v-for="msg in notifications" :key="msg.id" class="list-item" @click="handleNotificationItemClick(msg)"
-                 :class="{ unread: !msg.is_read, selected: selectedNotifications.has(msg.id) }">
-              <div v-if="isSelectMode" class="item-checkbox">
-                <div class="custom-checkbox" :class="{ checked: selectedNotifications.has(msg.id) }">
-                  <i class="icon-check" v-if="selectedNotifications.has(msg.id)">✓</i>
-                </div>
-              </div>
-              <div class="list-item-content">
-                <div class="item-header">
-                  <span class="message-type" :class="getMessageTypeClass(msg.type)">{{ msg.type }}</span>
-                  <span v-if="!msg.is_read" class="red-dot"></span>
-                </div>
-                <div class="item-content">
-                  <span class="item-title">{{ msg.title }}</span>
-                  <span class="item-date">{{ formatDate(msg.created_at) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 弹窗：查看所有操作记录 -->
-    <div v-if="showAllHistoryModal" class="modal-mask" @click.self="closeAllModals">
-      <div class="modal-container list-modal">
-        <div class="modal-header">
-          <h3>所有操作记录</h3>
-          <div v-if="!isOperationSelectMode" class="header-actions">
-            <button class="action-btn clear-all-btn" @click="confirmClearAllOperations"
-                    :disabled="operations.length === 0">
-              一键清空
-            </button>
-            <button class="action-btn" @click="enterOperationSelectMode"
-                    :disabled="operations.length === 0">
-              批量删除
-            </button>
-          </div>
-          <div v-else class="header-actions">
-            <div class="select-all-container" @click="toggleAllOperations">
-              <span class="select-all-text">全选</span>
-              <div class="custom-checkbox" :class="{ checked: allOperationsSelected }">
-                <i class="icon-check" v-if="allOperationsSelected"></i>
-              </div>
-            </div>
-            <div class="selection-buttons">
-              <button class="action-btn action-btn" @click="exitOperationSelectMode">
-                取消
-              </button>
-              <button class="action-btn confirm-delete-btn" @click="confirmBatchDeleteOperations"
-                      :disabled="!hasSelectedOperations">
-                删除选中 ({{ selectedOperations.size }})
-              </button>
-            </div>
-          </div>
-          <button class="modal-close" @click="closeAllModals">×</button>
-        </div>
-        <div class="modal-content list-content">
-          <div v-if="operations.length === 0" class="empty-list">暂无操作记录</div>
-          <div v-else class="message-list">
-            <div v-for="record in operations" :key="record.id" class="list-item"
-                 :class="{ selected: selectedOperations.has(record.id), 'select-mode': isOperationSelectMode }"
-                 @click="handleOperationItemClick(record.id)">
-              <div v-if="isOperationSelectMode" class="item-checkbox">
-                <div class="custom-checkbox" :class="{ checked: selectedOperations.has(record.id) }">
-                  <i class="icon-check" v-if="selectedOperations.has(record.id)">✓</i>
-                </div>
-              </div>
-              <div class="item-content">
-                <span class="item-title">{{ record.title }}</span>
-                <span class="item-date">{{ record.date }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 弹窗：系统通知详情 -->
-    <div v-if="showMessageModal" class="modal-mask" @click.self="closeDetailModal">
-      <div class="modal-container detail-modal">
-        <div class="modal-header">
-          <h3>{{ currentMessage?.title }}</h3>
-          <button class="modal-close" @click="closeDetailModal">×</button>
-        </div>
-        <div class="modal-content detail-content">
-          <div class="message-meta">
-            <span class="message-type" :class="getMessageTypeClass(currentMessage?.type)">{{
-                currentMessage?.type
-              }}</span>
-            <span class="message-date">{{ formatDate(currentMessage?.created_at) }}</span>
-          </div>
-          <div class="message-body">
-            {{ currentMessage?.content }}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 弹窗：删除确认 -->
-    <div v-if="showDeleteConfirmModal" class="modal-mask" @click.self="closeDeleteConfirm">
-      <div class="modal-container detail-modal">
-        <div class="modal-header">
-          <h3>确认删除</h3>
-          <button class="modal-close" @click="closeDeleteConfirm">×</button>
-        </div>
-        <div class="modal-content detail-content">
-          <div class="confirm-message">
-            <p v-if="deleteMode === 'read'">确定要删除所有已读消息吗？共 {{ readMessagesCount }} 条消息将被删除。</p>
-            <p v-else-if="deleteMode === 'batch'">确定要删除选中的系统通知吗？共 {{ selectedNotifications.size }}
-              条消息将被删除。</p>
-            <p v-else-if="deleteMode === 'batch-operations'">确定要删除选中的操作记录吗？共 {{ selectedOperations.size }}
-              条记录将被删���。</p>
-            <p v-else-if="deleteMode === 'clear-all'">确定要清空所有操作记录吗？共 {{ operations.length }}
-              条记录将被删除。</p>
-            <p class="warning-text">此操作不可撤销！</p>
-          </div>
-        </div>
-        <button class="delete-btn" @click="executeDelete">确认删除</button>
       </div>
     </div>
   </div>
@@ -318,24 +197,21 @@ import {useRouter} from 'vue-router';
 import {computed, onMounted, ref, watch} from 'vue';
 import axios from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js";
+import {useThemeStore} from "@/stores/themeStore.js";
 
 const authStore = useAuthStore();
 const selectionStore = useSelectionStore();
 const router = useRouter();
-
+const showPermissionDetails = ref(false)
 // 权限错误相关
 const permissionError = ref(false);
 const permissionErrorMessage = ref('');
-
-
-// 部门权限列表
 const departmentList = computed(() => {
   const deptIds = Array.isArray(authStore.departments?.ids) ? authStore.departments.ids : [];
   if (!deptIds || deptIds.length === 0) return [];
   return (authStore.monthCategories || [])
       .filter(item => item && (deptIds.includes(item.id) || deptIds.includes(item.name_en)));
 })
-
 
 // 检查URL参数中的错误信息
 const checkPermissionErrors = () => {
@@ -358,252 +234,12 @@ const dismissError = () => {
   window.history.replaceState({}, '', url);
 };
 
-// 系统通知相关
-const notifications = ref([]);
-const operations = ref([]);
-const unreadCount = computed(() => notifications.value.filter(m => !m.is_read).length);
-const readMessagesCount = computed(() => notifications.value.filter(m => m.is_read).length);
-const previewMessages = computed(() => notifications.value.slice(0, 4));
-const previewHistory = computed(() => operations.value.slice(0, 4));
-
-// 批量选择相关
-const selectedNotifications = ref(new Set());
-const selectedOperations = ref(new Set());
-const isSelectMode = ref(false);
-const isOperationSelectMode = ref(false);
-const currentTime = ref('')
-
-// 计算属性
-const allNotificationsSelected = computed(() =>
-    notifications.value.length > 0 && selectedNotifications.value.size === notifications.value.length
-);
-const allOperationsSelected = computed(() =>
-    operations.value.length > 0 && selectedOperations.value.size === operations.value.length
-);
-const hasSelectedNotifications = computed(() => selectedNotifications.value.size > 0);
-const hasSelectedOperations = computed(() => selectedOperations.value.size > 0);
-
 // 进度数据
 const analyticalProgressData = ref([]);
 const quantitativeProgressData = ref([]);
-const currentProgressData = computed(() =>
-    authStore.isDataMode ? quantitativeProgressData.value : analyticalProgressData.value
-);
+const currentTime = ref('')
 
-// 弹窗状态
-const showMessageModal = ref(false);
-const currentMessage = ref(null);
 const isDark = ref(null);
-const showAllMessagesModal = ref(false);
-const showAllHistoryModal = ref(false);
-const showDeleteConfirmModal = ref(false);
-const deleteMode = ref('');
-
-// 通知相关函数
-const fetchMessages = async () => {
-  try {
-    const response = await axios.get('/messages/get');
-    const data = response.data;
-    notifications.value = data.notifications.map(msg => ({
-      ...msg,
-      is_read: msg.is_read !== undefined ? msg.is_read : false
-    }));
-    operations.value = data.operations.map((msg) => ({
-      id: msg.id,
-      title: msg.title,
-      date: formatDate(msg.created_at)
-    }));
-
-  } catch (error) {
-    console.error('获取通知失败:', error);
-    notifications.value = [];
-    operations.value = [];
-  }
-};
-
-const openMessageDetail = (msg) => {
-  currentMessage.value = msg;
-  showMessageModal.value = true;
-  if (!msg.is_read) {
-    msg.is_read = true;
-    markMessageAsRead(msg.id);
-  }
-};
-
-const closeAllModals = () => {
-  showAllMessagesModal.value = false;
-  showAllHistoryModal.value = false;
-};
-
-const closeDetailModal = () => {
-  showMessageModal.value = false;
-};
-
-const closeDeleteConfirm = () => {
-  showDeleteConfirmModal.value = false;
-};
-
-const markMessageAsRead = async (messageId) => {
-  try {
-    await axios.patch(`/messages/read`, messageId);
-  } catch (error) {
-    console.error('标记通知为已读失败:', error);
-  }
-};
-
-const markAllAsRead = async () => {
-  try {
-    await axios.patch('/messages/read-all');
-    notifications.value.forEach(msg => msg.is_read = true);
-  } catch (error) {
-    console.error('标记所有通知为已读失败:', error);
-  }
-};
-
-const deleteReadMessages = () => {
-  deleteMode.value = 'read';
-  showDeleteConfirmModal.value = true;
-};
-
-const executeDelete = async () => {
-  try {
-    if (deleteMode.value === 'read') {
-      const readMessageIds = notifications.value.filter(msg => msg.is_read).map(msg => msg.id);
-      await axios.delete('/messages/batch-delete', {data: readMessageIds});
-      notifications.value = notifications.value.filter(msg => !msg.is_read);
-    } else if (deleteMode.value === 'batch') {
-      const selectedIds = Array.from(selectedNotifications.value);
-      await axios.delete('/messages/batch-delete', {data: selectedIds});
-      notifications.value = notifications.value.filter(msg => !selectedIds.includes(msg.id));
-      exitSelectMode();
-    } else if (deleteMode.value === 'batch-operations') {
-      const selectedIds = Array.from(selectedOperations.value);
-      await axios.delete('/messages/batch-delete', {data: selectedIds});
-      operations.value = operations.value.filter(op => !selectedIds.includes(op.id));
-      exitOperationSelectMode();
-    } else if (deleteMode.value === 'clear-all') {
-      await axios.delete('/messages/clear-all');
-      operations.value = [];
-      exitOperationSelectMode();
-    }
-    closeDeleteConfirm();
-  } catch (error) {
-    console.error('删除失败:', error);
-  }
-};
-
-// 工具函数
-const formatDate = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
-// 批量删除相关
-const enterSelectMode = () => {
-  isSelectMode.value = true;
-  selectedNotifications.value = new Set();
-};
-
-const exitSelectMode = () => {
-  isSelectMode.value = false;
-  selectedNotifications.value.clear();
-};
-
-const toggleNotificationSelection = (id) => {
-  if (selectedNotifications.value.has(id)) {
-    selectedNotifications.value.delete(id);
-  } else {
-    selectedNotifications.value.add(id);
-  }
-};
-
-const toggleAllNotifications = () => {
-  if (allNotificationsSelected.value) {
-    selectedNotifications.value.clear();
-  } else {
-    notifications.value.forEach(msg => selectedNotifications.value.add(msg.id));
-  }
-};
-
-const confirmBatchDelete = () => {
-  showDeleteConfirmModal.value = true;
-  deleteMode.value = 'batch';
-};
-
-const getMessageTypeClass = (type) => {
-  const typeMap = {
-    '系统更新': 'system',
-    '月报': 'monthly',
-    '年报': 'yearly',
-    '通知': 'notification',
-    '警告': 'warning',
-    '更新': 'update'
-  };
-  return typeMap[type] || 'default';
-};
-
-const toggleTheme = () => {
-  isDark.value = !isDark.value;
-  document.body.classList.toggle('dark-theme', isDark.value);
-  localStorage.setItem('darkMode', JSON.stringify(isDark.value));
-};
-
-// 操作记录批量选择相关
-const enterOperationSelectMode = () => {
-  isOperationSelectMode.value = true;
-  selectedOperations.value = new Set();
-};
-
-const exitOperationSelectMode = () => {
-  isOperationSelectMode.value = false;
-  selectedOperations.value.clear();
-};
-
-const toggleOperationSelection = (id) => {
-  if (selectedOperations.value.has(id)) {
-    selectedOperations.value.delete(id);
-  } else {
-    selectedOperations.value.add(id);
-  }
-};
-
-const toggleAllOperations = () => {
-  if (allOperationsSelected.value) {
-    selectedOperations.value.clear();
-  } else {
-    operations.value.forEach(op => selectedOperations.value.add(op.id));
-  }
-};
-
-const handleNotificationItemClick = (msg) => {
-  if (isSelectMode.value) {
-    toggleNotificationSelection(msg.id);
-  } else {
-    openMessageDetail(msg)
-  }
-};
-const handleOperationItemClick = (id) => {
-  if (isOperationSelectMode.value) {
-    toggleOperationSelection(id);
-  }
-};
-
-const confirmBatchDeleteOperations = () => {
-  showDeleteConfirmModal.value = true;
-  deleteMode.value = 'batch-operations';
-};
-
-const confirmClearAllOperations = () => {
-  showDeleteConfirmModal.value = true;
-  deleteMode.value = 'clear-all';
-};
 const initTheme = () => {
   const savedTheme = localStorage.getItem('darkMode');
   if (savedTheme !== null) {
@@ -613,8 +249,14 @@ const initTheme = () => {
   }
   document.body.classList.toggle('dark-theme', isDark.value);
 };
+const toggleTheme = () => {
+  isDark.value = !isDark.value;
+  document.body.classList.toggle('dark-theme', isDark.value);
+  localStorage.setItem('darkMode', JSON.stringify(isDark.value));
+  const themeStore = useThemeStore();
+  themeStore.setMode(isDark.value ? 'dark' : 'light');
+};
 
-// 获取定量进度数据
 const fetchProgress = async () => {
   try {
     const factory = selectionStore.selectedFactory;
@@ -627,40 +269,35 @@ const fetchProgress = async () => {
     console.error('获取进度数据失败:', error);
   }
 };
-// 获取角色显示名称
+
+// 其他函数
 const getRoleDisplayName = () => {
   const roleMap = {
     'department': authStore.departments.name,
-    'factory': '工厂管理员',
-    'headquarter': '总部管理员',
-    'admin': '系统管理员'
+    'factory': authStore.factory,
+    'headquarter': '总部',
+    'admin': '管理员'
   }
   return roleMap[authStore.user?.role] || '用户'
 }
 
-// 返回用于内联样式的对象（只包含背景图片 URL，叠层由 CSS 负责）
 const getDeptIconStyle = (name_en) => {
   const url = `${axios?.defaults?.baseURL}/static/icons/${name_en}.png?t=${new Date().getTime()}`;
   if (!url) return {backgroundColor: '#eee'};
-  console.log('url:', url)
   return {
     backgroundImage: `url('${url}')`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    backgroundColor: '#f3f4f6',
-    backgroundWidth: '100%',
-    backgroundOpacity: '0.1'
+    backgroundColor: '#f3f4f6'
   }
 }
 
-// 导航到部门
-const navigateToDepartment = (deptType) => {
-  console.log('导航到部门:', deptType)
-  router.push(`/${deptType}`)
+const navigateToDepartment = (category) => {
+  selectionStore.selectCategoryMonthly(category)
+  router.push(`/monthly-data`)
 }
 
-// 更新时间
 const updateTime = () => {
   const now = new Date()
   currentTime.value = now.toLocaleString('zh-CN', {
@@ -671,28 +308,20 @@ const updateTime = () => {
   })
 }
 
-// 在 onMounted 中添加
 onMounted(() => {
   initTheme();
   fetchProgress();
-  fetchMessages();
   checkPermissionErrors();
   updateTime()
-  setInterval(updateTime, 60000) // 每分钟更新一次
+  setInterval(updateTime, 60000)
 });
 
-// 监听年份变化，更新进度数据
 watch(() => selectionStore.selectedYear, (newYear, oldYear) => {
-  if (newYear !== oldYear) {
-    fetchProgress();
-  }
+  if (newYear !== oldYear) fetchProgress();
 });
 
-// 监听工厂变化，管理员或总部账号时也更新进度数据
 watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
-  if ((authStore.isHeadquarter || authStore.isAdmin) && newFactory !== oldFactory) {
-    fetchProgress();
-  }
+  if ((authStore.isHeadquarter || authStore.isAdmin) && newFactory !== oldFactory) fetchProgress();
 });
 </script>
 
@@ -702,7 +331,7 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   color: #222;
   background: linear-gradient(120deg, #f8d3d3 0%, #b6e1ee 50%, #d1da79 100%);
   background-size: 300% 300%;
-  min-height: 100vh;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   animation: gradientFlow 8s ease infinite;
@@ -773,10 +402,25 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
 
 /* 欢迎区域 */
 .welcome-section {
+  /* vertical stack: title above role controls, both centered */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
   text-align: center;
   flex: 1;
   max-width: 500px;
   margin: 0 2rem;
+}
+
+.user-role-controls {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: auto;
 }
 
 .welcome-text {
@@ -787,19 +431,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-weight: 700;
-}
-
-.user-role-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-  border: 1px solid rgba(102, 126, 234, 0.2);
-  border-radius: 20px;
-  color: #495057;
-  font-size: 0.9rem;
-  font-weight: 500;
 }
 
 .user-role-badge i {
@@ -874,18 +505,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   display: flex;
   align-items: center;
   gap: 1rem;
-}
-
-.permission-icon {
-  width: 50px;
-  height: 50px;
-  background: linear-gradient(135deg, #4CAF50 0%, #81C784 100%);
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.5rem;
 }
 
 .permission-title h3 {
@@ -971,12 +590,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   background-clip: text;
 }
 
-.dark-theme .user-role-badge {
-  background: linear-gradient(135deg, rgba(255, 107, 157, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
-  border-color: rgba(255, 107, 157, 0.2);
-  color: #e2e8f0;
-}
-
 .dark-theme .user-role-badge i {
   color: #ff6b9d;
 }
@@ -1009,18 +622,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
 
 .dark-theme .dept-name {
   color: #e2e8f0;
-}
-
-.dark-theme .dept-arrow {
-  color: #a0aec0;
-}
-
-.dark-theme .permission-footer {
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.dark-theme .stat-item {
-  color: #a0aec0;
 }
 
 .dark-theme .stat-item i {
@@ -1057,18 +658,12 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
     grid-template-columns: 1fr;
   }
 
-  .permission-stats {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-  }
-
   .card-content {
     padding: 1rem;
   }
 
   .main-layout {
-    flex-direction: column;
+    flex-direction: row;
     gap: 1.5rem;
   }
 }
@@ -1086,12 +681,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
-  }
-
-  .permission-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
   }
 }
 
@@ -1314,14 +903,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   font-weight: bold;
 }
 
-.message-section {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.08);
-  padding: 0.7rem 0.8rem;
-  position: relative;
-}
-
 .message-section h2,
 .operation-section h2 {
   font-size: 1.2rem;
@@ -1334,363 +915,11 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   color: #e0e0e0;
 }
 
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.message-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.unread-badge {
-  background: #e53935;
-  color: #fff;
-  border-radius: 50%;
-  padding: 0.3rem 0.7rem;
-  font-size: 1rem;
-  font-weight: bold;
-  margin-left: 0.5rem;
-}
-
-.view-all-btn {
-  background: #66aff6;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  padding: 0.4rem 0.8rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.view-all-btn:hover {
-  background: #1565c0;
-}
-
-.dark-theme .view-all-btn {
-  background: #3192b0;
-}
-
-.message-preview {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-  margin-top: 0.7rem;
-}
-
-.empty-message {
-  text-align: center;
-  color: #888;
-  padding: 1rem 0;
-}
-
-.message-card {
-  background: #d8dada;
-  border-radius: 8px;
-  padding: 0.5rem 0.7rem;
-  margin: 0.2rem 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  position: relative;
-  transition: box-shadow 0.2s;
-  box-shadow: 0 2px 6px rgba(33, 150, 243, 0.06);
-}
-
-.message-card.unread {
-  background: linear-gradient(120deg, #d0e7f8 0%, #b7b2fd 100%);
-}
-
-.message-card:hover {
-  background: #bebdbd;
-}
-
-.message-card.unread:hover {
-  background: linear-gradient(120deg, #b5cada 0%, #9994de 100%);
-}
-
-.dark-theme .message-card {
-  background: #2a2a2a;
-  color: #fff;
-}
-
-.dark-theme .message-card.unread {
-  background: linear-gradient(120deg, #3d082a 0%, #0c0633 100%);
-}
-
-.dark-theme .message-card:hover {
-  background: #414141;
-}
-
-.dark-theme .message-card.unread:hover {
-  background: linear-gradient(120deg, #59103f 0%, #180d5e 100%);
-}
-
-
-.message-title {
-  flex: 1;
-  margin-left: 0.5rem;
-  color: #03396e;
-}
-
-.dark-theme .message-title, .dark-theme .message-date {
-  color: #f5f5f5;
-}
-
-.red-dot {
-  width: 10px;
-  height: 10px;
-  background: #e53935;
-  border-radius: 50%;
-  display: inline-block;
-  margin-left: 0.5rem;
-}
-
-.message-date {
-  font-size: 0.95rem;
-  color: #888;
-  margin-left: 1rem;
-}
-
-.modal-mask {
-  position: fixed;
-  z-index: 9999;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(2px);
-}
-
-.modal-container {
-  background: linear-gradient(120deg, #f8f1f1 0%, #fadcb3 100%);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-}
-
-.list-modal {
-  width: 60%;
-  height: 80%;
-}
-
-.detail-modal {
-  width: 50%;
-  max-width: 70%;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.2rem 1.5rem;
-  border-bottom: 1px solid #eee;
-  flex-shrink: 0;
-}
-
 .modal-header h3 {
   margin: 0;
   color: #333;
   font-size: 1.2rem;
   font-weight: 600;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-}
-
-.select-all-container {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  padding: 0.4rem 0.6rem;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-  flex-direction: row;
-}
-
-.custom-checkbox {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #ddd;
-  border-radius: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 0.5rem;
-  transition: all 0.2s;
-  margin-top: 1.2rem;
-  cursor: pointer !important;
-}
-
-.custom-checkbox.checked {
-  background-color: #66aff6;
-  border-color: #66aff6;
-}
-
-.custom-checkbox .icon-check {
-  color: white;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.select-all-text {
-  font-size: 0.9rem;
-  color: #555;
-  user-select: none;
-  justify-content: left;
-  margin-right: 0.5rem;
-  margin-top: 1.2rem;
-}
-
-.selection-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #999;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.modal-close:hover {
-  background: #f5f5f5;
-  color: #333;
-}
-
-.modal-content {
-  padding: 1.5rem;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.list-content {
-  max-height: 60vh;
-  overflow-y: auto;
-  padding: 0;
-}
-
-.detail-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.empty-list {
-  text-align: center;
-  color: #888;
-  padding: 2rem 0;
-}
-
-.message-list {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.list-item {
-  padding: 0.9rem 1.2rem;
-  border-bottom: 1px solid #e5e7eb;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  box-sizing: border-box;
-  background: #ffffff;
-  border-radius: 6px;
-  margin-bottom: 2px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.list-item.unread {
-  background: #eff6ff; /* 更柔和的浅蓝色 */
-  border-left: 4px solid #3b82f6;
-  font-weight: 500;
-}
-
-
-.list-item:last-child {
-  border-bottom: none;
-}
-
-.list-item:hover {
-  background: #f3f3ca;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.list-item.select-mode {
-  padding-left: 0.8rem;
-}
-
-.list-item.selected {
-  background-color: #fef3c7;
-  border-left: 4px solid #f59e0b;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
-}
-
-.list-item-content {
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.item-header {
-  margin-right: 1rem;
-  display: flex;
-  align-items: center;
-}
-
-.item-content {
-  display: flex;
-  flex: 1;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.item-checkbox {
-  margin-left: 0.8rem;
-  display: flex;
-  align-items: center;
-}
-
-.item-title {
-  font-weight: 500;
-  color: #333;
-  font-size: 0.95rem;
-}
-
-.item-date {
-  font-size: 0.85rem;
-  color: #888;
 }
 
 .modal-footer button {
@@ -1711,84 +940,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   background: #1565c0;
 }
 
-.action-btn {
-  background: #9946e1;
-  color: #fff;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  position: relative;
-  min-width: 100px;
-}
-
-.action-btn:not(:disabled):hover {
-  background: #6020da;
-}
-
-.action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-
-.clear-all-btn:not(:disabled):hover {
-  background: #e53935;
-  color: white;
-}
-
-.confirm-delete-btn {
-  display: flex;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-  background: #c72222;
-}
-
-.confirm-delete-btn:hover:not(:disabled) {
-  background: #9a0d0d;
-}
-
-.confirm-delete-btn:disabled {
-  background: #444;
-  color: #e0e0e0;
-}
-
-.delete-btn:not(:disabled) {
-  background: #c72222;
-  color: #e0e0e0;
-  border-radius: 4px;
-  padding: 0.7rem 1.2rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.delete-btn:hover:not(:disabled) {
-  background: #9a0d0d;
-}
-
-.icon-check {
-  font-size: 0.9rem;
-}
-
-.confirm-message {
-  font-size: 1rem;
-  color: #333;
-}
-
-.dark-theme .confirm-message {
-  color: #e0e0e0;
-}
-
-.warning-text {
-  color: #e53935;
-  font-weight: bold;
-}
-
 @media (max-width: 900px) {
   .main-layout {
     flex-direction: column;
@@ -1802,21 +953,6 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
   .progress-list {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
-
-  .detail-modal {
-    width: 95vw;
-    height: 95vh;
-  }
-
-  .list-modal {
-    width: 90%;
-    max-width: 95%;
-  }
-
-  .header-actions {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
 }
 
 .dark-theme .main-half {
@@ -1825,9 +961,7 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
 }
 
 .dark-theme .dashboard {
-  background: linear-gradient(60deg, #15010b 0%, #340530 50%, #040225 100%);
-  background-size: 300% 300%;
-  animation: gradientFlow 8s ease infinite;
+  background: linear-gradient(60deg, #25020d 0%, #171616 50%, #04021f 100%);
 }
 
 
@@ -1860,79 +994,11 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
 }
 
 .dark-theme .progress-bar {
-  background: linear-gradient(120deg, #930651 0%, #82b1ff 100%);
-}
-
-.dark-theme .message-section {
-  background: #1c1c1c;
-}
-
-
-.dark-theme .red-dot {
-  background: #ff5252;
-}
-
-.dark-theme .modal-container {
-  background: linear-gradient(120deg, #3f0927 0%, #080433 100%);
-  color: #e0e0e0;
-}
-
-.dark-theme .modal-header {
-  border-bottom-color: #555;
+  background: linear-gradient(120deg, #f83434 0%, #5890fa 100%);
 }
 
 .dark-theme .modal-header h3 {
   color: #e0e0e0;
-}
-
-.dark-theme .modal-close {
-  color: #aaa;
-}
-
-.dark-theme .modal-close:hover {
-  background: #3a3a3a;
-  color: #e0e0e0;
-}
-
-.dark-theme .list-item {
-  background: #1f1f1f;
-  border-bottom-color: #4b5563;
-  color: #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.dark-theme .list-item:hover, .dark-theme .list-item.unread:hover, .dark-theme .list-item.selected:hover {
-  background: #4b4b4b;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-
-
-.dark-theme .list-item.unread {
-  background: linear-gradient(60deg, #3d082a 0%, #0c0633 100%);
-  border-left-color: #60a5fa;
-}
-
-
-.dark-theme .list-item.selected {
-  background: linear-gradient(60deg, #650c20 0%, #230009 100%);
-  border-left-color: #fa6060;
-}
-
-.dark-theme .item-title {
-  color: #e0e0e0;
-}
-
-.dark-theme .select-all-text {
-  color: #e0e0e0;
-}
-
-.dark-theme .action-btn {
-  background: #444;
-  color: #e0e0e0;
-}
-
-.dark-theme .action-btn:not(:disabled):hover {
-  background: #555;
 }
 
 .small-select {
@@ -2046,5 +1112,185 @@ watch(() => selectionStore.selectedFactory, (newFactory, oldFactory) => {
 .dark-theme .small-select .selected-option {
   background: #4a4a4a;
   color: #bb86fc;
+}
+
+.permission-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #764ba2;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 0;
+  font-weight: 500;
+  text-decoration: underline;
+  transition: color 0.2s, text-decoration 0.2s;
+  box-shadow: none;
+  width: fit-content;
+}
+
+.permission-toggle-btn:hover {
+  color: #e94560;
+  text-decoration: underline;
+  background: transparent;
+}
+
+.permission-toggle-btn.active {
+  color: #28a745;
+  text-decoration: underline;
+  background: transparent;
+}
+
+.permission-details h4,
+.filter-section h3,
+.records-section h3 {
+  color: #222;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  letter-spacing: 1px;
+}
+
+.dark-theme .permission-details h4,
+.dark-theme .filter-section h3,
+.dark-theme .records-section h3 {
+  color: #fff;
+  background: linear-gradient(90deg, #e94560 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 8px #53348399;
+}
+
+.permission-card {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .permission-card {
+  background: rgba(12, 13, 28, 0.7);
+}
+
+.permission-details {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.roles-grid {
+  display: flex;
+  gap: 1rem;
+  flex-direction: row;
+}
+
+.role-card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(103, 126, 234, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  width: 25%;
+}
+
+.dark-theme .role-card {
+  background: rgba(47, 18, 30, 0.7);
+}
+
+.role-card:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(103, 126, 234, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(103, 126, 234, 0.2);
+}
+
+.dark-theme .role-card:hover {
+  background: rgba(84, 32, 54, 0.7);
+}
+
+.role-card.current-user {
+  border-color: #e94560;
+  background: linear-gradient(135deg, rgba(34, 0, 255, 0.05) 0%, rgba(246, 42, 42, 0.1) 100%);
+  box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+}
+
+.dark-theme .role-card.current-user {
+  background: linear-gradient(135deg, rgba(252, 159, 233, 0.2) 0%, rgba(246, 158, 158, 0.01) 100%);
+}
+
+.role-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.role-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  width: fit-content;
+  height: fit-content;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.role-badge.department {
+  background: linear-gradient(135deg, rgba(248, 220, 170, 0.5) 0%, #88f513 100%);
+}
+
+.role-badge.factory {
+  background: linear-gradient(135deg, rgba(25, 238, 92, 0.5) 0%, #03ecb6 100%);
+}
+
+.role-badge.headquarter {
+  background: linear-gradient(135deg, rgba(130, 198, 246, 0.5) 0%, #a007dc 100%);
+}
+
+.role-badge.admin {
+  background: linear-gradient(135deg, rgba(248, 109, 204, 0.5) 0%, #ff0013 100%);
+}
+
+.current-label {
+  background: linear-gradient(135deg, #e94560 0%, #ff6b9d 100%);
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.role-permissions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.permission-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #495057;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: rgba(103, 126, 234, 0.05);
+  border: 1px solid rgba(103, 126, 234, 0.1);
+  font-size: 0.875rem;
+}
+
+.dark-theme .permission-item {
+  background: rgba(119, 132, 217, 0.1);
+  color: rgba(255, 243, 224, 0.9);
 }
 </style>

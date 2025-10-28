@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector :review="review" form-type="material" @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" :isYear="false" @selection-changed="fetchData"/>
       <div v-if="isLoading" class="loading">数据加载中...</div>
       <template v-else>
         <fieldset v-for="(s, si) in sets" :key="si" class="summary-fieldset">
@@ -26,15 +26,14 @@
 </template>
 
 <script setup lang="js">
-import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
-import {useRoute} from 'vue-router'
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
 import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js"
 import BaseInfoSelector from "@/components/BaseInfoSelector.vue";
 import {handleError, showError, showInfo, showSuccess} from "@/utils/toast.js";
 
-const route = useRoute();
 const selectionStore = useSelectionStore()
+const category = computed(() => selectionStore.selectedCategoryMonthly);
 const factory = computed(() => selectionStore.selectedFactory);
 const year = computed(() => selectionStore.selectedYear);
 const month = computed(() => selectionStore.selectedMonth);
@@ -43,15 +42,8 @@ const isLoading = ref(false)
 
 // 后端返回的动态集合
 const sets = ref([])
-// 审核状态
 const review = ref({});
 
-// 从路由读取 category_id（支持 params 和 query）
-const getCategoryId = () => {
-  const pid = route.params.category_id ?? route.query.category_id;
-  const n = Number(pid);
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
 
 // 将单个字段值规范化为长度为 12 的数组（不做数值计算，仅结构化）
 function normalizeFieldValue(val) {
@@ -79,48 +71,12 @@ function normalizeSets(rawSets) {
 
 onMounted(() => {
   document.addEventListener("click", selectionStore.handleClickOutside);
-  // 首次加载时根据路由拿数据
-  fetchData();
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", selectionStore.handleClickOutside);
 });
 
-// 监听路由 category_id 的变化，以及 selection 的变化，触发 fetchData
-watch(() => route.params.category_id, () => {
-  fetchData();
-});
-watch([() => selectionStore.selectedFactory, () => selectionStore.selectedYear, () => selectionStore.selectedMonth], () => {
-  fetchData();
-});
-
-// 获取数据并直接使用后端结构
-const fetchData = async () => {
-  isLoading.value = true
-  try {
-    const categoryId = getCategoryId() || 1
-    const response = await apiClient.get(`/month`, {
-      params: {
-        category_id: categoryId,
-        factory: factory.value,
-        year: year.value
-      }
-    })
-    resetFormData()
-    if (response.data && response.data.sets) {
-      sets.value = normalizeSets(response.data.sets || [])
-      review.value = response.data.review
-      console.log(response.data)
-    } else {
-      showInfo("未找到数据")
-    }
-  } catch (error) {
-    handleError(error)
-  } finally {
-    isLoading.value = false
-  }
-}
 
 const resetFormData = () => {
   sets.value = []
@@ -134,24 +90,51 @@ const resetFormData = () => {
   }
 }
 
+// 获取数据并直接使用后端结构
+const fetchData = async () => {
+  isLoading.value = true
+  try {
+    resetFormData()
+    // console.log("请求参数：", category.value.id, factory.value, year.value)
+    const response = await apiClient.get(`/month`, {
+      params: {
+        category_id: category.value.id,
+        factory: factory.value,
+        year: year.value
+      }
+    })
+    if (response.data && response.data.sets) {
+      sets.value = normalizeSets(response.data.sets || [])
+      review.value = response.data.review
+      console.log("月度结果：", category.value, factory.value, year.value, response.data)
+    } else {
+      showInfo("未找到数据")
+    }
+  } catch (error) {
+    handleError(error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
 // 提交：把所有字段名和值（数组）直接传给后端，不做计算
 const submitEdit = async (ifSubmit) => {
   try {
-    const categoryId = getCategoryId() || 1
     const payload = {
-      category_id: categoryId,
+      category_id: category.value.id,
       factory: factory.value,
       year: year.value,
       month: month.value,
       sets: sets.value,
       isSubmitted: ifSubmit
     }
+    // console.log("提交参数：", payload)
     const response = await apiClient.post('/month', payload);
     const operation = ifSubmit ? '提交' : '保存';
     if (response.data && response.data.status === 'success') {
       showSuccess('数据' + operation + '成功!')
     } else {
-      showError('数据' + operation + '失败: '+(response.data.message || '未知错误'))
+      showError('数据' + operation + '失败: ' + (response.data.message || '未知错误'))
     }
   } catch (error) {
     handleError(error)

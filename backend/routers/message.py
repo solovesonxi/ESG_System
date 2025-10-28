@@ -11,7 +11,7 @@ from core.utils import send_message
 router = APIRouter(prefix="/messages", tags=["消息"])
 
 
-@router.post("/send")
+@router.post("")
 async def send_messages(msg_type: str = Body(..., description="消息类型"),
                         title: str = Body(None, description="消息标题"),
                         content: str = Body(..., description="消息内容"),
@@ -24,7 +24,7 @@ async def send_messages(msg_type: str = Body(..., description="消息类型"),
     return {"status": "success", "message": "消息已发送"}
 
 
-@router.get("/get")
+@router.get("")
 async def get_messages(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     role = current_user["role"]
     factory = current_user["factory"]
@@ -41,17 +41,11 @@ async def get_messages(db: Session = Depends(get_db), current_user: dict = Depen
             Message.created_at.desc()).all()
     else:
         raise HTTPException(status_code=400, detail="未知角色")
-    notifications = [msg for msg in messages if msg.type != "最近操作"]
-    operations = [msg for msg in messages if msg.type == "最近操作"]
-
-    def to_dict(msg):
-        return {"id": msg.id, "type": msg.type, "title": msg.title, "content": msg.content,
-                "sender_role": msg.sender_role, "sender_factory": msg.sender_factory,
-                "sender_department": msg.sender_department, "receiver_role": msg.receiver_role,
-                "receiver_factory": msg.receiver_factory, "receiver_department": msg.receiver_department,
-                "created_at": msg.created_at, "is_read": msg.is_read}
-
-    return {"notifications": [to_dict(m) for m in notifications], "operations": [to_dict(m) for m in operations]}
+    return {"messages": [{"id": m.id, "type": m.type, "title": m.title, "content": m.content,
+                "sender_role": m.sender_role, "sender_factory": m.sender_factory,
+                "sender_department": m.sender_department, "receiver_role": m.receiver_role,
+                "receiver_factory": m.receiver_factory, "receiver_department": m.receiver_department,
+                "created_at": m.created_at, "is_read": m.is_read} for m in messages]}
 
 
 @router.patch("/read")
@@ -76,9 +70,9 @@ async def mark_all_as_read(db: Session = Depends(get_db), current_user: dict = D
     try:
         role = current_user["role"]
         factory = current_user["factory"]
-        query = db.query(Message).filter(Message.type != "最近操作",
-                                         Message.receiver_role == role if role != "factory" else Message.receiver_factory == factory,
-                                         Message.is_read == False)
+        query = db.query(Message).filter(
+            Message.receiver_role == role if role != "factory" else Message.receiver_factory == factory,
+            Message.is_read == False)
         messages_to_update = query.all()
         updated_count = len(messages_to_update)
         for msg in messages_to_update:
@@ -111,20 +105,3 @@ async def batch_delete_messages(ids: list[int] = Body(..., description="消息ID
         db.rollback()
         raise HTTPException(status_code=500, detail=f"批量删除消息失败: {str(e)}")
 
-
-@router.delete("/clear-all")
-async def clear_all_operations(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    try:
-        role = current_user["role"]
-        factory = current_user["factory"]
-        query = db.query(Message).filter(Message.type == "最近操作",
-                                         Message.receiver_role == role if role != "factory" else Message.receiver_factory == factory)
-        messages_to_delete = query.all()
-        deleted_count = len(messages_to_delete)
-        for msg in messages_to_delete:
-            db.delete(msg)
-        db.commit()
-        return {"status": "success", "message": f"已清空{deleted_count}条最近操作记录"}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"清空最近操作失败: {str(e)}")

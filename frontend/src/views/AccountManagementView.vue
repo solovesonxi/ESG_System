@@ -45,23 +45,17 @@
 
     <!-- 账号表格区 -->
     <div class="records-section">
-      <div class="records-header-row"
-           style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-        <h3 style="margin: 0;">账号列表 <span class="text-muted">共 {{ accounts.length }} 个账号</span></h3>
+      <div class="records-header-row">
+        <h3 >账号列表 <span class="text-muted">（共 {{ totalCount }} 个账号）</span></h3>
         <div class="quick-actions">
-          <button class="btn btn-secondary" @click="openAddAccount" title="添加账号"><span class="icon-add"></span> 添加账号
-          </button>
-          <button class="btn btn-secondary" @click="triggerImport" title="批量导入"><span class="icon-upload"></span>
-            批量导入
-          </button>
-          <button class="btn btn-secondary" @click="handleExport" title="导出列表"><span class="icon-download"></span>
-            导出列表
-          </button>
-          <button class="btn btn-secondary" @click="refreshAccounts" title="刷新"><span class="icon-refresh"></span> 刷新
-          </button>
+          <button class="btn btn-secondary" @click="openAddAccount" title="添加账号"><span class="icon-add"></span> 添加账号</button>
+          <button class="btn btn-secondary" @click="triggerImport" title="批量导入"><span class="icon-upload"></span>批量导入</button>
+          <button class="btn btn-secondary" @click="handleExport" title="导出列表"><span class="icon-download"></span>导出列表</button>
+          <button class="btn btn-secondary" @click="refreshAccounts" title="刷新"><span class="icon-refresh"></span> 刷新</button>
           <input type="file" ref="importFile" style="display:none" @change="handleImport" accept=".csv"/>
         </div>
       </div>
+
       <div class="records-list-modern">
         <div class="record-header-row">
           <span class="header-cell">头像</span>
@@ -71,12 +65,11 @@
           <span class="header-cell">部门</span>
           <span class="header-cell">电话</span>
           <span class="header-cell">邮箱</span>
-          <span class="header-cell">状态</span>
+          <span class="header-cell">启用</span>
         </div>
         <div v-for="account in accounts" :key="account.username" class="record-row">
           <span class="cell" @click="openDetail(account)">
-            <img
-                :src="apiClient.defaults.baseURL + (account.avatar ? account.avatar : '/static/avatars/default-avatar.jpg')"
+            <img :src="apiClient.defaults.baseURL + (account.avatar ? account.avatar : '/static/avatars/default-avatar.jpg')"
                 class="avatar-img" alt="头像"/>
           </span>
           <span class="cell" @click="openDetail(account)">{{ account.username }}</span>
@@ -116,19 +109,17 @@
     <teleport to="body">
       <div v-if="showDetail" class="modal-mask" @click.self="closeDetail">
         <div class="modal-content">
-          <div class="modal-header" style="text-align: center;margin-top: 5%;">
-            <h3>{{ detailAccount.value && detailAccount.value.id ? '编辑账号' : '注册账号' }}</h3>
+          <div class="modal-header">
+            <h3>{{ detailAccount && detailAccount.id ? '编辑账号' : '添加账号' }}</h3>
           </div>
           <div class="modal-body">
             <div class="form-group">
               <label class="form-label">头像</label>
-              <img
-                  :src="localAvatar || (apiClient.defaults.baseURL + (detailAccount.avatar || '/static/avatars/default-avatar.jpg'))"
+              <img :src="localAvatar || (apiClient.defaults.baseURL + (detailAccount.avatar || '/static/avatars/default-avatar.jpg'))"
                   class="avatar-img large" alt="头像"/>
               <input type="file" id="avatar-upload" @change="uploadAvatar" accept="image/*" hidden>
               <label for="avatar-upload" class="btn btn-secondary">选择图片</label>
-              <button v-if="detailAccount.avatar" @click="handleRemoveAvatar" class="btn btn-secondary">使用默认头像
-              </button>
+              <label v-if="detailAccount.avatar" @click="handleRemoveAvatar" class="btn btn-secondary">使用默认头像</label>
             </div>
             <div class="form-group">
               <label class="form-label">用户名</label>
@@ -155,11 +146,8 @@
               <div class="departments-tags">
                 <div class="add-dept">
                   <select v-model="newDepartment" class="form-input">
-                    <option value="">请选择部门</option>
-                    <option v-for="dep in availableDepartments" :key="dep.id" :value="dep.id">{{
-                        dep.name_zh || dep.name_en
-                      }}
-                    </option>
+                    <option value=0>请选择部门</option>
+                    <option v-for="dep in availableDepartments" :key="dep.id" :value="dep.id">{{dep.name_zh }}</option>
                   </select>
                   <button @click="addDepartment" class="btn btn-primary add-btn" :disabled="!newDepartment">＋</button>
                 </div>
@@ -180,31 +168,10 @@
             </div>
             <div class="form-group">
               <label class="form-label">密码</label>
-              <input
-                  v-model="newPassword"
-                  :type="showPassword ? 'text' : 'password'"
-                  class="form-input"
-                  placeholder="设置密码"
-                  autocomplete="new-password"
-                  style="padding-right: 40px;"
-              >
-              <button
-                  type="button"
-                  class="password-toggle"
-                  @click="showPassword = !showPassword"
-                  tabindex="-1"
-              >
-                <svg v-if="showPassword" width="22" height="22" viewBox="0 0 22 22">
-                  <path d="M1 11C3.5 5 8.5 2 11 2C13.5 2 18.5 5 21 11C18.5 17 13.5 20 11 20C8.5 20 3.5 17 1 11Z"
-                        stroke="#764ba2" stroke-width="2"/>
-                  <path d="M4 4L18 18" stroke="#764ba2" stroke-width="2"/>
-                  <circle cx="11" cy="11" r="3" stroke="#764ba2" stroke-width="2"/>
-                </svg>
-                <svg v-else width="22" height="22" viewBox="0 0 22 22">
-                  <path d="M1 11C3.5 5 8.5 2 11 2C13.5 2 18.5 5 21 11C18.5 17 13.5 20 11 20C8.5 20 3.5 17 1 11Z"
-                        stroke="#764ba2" stroke-width="2"/>
-                  <circle cx="11" cy="11" r="3" stroke="#764ba2" stroke-width="2"/>
-                </svg>
+              <input v-model="newPassword" :type="showPassword ? 'text' : 'password'" class="form-input"
+                  placeholder="设置密码" autocomplete="new-password" style="padding-right: 40px;">
+              <button type="button" class="password-toggle" @click="showPassword = !showPassword">
+                <i :class="showPassword ? 'fas fa-eye' : 'fas fa-eye-slash'"></i>
               </button>
             </div>
           </div>
@@ -260,14 +227,14 @@ const importFile = ref(null);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const totalPages = ref(1);
-
+const totalCount = ref(0);
 const handleRemoveAvatar = () => {
   localAvatar.value = null;
   detailAccount.value.avatar = '/static/avatars/default-avatar.jpg';
 }
 
 const availableDepartments = computed(() => {
-  if (detailAccount.value && detailAccount.value.departments) {
+  if (detailAccount.value && detailAccount.value.departments && detailAccount.value.departments.ids) {
     return authStore.monthCategories.filter(dep => !detailAccount.value.departments.ids.includes(dep.id));
   }
   return authStore.monthCategories;
@@ -297,7 +264,7 @@ function roleLabel(role) {
 }
 
 function fetchAccounts() {
-  axios.get('/admin/account', {
+  axios.get('/account', {
     params: {
       role: filterRole.value,
       factory: filterFactory.value,
@@ -309,7 +276,8 @@ function fetchAccounts() {
   }).then(res => {
     console.log(res.data)
     accounts.value = res.data.accounts || []
-    totalPages.value = Math.ceil(res.data.total / res.data.page_size)
+    totalCount.value = res.data.total || accounts.value.length
+    totalPages.value = Math.max(1, Math.ceil(totalPages.value / res.data.page_size))
   }).catch(error => {
     console.error('获取账号列表失败:', error)
     handleError(error)
@@ -336,7 +304,7 @@ function openDetail(account) {
 function closeDetail() {
   localAvatar.value = null;
   newPassword.value = '';
-  newDepartment.value = '';
+  newDepartment.value = 0;
   detailAccount.value = null;
   showDetail.value = false;
 }
@@ -366,10 +334,10 @@ async function saveAccount() {
     let response;
     if (!detailAccount.value.id) {
       // 注册账号
-      response = await axios.post('/admin/account/add', submitData);
+      response = await axios.post('/account/add', submitData);
     } else {
       // 更新账号
-      response = await axios.patch('/admin/account/update', submitData);
+      response = await axios.patch('/account/update', submitData);
     }
     if (response.data.status === "success") {
       showSuccess(detailAccount.value.id ? '修改成功' : '添加成功');
@@ -390,7 +358,7 @@ async function deleteAccount() {
 
 async function confirmDeleteAccount() {
   try {
-    const response = await axios.delete('/admin/account/delete', {
+    const response = await axios.delete('/account/delete', {
       data: {id: detailAccount.value.id}
     })
     if (response.data.status === "success") {
@@ -423,7 +391,10 @@ function uploadAvatar(e) {
 
 
 function removeDepartment(dep) {
-  detailAccount.value.departments = detailAccount.value.departments.filter(d => d !== dep)
+  console.log(detailAccount)
+  console.log(detailAccount.value)
+  console.log(detailAccount.value.departments.ids)
+  detailAccount.value.departments.ids = detailAccount.value.departments.ids.filter(d => d !== dep)
 }
 
 function addDepartment() {
@@ -459,7 +430,7 @@ async function handleImport(event) {
     });
     showInfo('正在导入账号，请稍候...');
     try {
-      const response = await apiClient.post('/admin/account/import', importedAccounts);
+      const response = await apiClient.post('/account/import', importedAccounts);
       if (response.data.status === 'success') {
         showSuccess(`导入成功 ${response.data.imported} 条，失败 ${response.data.failed.length} 条`);
         fetchAccounts(); // 刷新账号列表
@@ -500,7 +471,7 @@ async function toggleAccountStatus(account) {
   try {
     console.log('Toggling account status from', account.is_active);
     console.log('1账号已', account.is_active ? '激活' : '禁用')
-    const response = await axios.post('/admin/account/toggle-status', {id: account.id, is_active: !account.is_active});
+    const response = await axios.patch('/account/toggle-status', {id: account.id, is_active: !account.is_active});
     console.log(response)
     if (response.data.status === 'success') {
       showSuccess('账号已' + (account.is_active ? '激活' : '禁用'));
@@ -540,503 +511,8 @@ onMounted(() => {
 <style scoped>
 @import '@/assets/filter-list-styles.css';
 
-.filter-title svg {
-  width: 20px;
-  height: 20px;
-  color: #764ba2;
-}
+/* Page-specific overrides (keep minimal to ensure consistency) */
+.record-row .cell:first-child img.avatar-img { width: 40px; height: 40px; }
+.record-row .cell { min-height: 48px; }
 
-.dark-theme .filter-title svg {
-  color: #7ab7ff;
-}
-
-.filter-input {
-  width: 100%;
-  height: fit-content;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(118, 75, 162, 0.3);
-  background: rgba(255, 255, 255, 0.8);
-  color: #374151;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.dark-theme .filter-input {
-  background: rgba(26, 26, 46, 0.8);
-  border-color: rgba(118, 75, 162, 0.5);
-  color: #b0d9ff;
-}
-
-.filter-input:focus {
-  outline: none;
-  border-color: #764ba2;
-  box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.2);
-}
-
-.btn {
-  padding: 10px 18px;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-primary {
-  background: linear-gradient(90deg, #91d5de, #ac7ed7);
-  color: white;
-  width: fit-content;
-  justify-self: center;
-  margin-top: 0;
-}
-
-.btn-primary:hover {
-  background: linear-gradient(90deg, #5aa0a9, #7e56a4);
-  transform: translateY(-2px);
-}
-
-.dark-theme .btn-primary {
-  background: linear-gradient(90deg, #035862, #4c038f);
-  color: white;
-}
-
-.dark-theme .btn-primary:hover {
-  background: linear-gradient(90deg, #046e7a, #5f04b2);
-}
-
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(118, 75, 162, 0.3);
-  color: #764ba2;
-  width: fit-content;
-  margin-top: 0;
-}
-
-.dark-theme .btn-secondary {
-  background: rgba(26, 26, 46, 0.9);
-  border-color: rgba(118, 75, 162, 0.5);
-  color: #b0d9ff;
-}
-
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.8);
-}
-
-.dark-theme .btn-secondary:hover {
-  background: rgba(41, 41, 75, 0.9);
-}
-
-.btn-danger {
-  background: linear-gradient(90deg, #e178b8, #e14c61);
-  color: white;
-  width: fit-content;
-  justify-self: center;
-  margin-top: 0;
-}
-
-.btn-danger:hover {
-  background: linear-gradient(90deg, #cc4e9c, #d90826);
-}
-
-.dark-theme .btn-danger {
-  background: linear-gradient(90deg, #a40366, #96041a);
-}
-
-.dark-theme .btn-danger:hover {
-  background: linear-gradient(90deg, #c91383, #c50522);
-}
-
-.text-muted {
-  color: #6b7280;
-  font-size: 14px;
-}
-
-.dark-theme .text-muted {
-  color: #7ab7ff;
-}
-
-.account-table th {
-  background-color: #f8f9fa;
-  color: #222;
-  text-align: left;
-  padding: 14px 16px;
-  font-weight: 600;
-  font-size: 1rem;
-  align-items: center;
-  margin-bottom: 5px;
-}
-
-.account-table td {
-  padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
-  vertical-align: middle;
-}
-
-.dark-theme .account-table td {
-  border-bottom: 1px solid #3a3f4b;
-}
-
-.dept-tag {
-  background: rgba(124, 58, 237, 0.1);
-  color: #7c3aed;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  margin-right: 6px;
-  margin-bottom: 6px;
-  display: inline-block;
-}
-
-.dark-theme .dept-tag {
-  background: rgba(124, 58, 237, 0.2);
-  color: #b0d9ff;
-}
-
-.role-badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #ffffff;
-}
-
-.role-department {
-  background: linear-gradient(135deg, rgba(121, 76, 0, 0.65) 0%, #85ff00 100%);
-}
-
-.role-factory {
-  background: linear-gradient(135deg, rgba(0, 108, 32, 0.65) 0%, #00f6ff 100%);
-}
-
-.role-headquarter {
-  background: linear-gradient(135deg, rgba(0, 100, 100, 0.65) 0%, #b700ff 100%);
-}
-
-.role-admin {
-  background: linear-gradient(135deg, rgba(0, 10, 100, 0.93) 0%, #ff0013 100%);
-}
-
-.avatar-img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #e5e7eb;
-}
-
-.dark-theme .avatar-img {
-  border: 2px solid #3a3f4b;
-}
-
-.avatar-img.large {
-  width: 80px;
-  height: 80px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 40px 0;
-  color: #6b7280;
-}
-
-.dark-theme .empty-state {
-  color: #7ab7ff;
-}
-
-.empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
-
-.button-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  margin-bottom: 30px;
-  gap: 10%;
-}
-
-.modal-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-  animation: fadeIn 0.3s ease;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.modal-content {
-  background: #fff;
-  color: #222;
-  border-radius: 16px;
-  width: 60%;
-  max-width: 560px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-  animation: slideUp 0.3s ease;
-}
-
-.dark-theme .modal-content {
-  background: #191d25;
-  color: #b0d9ff;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.modal-body {
-  padding: 24px;
-}
-
-.form-group {
-  margin-left: 24px;
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  flex-direction: row;
-  align-items: center;
-  gap: 18px;
-}
-
-.form-label {
-  margin-bottom: 0;
-  min-width: 80px;
-  font-weight: 500;
-  color: #374151;
-}
-
-.dark-theme .form-label {
-  color: #b0d9ff;
-}
-
-.form-input, select, input[type="password"] {
-  flex: 1 1 180px;
-  min-width: 120px;
-  max-width: 300px;
-  margin-bottom: 0;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(118, 75, 162, 0.3);
-  background: rgba(255, 255, 255, 0.8);
-  color: #374151;
-  font-size: 14px;
-}
-
-.dark-theme .form-input,
-.dark-theme select,
-.dark-theme input[type="password"] {
-  background: rgba(26, 26, 46, 0.8);
-  border-color: rgba(118, 75, 162, 0.5);
-  color: #b0d9ff;
-}
-
-.departments-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-.add-dept {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.password-wrapper {
-  position: relative;
-  width: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.password-wrapper .form-input {
-  width: 100%;
-  padding-right: 40px;
-}
-
-.password-toggle {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #764ba2;
-  cursor: pointer;
-  font-size: 18px;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  z-index: 2;
-}
-
-.password-toggle:hover {
-  background: rgba(118, 75, 162, 0.08);
-}
-
-.dark-theme .password-toggle {
-  color: #b0d9ff;
-}
-
-.dark-theme .password-toggle:hover {
-  background: rgba(118, 75, 162, 0.18);
-}
-
-.add-account-btn {
-  color: #222;
-}
-
-.dark-theme .add-account-btn {
-  color: #fff;
-}
-
-.quick-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 24px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 24px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-
-input:checked + .slider {
-  background-color: #2196F3;
-}
-
-input:checked + .slider:before {
-  transform: translateX(20px);
-}
-
-.slider.round {
-  border-radius: 24px;
-}
-
-.icon-add::before {
-  content: '\2795';
-  margin-right: 4px;
-}
-
-.icon-upload::before {
-  content: '\21E9';
-  margin-right: 4px;
-}
-
-.icon-download::before {
-  content: '\21E7';
-  margin-right: 4px;
-}
-
-.icon-refresh::before {
-  content: '\21BB';
-  margin-right: 4px;
-}
-
-.records-list-modern {
-  width: 100%;
-}
-
-.record-header-row .header-cell:last-child,
-.record-row .cell:last-child {
-  text-align: right;
-  padding-right: 30px;
-}
-
-.record-row .cell:last-child {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.record-row .cell {
-  display: flex;
-  width: 100%;
-}
-
-@media (max-width: 768px) {
-  .add-dept {
-    flex-direction: column;
-  }
-
-  .modal-content {
-    margin: 0;
-    max-height: calc(100vh - 40px);
-  }
-
-  .modal-footer .btn {
-    width: 100%;
-  }
-}
 </style>

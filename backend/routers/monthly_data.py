@@ -115,6 +115,4 @@ def submit_data(payload: dict, db: Session = Depends(get_db), current_user: dict
         msg_content = f"{current_user['user'].username}于{now_str}{msg_title}，请工厂及时审核。"
         send_message(db, "月报", msg_title, msg_content, sender_factory=factory, sender_department=category,
                      receiver_factory=factory)
-    send_message(db, "最近操作", msg_title, receiver_role='department', receiver_factory=factory,
-                 receiver_department=category)
     return {"status": "success"}

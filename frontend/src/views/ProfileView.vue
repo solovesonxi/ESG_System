@@ -2,12 +2,12 @@
   <div class="account-container">
     <div class="account-left">
       <h1 class="account-title">账号管理</h1>
-      <div class="account-avatar" @click="openAvatarPicker" @mouseenter="showAvatarTip = true" @mouseleave="showAvatarTip = false">
+      <div class="account-avatar" @click="openAvatarPicker" @mouseenter="showAvatarTip = true"
+           @mouseleave="showAvatarTip = false">
         <img :src="authStore.user?.avatar" alt="用户头像" class="avatar-image-large"/>
         <div v-if="showAvatarTip" class="avatar-tip">更换头像</div>
       </div>
       <button class="change-password-btn" @click="openPasswordModal">
-        <i class="fas fa-key"></i>
         <span>更改密码</span>
       </button>
     </div>
@@ -15,7 +15,7 @@
       <div class="account-info">
         <div class="info-item" v-for="item in infoItems" :key="item.field">
           <div class="info-label">
-            <i :class="item.icon"></i>
+            <font-awesome-icon :icon="item.icon" class="menu-icon"/>
             <span>{{ item.label }}</span>
           </div>
           <div class="info-value">
@@ -121,27 +121,31 @@
 import {computed, ref} from 'vue';
 import {useAuthStore} from '@/stores/authStore';
 import apiClient from '@/utils/axios';
-import {showSuccess, showError, showInfo} from '@/utils/toast.js';
+import {showError, showInfo, showSuccess} from '@/utils/toast.js';
+import {faBullhorn, faCalendarAlt, faChartBar, faChartLine, faCheckCircle, faEnvelope, faIndustry, faPhone, faTags, faUser, faUserCog, faUserTag} from '@fortawesome/free-solid-svg-icons';
+import {library} from "@fortawesome/fontawesome-svg-core";
+
+library.add(faUser, faIndustry, faUserTag, faPhone, faEnvelope, faBullhorn, faCalendarAlt, faChartBar, faChartLine, faCheckCircle, faTags, faUserCog);
+const infoItems = [
+  {field: 'username', label: '用户名', icon: faUser, editable: true},
+  {field: 'factory', label: '工厂名', icon: faIndustry, editable: false},
+  {field: 'type', label: '账号类型', icon: faUserTag, editable: false},
+  {field: 'phone', label: '电话', icon: faPhone, editable: true},
+  {field: 'email', label: '邮箱', icon: faEnvelope, editable: true}
+];
 
 const authStore = useAuthStore();
-
 // 账号信息相关
 const user = ref({
   username: authStore.user?.username || '未设置',
   factory: authStore.user?.factory || '未设置',
-  type: authStore.user?.role === "factory" ? '工厂账号' :(authStore.user?.role === "headquarter" ? '总部账号' : '管理员账号'),
+  type: authStore.user?.role === "factory" ? '工厂账号' : (authStore.user?.role === "headquarter" ? '总部账号' : '管理员账号'),
   phone: authStore.user?.phone || '未设置',
   email: authStore.user?.email || '未设置',
   avatar: authStore.user?.avatar || '/default-avatar.jpg'
 });
 
-const infoItems = [
-  {field: 'username', label: '用户名', icon: 'fas fa-user', editable: true},
-  {field: 'factory', label: '工厂名', icon: 'fas fa-industry', editable: false},
-  {field: 'type', label: '账号类型', icon: 'fas fa-user-tag', editable: false},
-  {field: 'phone', label: '电话', icon: 'fas fa-phone', editable: true},
-  {field: 'email', label: '邮箱', icon: 'fas fa-envelope', editable: true}
-];
+
 
 // 打开头像选择器
 const openAvatarPicker = () => {
@@ -352,8 +356,8 @@ const submitPassword = async () => {
   display: flex;
   flex-direction: row;
   width: 100%;
-  height: 72vh;
-  background: rgba(30, 30, 40, 0.7);
+  height: 100%;
+  background: rgba(30, 30, 40, 0.85);
   border-radius: 0;
   box-shadow: none;
   padding: 0;
@@ -373,7 +377,7 @@ const submitPassword = async () => {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 48px 0 48px 0;
+  padding: 12% 0 12% 0;
   width: auto;
   height: 100%;
   position: relative;
@@ -393,18 +397,23 @@ const submitPassword = async () => {
   overflow: hidden;
   cursor: pointer;
 }
+
 .account-avatar::after {
   content: '';
   position: absolute;
-  left: 0; top: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0);
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0);
   border-radius: 50%;
   pointer-events: none;
   transition: background 0.3s;
   z-index: 1;
 }
+
 .account-avatar:hover::after {
-  background: rgba(0,0,0,0.35);
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .avatar-image-large {
@@ -416,11 +425,13 @@ const submitPassword = async () => {
   position: relative;
   z-index: 2;
 }
+
 .account-avatar:hover .avatar-image-large {
   box-shadow: 0 0 32px 0 #4776E6, 0 0 12px 2px #8E54E9;
   filter: brightness(1.08) saturate(1.18);
   transform: scale(1.06);
 }
+
 .avatar-tip {
   position: absolute;
   left: 50%;
@@ -433,7 +444,7 @@ const submitPassword = async () => {
   font-size: 1.08rem;
   font-weight: 500;
   letter-spacing: 1px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 2px 8px #4776E6;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), 0 2px 8px #4776E6;
   pointer-events: none;
   z-index: 3;
   opacity: 0;
@@ -443,6 +454,7 @@ const submitPassword = async () => {
   text-align: center;
   transition: opacity 0.25s, transform 0.25s;
 }
+
 .account-avatar:hover .avatar-tip {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
@@ -710,31 +722,6 @@ const submitPassword = async () => {
   box-shadow: 0 7px 20px rgba(71, 118, 230, 0.6);
 }
 
-.notification {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  background: rgba(30, 30, 40, 0.9);
-  border-left: 4px solid #2ecc71;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  z-index: 2000;
-  transform: translateX(120%);
-  transition: transform 0.4s ease;
-}
-
-.notification.show {
-  transform: translateX(0);
-}
-
-.notification.error {
-  border-left-color: #e74c3c;
-}
-
 .notification i {
   font-size: 1.5rem;
 }
@@ -751,78 +738,85 @@ const submitPassword = async () => {
 .dark-theme .account-container {
   background: rgba(18, 18, 18, 0.95);
 }
+
 .dark-theme .account-left {
   background: linear-gradient(135deg, rgba(71, 118, 230, 0.12) 0%, rgba(142, 84, 233, 0.10) 100%), rgba(40, 50, 80, 0.55);
-  border-right: 2px solid rgba(255,255,255,0.08);
+  border-right: 2px solid rgba(255, 255, 255, 0.08);
 }
+
 .dark-theme .account-title {
   color: #bb86fc;
   text-shadow: 0 0 12px rgba(187, 134, 252, 0.2);
 }
+
 .dark-theme .account-avatar {
   background: linear-gradient(135deg, #3700b3, #8E54E9);
   box-shadow: 0 0 32px rgba(98, 0, 234, 0.3);
 }
+
 .dark-theme .change-password-btn {
   background: linear-gradient(135deg, rgba(98, 0, 234, 0.15), rgba(55, 0, 179, 0.18));
   color: #bb86fc;
   border: 1px solid rgba(98, 0, 234, 0.2);
 }
+
 .dark-theme .account-right {
   background: transparent;
 }
+
 .dark-theme .info-label {
   color: #bb86fc;
 }
+
 .dark-theme .info-value {
   color: #e0e0e0;
 }
+
 .dark-theme .edit-btn {
   background: rgba(98, 0, 234, 0.15);
   color: #bb86fc;
   border: 1px solid rgba(98, 0, 234, 0.2);
 }
+
 .dark-theme .edit-btn:hover {
   background: rgba(98, 0, 234, 0.25);
 }
+
 .dark-theme .modal-overlay {
   background: rgba(18, 18, 18, 0.85);
 }
+
 .dark-theme .edit-modal {
   background: linear-gradient(135deg, #232323, #2a2a2a);
   border: 1px solid rgba(187, 134, 252, 0.08);
 }
+
 .dark-theme .modal-header h2 {
   color: #bb86fc;
 }
+
 .dark-theme .input-group label {
   color: #bb86fc;
 }
+
 .dark-theme .input-field {
   background: rgba(30, 30, 40, 0.7);
   color: #e0e0e0;
   border: 1px solid #444;
 }
+
 .dark-theme .input-field:focus {
   border-color: #bb86fc;
   box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.2);
 }
-.dark-theme .cancel-btn {
-  background: rgba(187, 134, 252, 0.08);
-  color: #bb86fc;
-  border: 1px solid rgba(187, 134, 252, 0.15);
-}
+
 .dark-theme .submit-btn {
   background: linear-gradient(135deg, #3700b3, #8E54E9);
   color: #fff;
 }
+
 .dark-theme .submit-btn:hover {
   background: linear-gradient(135deg, #6200ea, #bb86fc);
-}
-.dark-theme .notification {
-  background: rgba(30, 30, 40, 0.95);
-  border-left-color: #bb86fc;
-  color: #e0e0e0;
 }
 
 /* 响应式设计 */
@@ -855,7 +849,7 @@ const submitPassword = async () => {
 
 @media (max-width: 600px) {
   .account-left {
-    background: linear-gradient(135deg, rgba(71, 118, 230, 0.12) 0%, rgba(142, 84, 233, 0.08) 100%),rgba(40, 50, 80, 0.35);
+    background: linear-gradient(135deg, rgba(71, 118, 230, 0.12) 0%, rgba(142, 84, 233, 0.08) 100%), rgba(40, 50, 80, 0.35);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);

@@ -84,3 +84,39 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+@media (max-width: 400px) {
+  .left-panel {
+    padding: 10px;
+  }
+
+  .form-container {
+    padding: 15px 10px;
+  }
+
+  .logo-text {
+    font-size: 20px;
+  }
+
+  .tagline {
+    font-size: 13px;
+  }
+
+  input {
+    padding: 10px;
+    min-height: 44px;
+  }
+}
+
+/* Ensure Font Awesome 5 icons are not accidentally overridden by project font rules */
+.fa, .fas, .far, .fab, .fal, [class^="fa-"], [class*=" fa-"] {
+  /* Font Awesome 5 Free/Brands font family */
+    font-family: "Font Awesome 5 Free", "Font Awesome 5 Brands", serif !important;
+  font-style: normal !important;
+  font-weight: 900 !important; /* fas uses 900 */
+  speak: none !important;
+  display: inline-block !important;
+  text-decoration: inherit !important;
+  text-transform: none !important;
+  line-height: 1 !important;
+}

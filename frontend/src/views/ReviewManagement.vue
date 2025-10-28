@@ -1,130 +1,5 @@
 <template>
   <div class="review-management">
-    <!-- 页面标题 -->
-    <div class="page-header">
-      <div class="user-info">
-        <span class="username">{{ authStore.user?.username }}</span>
-        <span class="role-badge" :class="authStore.user?.role">
-          {{ getRoleLabel(authStore.user?.role) }}
-        </span>
-        <button class="permission-toggle-btn" @click="showPermissionDetails = !showPermissionDetails"
-                :class="{ 'active': showPermissionDetails }">
-          {{ showPermissionDetails ? '隐藏权限' : '查看权限' }}
-        </button>
-      </div>
-    </div>
-    <div v-show="showPermissionDetails" class="permission-card">
-      <div class="permission-details">
-        <h4>系统角色权限说明</h4>
-        <div class="roles-grid">
-          <!-- 部门账号 -->
-          <div class="role-card" :class="{ 'current-user': authStore.isDepartment }">
-            <div class="role-card-header">
-              <span class="role-badge department">部门</span>
-              <span v-if="authStore.isDepartment" class="current-label">您当前角色</span>
-            </div>
-            <div class="role-permissions">
-              <div class="permission-item">
-                查看管辖部门每月的定量数据和一二级审核结果
-              </div>
-              <div class="permission-item">
-                每月填写管辖部门的数据
-              </div>
-            </div>
-          </div>
-
-          <!-- 工厂账号 -->
-          <div class="role-card" :class="{ 'current-user': authStore.isFactory }">
-            <div class="role-card-header">
-              <span class="role-badge factory">工厂</span>
-              <span v-if="authStore.isFactory" class="current-label">您当前角色</span>
-            </div>
-            <div class="role-permissions">
-              <div class="permission-item">
-                查看所有部门的定量数据和一二级审核结果
-              </div>
-              <div class="permission-item">
-                审核所有部门的定量数据
-              </div>
-              <div class="permission-item">
-                查看本工厂的年度数据和审核结果
-              </div>
-              <div class="permission-item">
-                每年填写本工厂的年度数据
-              </div>
-            </div>
-          </div>
-
-          <!-- 总部账号 -->
-          <div class="role-card" :class="{ 'current-user': authStore.isHeadquarter }">
-            <div class="role-card-header">
-              <span class="role-badge headquarter">总部</span>
-              <span v-if="authStore.isHeadquarter" class="current-label">您当前角色</span>
-            </div>
-            <div class="role-permissions">
-              <div class="permission-item">
-                查看所有月度和年度数据和一二级审核结果
-              </div>
-              <div class="permission-item">
-                审核所有工厂所有部门的定量数据
-              </div>
-              <div class="permission-item">
-                审核所有工厂的年度数据
-              </div>
-              <div class="permission-item">
-                最终审核确认
-              </div>
-            </div>
-          </div>
-
-          <!-- 管理员账号 -->
-          <div class="role-card" :class="{ 'current-user': authStore.isAdmin }">
-            <div class="role-card-header">
-              <span class="role-badge admin">管理员</span>
-              <span v-if="authStore.isAdmin" class="current-label">您当前角色</span>
-            </div>
-            <div class="role-permissions">
-              <div class="permission-item">
-                访问所有功能模块
-              </div>
-              <div class="permission-item">
-                账号管理和权限分配
-              </div>
-              <div class="permission-item">
-                指标库管理
-              </div>
-              <div class="permission-item">
-                系统维护和配置
-              </div>
-            </div>
-          </div>
-
-          <div class="current-user-notice">
-            <div class="notice-icon">
-              <i class="fas fa-info-circle"></i>
-            </div>
-            <div style="flex: 1;">
-              <strong>您当前的操作权限：</strong>
-              <div class="user-permissions">
-              <span v-if="authStore.isDepartment" class="permission-tag">
-                仅限以下部门数据: {{ departmentsListZh.join('、') }}
-              </span>
-                <span v-if="authStore.isFactory" class="permission-tag">
-                本工厂: {{ authStore.factory }}
-              </span>
-                <span v-if="authStore.isHeadquarter" class="permission-tag">
-                全公司数据访问
-              </span>
-                <span v-if="authStore.isAdmin" class="permission-tag">
-                超级管理员权限
-              </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- 过滤器和审核记录列表将在此插入 -->
     <div class="filter-section card">
       <h3>筛选审核记录</h3>
@@ -263,26 +138,15 @@ import debounce from 'lodash/debounce';
 const authStore = useAuthStore()
 const selectionStore = useSelectionStore()
 
-const showPermissionDetails = ref(false)
 const factoryList = computed(() => (authStore.isDepartment || authStore.isFactory) ? [authStore.factory] : selectionStore.factories)
 const departmentsList = computed(() => authStore.getReviewableDataTypes || [])
-const departmentsListZh = computed(() => (departmentsList.value || []).map(dep => dep.name_zh))
+
 
 // 分页相关
 const currentPage = ref(1)
 const pageSize = ref(10)
 const totalRecords = ref(0)
 
-// 方法
-const getRoleLabel = (role) => {
-  const labels = {
-    'department': '部门账号',
-    'factory': '工厂账号',
-    'headquarter': '总部账号',
-    'admin': '管理员'
-  }
-  return labels[role] || role
-}
 
 const fetchRecords = async () => {
   try {
@@ -301,7 +165,6 @@ const fetchRecords = async () => {
     const response = await apiClient.get('/review/', {params})
     filteredRecords.value = response.data.records
     totalRecords.value = response.data.total
-    console.log('filteredRecords:', response)
   } catch (error) {
     showError(error)
   }
@@ -361,7 +224,6 @@ onMounted(() => {
     currentPage.value = state.currentPage || 1
   }
   fetchRecords()
-  console.log(departmentsList.value)
 })
 
 // 统一监听筛选条件和 pageSize，变化时重置页码并刷新

@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import {computed, ref} from 'vue'
+import {computed, nextTick, ref} from 'vue'
 import router from '@/router'
 import apiClient from '@/utils/axios';
 import {useSelectionStore} from "@/stores/selectionStore.js";
@@ -8,14 +8,13 @@ export const useAuthStore = defineStore('auth', () => {
     const accessToken = ref(null);
     const user = ref(null);
     const isAuthenticated = ref(false);
-    const categories = ref(null);
+    const categories = ref({});
     const isDepartment = computed(() => user.value?.role === 'department' || false);
     const isFactory = computed(() => user.value?.role === 'factory' || false);
     const isHeadquarter = computed(() => user.value?.role === 'headquarter' || false);
     const isAdmin = computed(() => user.value?.role === 'admin' || false);
     const factory = computed(() => user.value?.factory || '');
     const departments = computed(() => user.value?.departments || []);
-    const isDataMode = ref(true);
     // 部门权限检查
     const hasDepartmentAccess = (departmentId) => {
         if (isFactory.value || isHeadquarter.value || isAdmin.value) {
@@ -52,27 +51,25 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    const setDataMode = (dataType) => {
-        const analyticalItems = flattenCategories(categories.value?.year);
-        const analyticalNames = analyticalItems.map(i => i.name_en);
-        isDataMode.value = !analyticalNames.includes(dataType);
-    }
+    const monthCategories = computed(() => flattenCategories(categories.value?.month));
+    const yearCategories = computed(() => flattenCategories(categories.value?.year));
 
     // 获取用户可访问的部门列表
     const getReviewableDataTypes = computed(() => {
-        const monthItems = flattenCategories(categories.value?.month);
-        const yearItems = flattenCategories(categories.value?.year);
+        const monthItems = monthCategories.value || [];
+        const yearItems = yearCategories.value || [];
+
         if (isHeadquarter.value || isAdmin.value) return [...monthItems, ...yearItems];
         if (isFactory.value) return monthItems;
+
         if (isDepartment.value) {
-            const deps = Array.isArray(departments.value.ids) ? departments.value.ids : [];
-            return monthItems.filter(item => item && item.name_en && deps.includes(item.name_en));
+            // departments.value.ids 可能是数字或字符串，标准化为字符串比较更稳健
+            const deps = Array.isArray(departments.value?.ids) ? departments.value.ids.map(String) : [];
+            return monthItems.filter(item => item && item.name_en && deps.includes(String(item.name_en)));
         }
         return [];
-    })
+    });
 
-    const monthCategories = computed(() => flattenCategories(categories.value?.month));
-    const yearCategories = computed(() => flattenCategories(categories.value?.year));
     const categoryRouteMap = computed(() => {
         const map = {};
         const m = monthCategories.value || [];
@@ -112,32 +109,32 @@ export const useAuthStore = defineStore('auth', () => {
         return entry || null;
     };
 
-
-
-    // 权限相关计算属性
-    const canLevel1Review = computed(() => (isDataMode.value && isFactory.value) || (!isDataMode.value && (isHeadquarter.value || isAdmin.value))) // 工厂一级审核月度，总部/管理员一级审核年度
-    const canLevel2Review = computed(() => isDataMode.value && (isHeadquarter.value || isAdmin.value)) // 总部/管理员可以二级审核月度
-    const canViewAllData = computed(() => isHeadquarter.value || isAdmin.value)
-    const canViewFactoryData = computed(() => isFactory.value || isHeadquarter.value || isAdmin.value)
     const selectionStore = useSelectionStore();
-
     // 初始化认证信息
-    const initAuth = (token, userData, cats, factories) => {
+    const initAuth = async (token, userData, cats, factories) => {
         accessToken.value = token
         user.value = userData
-        categories.value = cats || null;
+        categories.value = cats || {};
         selectionStore.factories = factories || [];
         const avatarPath = userData.avatar ? userData.avatar : '/static/avatars/default-avatar.jpg';
         user.value.avatar = `${apiClient.defaults.baseURL}${avatarPath}?t=${new Date().getTime()}`;
         console.log("用户登录认证数据：", user);
         localStorage.setItem('access_token', token)
         localStorage.setItem('user', JSON.stringify(user.value))
-        localStorage.removeItem('lastPath_data');
-        localStorage.removeItem('lastPath_analyze');
+        localStorage.removeItem('monthly_path');
+        localStorage.removeItem('yearly_path');
         localStorage.removeItem('reviewManagementState');
         selectionStore.initSelection();
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
         isAuthenticated.value = true;
+        try {
+            await nextTick();
+            monthCategories.value;
+            yearCategories.value;
+        } catch (e) {
+            console.warn('initAuth: 下一帧触发计算失败', e);
+        }
+        await router.push('/home');
     }
 
     // 更新头像
@@ -161,19 +158,6 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem('access_token', token)
         localStorage.setItem('user', JSON.stringify(user.value))
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
-    }
-
-    // 清除认证信息
-    const clearAuth = () => {
-        selectionStore.resetSelection();
-        accessToken.value = null;
-        user.value = null;
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('lastPath_data');
-        localStorage.removeItem('lastPath_analyze');
-        localStorage.removeItem('reviewManagementState');
-        delete apiClient.defaults.headers.common['Authorization'];
     }
 
     // 检查token是否有效
@@ -215,12 +199,16 @@ export const useAuthStore = defineStore('auth', () => {
 
     // 登出
     const logout = async () => {
-        clearAuth();
+        selectionStore.resetSelection();
+        accessToken.value = null;
+        user.value = null;
         categories.value = null;
-        try {
-            localStorage.removeItem('categories');
-        } catch (e) {
-        }
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('monthly_path');
+        localStorage.removeItem('yearly_path');
+        localStorage.removeItem('reviewManagementState');
+        delete apiClient.defaults.headers.common['Authorization'];
         await router.push('/login');
     }
 
@@ -233,24 +221,17 @@ export const useAuthStore = defineStore('auth', () => {
         isAdmin,
         isFactory,
         isDepartment,
-        isDataMode,
         factory,
         departments,
         getReviewableDataTypes,
         monthCategories,
         yearCategories,
         categoryRouteMap,
-        canLevel1Review,
-        canLevel2Review,
-        canViewAllData,
-        canViewFactoryData,
         getCategoryMapping,
         getCategoryRoute,
         hasDepartmentAccess,
-        setDataMode,
         initAuth,
         setAuth,
-        clearAuth,
         checkTokenValid,
         refreshToken,
         logout,

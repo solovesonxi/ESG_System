@@ -11,9 +11,9 @@ from sqlalchemy.orm import Session
 
 from core.dependencies import get_db, pwd_context, logger
 from core.models import User
-from core.permission import get_current_user
+from core.permission import get_current_user, admin_required
 
-router = APIRouter(prefix="/admin", tags=["管理控制台"])
+router = APIRouter(prefix="/account", tags=["账号管理"], dependencies=[Depends(admin_required)])
 
 
 class UserUpdateRequest(BaseModel):
@@ -30,7 +30,7 @@ class UserUpdateRequest(BaseModel):
     is_active: Optional[bool] = None  # 新增：账号启用/禁用
 
 
-def create_or_update_user(user: User, data: UserUpdateRequest, db: Session, is_new: bool = False):
+def create_or_update_user(user, data: UserUpdateRequest, db: Session, is_new: bool = False):
     if data.username:
         user.username = data.username
     if data.hashed_password and data.hashed_password != "":
@@ -90,7 +90,7 @@ def create_or_update_user(user: User, data: UserUpdateRequest, db: Session, is_n
     return user
 
 
-@router.get("/account")
+@router.get("")
 def get_accounts(role: str = Query(None), factory: str = Query(None), department: int = Query(None),
                  keyword: str = Query(None), page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100),
                  db: Session = Depends(get_db)):
@@ -133,11 +133,8 @@ def get_accounts(role: str = Query(None), factory: str = Query(None), department
         raise HTTPException(status_code=500, detail="服务器内部错误")
 
 
-@router.patch("/account/update")
-def update_account(data: UserUpdateRequest, db: Session = Depends(get_db),
-                   current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="非管理员不可修改用户重要信息")
+@router.patch("/update")
+def update_account(data: UserUpdateRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == data.id).first()
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
@@ -145,7 +142,7 @@ def update_account(data: UserUpdateRequest, db: Session = Depends(get_db),
     return {"status": "success"}
 
 
-@router.delete("/account/delete")
+@router.delete("/delete")
 def delete_account(id: int = Body(..., embed=True), db: Session = Depends(get_db),
                    current_user: dict = Depends(get_current_user)):
     user = db.query(User).filter(User.id == id).first()
@@ -162,10 +159,8 @@ def delete_account(id: int = Body(..., embed=True), db: Session = Depends(get_db
         raise HTTPException(status_code=500, detail=f"删除失败: {e}")
 
 
-@router.post("/account/add")
-def add_account(data: UserUpdateRequest, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="非管理员不可添加账号")
+@router.post("/add")
+def add_account(data: UserUpdateRequest, db: Session = Depends(get_db)):
     if data.hashed_password is None or data.hashed_password == "":
         raise HTTPException(status_code=400, detail="密码不能为空")
     if data.username and db.query(User).filter(User.username == data.username).first():
@@ -179,7 +174,7 @@ def add_account(data: UserUpdateRequest, db: Session = Depends(get_db), current_
     return {"status": "success", "id": new_user.id, "avatar": new_user.avatar}
 
 
-@router.post("/account/import")
+@router.post("/import")
 def import_accounts(accounts: list[UserUpdateRequest], db: Session = Depends(get_db),
                     current_user: dict = Depends(get_current_user)):
     if current_user["role"] != "admin":
@@ -207,12 +202,9 @@ def import_accounts(accounts: list[UserUpdateRequest], db: Session = Depends(get
     return {"status": "success", "imported": success_count, "failed": failed}
 
 
-@router.post("/account/toggle-status")
-def toggle_account_status(id: int = Body(...), is_active: bool = Body(...), db: Session = Depends(get_db),
-                          current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="只有管理员可以切换账号状态")
-    user = db.query(User).filter(User.id == id).first()
+@router.patch("/toggle-status")
+def toggle_account_status(id: int = Body(...), is_active: bool = Body(...), db: Session = Depends(get_db)):
+    user = db.query(User).filter_by(id = id).first()
     if not user:
         raise HTTPException(status_code=404, detail="账号不存在")
     user.is_active = is_active

@@ -14,11 +14,15 @@
         </div>
         <div class="feature">
           <span class="feature-icon">✓</span>
-          <span>资源消耗与碳排放追踪</span>
+          <span>实时消息自动推送</span>
         </div>
         <div class="feature">
           <span class="feature-icon">✓</span>
-          <span>合规性管理与风险预警</span>
+          <span>多级账号管理与数据审核机制</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">✓</span>
+          <span>支持自定义指标</span>
         </div>
       </div>
 
@@ -46,19 +50,10 @@
         <div class="form-row">
           <label class="form-label">密码</label>
           <div class="password-wrapper">
-            <input
-                v-model="loginForm.password"
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="请输入密码"
-                required
-                :class="{'input-error': loginError}"
-            >
-            <button
-                type="button"
-                class="password-toggle"
-                @click="showPassword = !showPassword"
-            >
-              <i :class="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+            <input v-model="loginForm.password" :type="showPassword ? 'text' : 'password'"
+                placeholder="请输入密码" required :class="{'input-error': loginError}">
+            <button type="button" class="password-toggle" @click="showPassword = !showPassword">
+              <i :class="showPassword ? 'fas fa-eye' : 'fas fa-eye-slash'"></i>
             </button>
           </div>
         </div>
@@ -82,7 +77,6 @@
 </template>
 
 <script>
-import router from "@/router/index.js";
 import {useAuthStore} from '@/stores/authStore';
 import apiClient from "@/utils/axios.js";
 import {handleError, showError, showInfo} from "@/utils/toast.js";
@@ -115,7 +109,6 @@ export default {
         if (response.data.status === 'success') {
           const { token, user, categories, factories} = response.data;
           useAuthStore().initAuth(token, user, categories, factories);
-          await router.push('/home');
         }else {
           showError('登录失败: ' + response.data.message);
         }
@@ -135,8 +128,6 @@ export default {
 
 <style scoped>
 .login-container {
-  width: 100%;
-  min-height: 80vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -149,14 +140,15 @@ export default {
       rgba(164, 90, 6, 0.6),
       rgba(26, 42, 108, 0.9)
   );
-  background-size: 500% 500%;
+  background-size: 400% 400%;
   animation: gradientBG 30s ease infinite;
   color: #fff;
   position: relative;
   padding: 20px;
-  border-radius: 20px;
   backdrop-filter: blur(10px);
   overflow: hidden;
+  width: 100%;
+  height: 100%;
 }
 
 @keyframes gradientBG {
@@ -279,9 +271,8 @@ input:focus, select:focus {
 
 .password-toggle {
   position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 12px;
+  top: -40%;
   background: none;
   border: none;
   color: #666;
@@ -460,7 +451,7 @@ input:focus, select:focus {
 }
 
 .links a {
-  color: #4CAF50;
+  color: #245226;
   text-decoration: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -498,7 +489,6 @@ input:focus, select:focus {
 @media (max-width: 900px) {
   .login-container {
     flex-direction: column;
-    min-height: 100vh;
     padding: 10px;
   }
 
