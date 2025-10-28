@@ -12,6 +12,8 @@ import FieldManagement from "@/views/FieldManagement.vue";
 import AnnouncementBoardView from "@/views/AnnouncementBoardView.vue";
 import MonthlyDataView from '@/views/MonthlyDataView.vue';
 import YearlyDataView from '@/views/YearlyDataView.vue';
+import {showError} from "@/utils/toast.js";
+import DataView from "@/views/DataView.vue";
 import NotificationsView from "@/views/NotificationsView.vue";
 import SettingsView from "@/views/SettingsView.vue";
 

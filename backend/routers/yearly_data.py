@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from fastapi import APIRouter
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
@@ -16,7 +16,17 @@ router = APIRouter(prefix="/year", tags=["年度数据"])
 
 
 @router.get("")
-def fetch_data(category_id: int, factory: str, year: int, db: Session = Depends(get_db)):
+def fetch_data(category_id: int, factory: str, year: int, db: Session = Depends(get_db),
+               current_user: dict = Depends(get_current_user)):
+    # 访问控制：部门/工厂只能查看自身工厂；总部/管理员可查看所有
+    role = current_user.get("role")
+    if role in ["headquarter", "admin"]:
+        pass
+    elif role in ["factory", "department"]:
+        if current_user.get("factory") != factory:
+            raise HTTPException(status_code=403, detail="无权查看其他工厂数据")
+    else:
+        raise HTTPException(status_code=403, detail="未知角色无权访问")
     category, model = get_model(category_id, db)
     fields = db.query(FieldData).filter_by(category=category_id, is_active=True).order_by(FieldData.set,
                                                                                           FieldData.id).all()
