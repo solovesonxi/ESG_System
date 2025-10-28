@@ -10,10 +10,11 @@ import AnnouncementBoardView from "@/views/AnnouncementBoardView.vue";
 import MonthlyDataView from '@/views/MonthlyDataView.vue';
 import YearlyDataView from '@/views/YearlyDataView.vue';
 import {showError} from "@/utils/toast.js";
+import DataView from "@/views/DataView.vue";
 
 const routes = [{path: '/', redirect: '/login'}, {path: '/login', component: LoginView}, {
     path: '/profile', component: ProfileView
-}, {path: '/home', component: Home}, {path: '/month', component: MonthlyDataView}, {
+}, {path: '/home', component: Home}, {path: '/data-view', component: DataView}, {path: '/month', component: MonthlyDataView}, {
     path: '/year', component: YearlyDataView
 }, {path: '/year/:category_id', component: YearlyDataView}, {path: '/month/:category_id', component: MonthlyDataView}, {
     path: '/review-management', component: ReviewManagement

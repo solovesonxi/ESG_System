@@ -205,12 +205,13 @@ const menuItems = computed(() => {
   const homeItem = {name: 'home', path: '/home', label: '首页'};
   const dataItems = authStore.isDataMode ? dataModeItems.value : analyzeModeItems.value;
   const reviewItem = {name: 'review', path: '/review-management', label: '审核管理'};
+  const dataViewItem = {name: 'data-view', path: '/data-view', label: '数据查看'};
   const profileItem = {name: 'profile', path: '/profile', label: '个人中心'};
   let result = [homeItem, ...dataItems];
   if (authStore.isAdmin) {
     result.push(adminMenuItem);
   }
-  result.push(reviewItem, profileItem);
+  result.push(reviewItem, dataViewItem, profileItem);
   return result;
 })
 
