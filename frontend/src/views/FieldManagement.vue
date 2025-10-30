@@ -112,27 +112,27 @@
               <input v-model="detailField.name_zh" class="form-input" />
             </div>
 
-            <div class="form-group">
+            <div class="form-group" v-if="isMonthlyField || isCalculativeField">
               <label class="form-label">步长</label>
               <input v-model.number="detailField.step" class="form-input" type="number" step="any" />
             </div>
 
-            <div class="form-group">
+            <div class="form-group" v-if="isCalculativeField">
               <label class="form-label">计算</label>
               <textarea v-model="calculationText" class="form-input" rows="4" placeholder='可以输入 JSON 或 简单公式文本'></textarea>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" v-if="isMonthlyField || isCalculativeField">
               <label class="form-label">单位</label>
               <input v-model="detailField.unit" class="form-input" />
             </div>
 
             <div class="form-group">
-              <label class="form-label">描述</label>
+              <label class="form-label">释义</label>
               <textarea v-model="detailField.description" class="form-input" rows="3"></textarea>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" v-if="!isMonthlyField">
               <label class="form-label">来源</label>
               <input v-model="detailField.source" class="form-input" />
             </div>
@@ -194,7 +194,13 @@ const allCategories = computed(() => {
   return [...m, ...y]
 })
 
-
+const isMonthlyField = computed(() => {
+  const monthlyCategoryIds = (Array.isArray(authStore.monthCategories) ? authStore.monthCategories : []).map(c => c.id)
+  return detailField.value && monthlyCategoryIds.includes(detailField.value.category)
+})
+const isCalculativeField = computed(() => {
+  return getCategoryName(detailField.value.category).includes('定量')
+})
 function getCategoryName(id) {
   if (!id) return ''
   const found = allCategories.value.find(c => c.id === id)
