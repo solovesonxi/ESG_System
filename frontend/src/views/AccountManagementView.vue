@@ -32,7 +32,7 @@
           <label>搜索用户名/电话/邮箱</label>
           <input v-model="keyword" class="filter-input" placeholder="请输入搜索内容"/>
         </div>
-        <button class="reset-btn" @click="resetFilters">
+        <button class="btn btn-secondary" @click="resetFilters">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
             <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
             <path
@@ -277,7 +277,7 @@ function fetchAccounts() {
     console.log(res.data)
     accounts.value = res.data.accounts || []
     totalCount.value = res.data.total || accounts.value.length
-    totalPages.value = Math.max(1, Math.ceil(totalPages.value / res.data.page_size))
+    totalPages.value = Math.max(1, Math.ceil(res.data.total / res.data.page_size))
   }).catch(error => {
     console.error('获取账号列表失败:', error)
     handleError(error)

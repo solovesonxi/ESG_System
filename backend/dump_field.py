@@ -2,9 +2,9 @@ import json
 import os
 import sys
 import argparse
+import re
 
-from sqlalchemy import create_engine, MetaData, select, literal, text, inspect
-from sqlalchemy.schema import Table
+from sqlalchemy import create_engine, MetaData, select, text
 
 # try to import project default URL if available
 try:
@@ -27,7 +27,7 @@ def table_qualified_name(preparer, table):
     return quote_name(preparer, table.name)
 
 
-def dump_fields(url, out_path, table_name=DEFAULT_TABLE):
+def dump_fields(url, out_path, table_name=DEFAULT_TABLE, collapse_percent=False, normalize_newlines='none'):
     if not url:
         raise SystemExit("No database URL provided. Set DATABASE_URL env or pass --url.")
 
@@ -66,46 +66,92 @@ def dump_fields(url, out_path, table_name=DEFAULT_TABLE):
         # use mappings() to get dict-like rows so we can reference columns by name
         rows = result.mappings().all()
 
+        # helper: detect JSON-like column types so we can append ::jsonb for Postgres
+        json_col_names = set()
+        for c in cols:
+            try:
+                tname = c.type.__class__.__name__.lower()
+            except Exception:
+                tname = str(c.type).lower()
+            if "json" in tname:
+                json_col_names.add(c.name)
+
         for row in rows:
             vals = []
             # iterate over actual columns order but skip id
             for c in cols:
                 # access by column name from mapping
                 v = row.get(c.name)
+                # NULL
                 if v is None:
                     vals.append("NULL")
                     continue
 
-                # bytes -> decode
+                # memoryview/bytes -> decode if possible
+                if isinstance(v, memoryview):
+                    try:
+                        v = v.tobytes()
+                    except Exception:
+                        v = bytes(v)
                 if isinstance(v, (bytes, bytearray)):
                     try:
                         v = v.decode('utf-8')
                     except Exception:
                         v = bytes(v).hex()
 
-                # try SQLAlchemy literal compilation for safe formatting
-                try:
-                    lit = literal(v)
-                    compiled = lit.compile(dialect=engine.dialect, compile_kwargs={"literal_binds": True})
-                    vals.append(str(compiled))
+                # booleans -> lower-case true/false for SQL (no quotes)
+                if isinstance(v, bool):
+                    if engine.dialect.name == 'postgresql':
+                        vals.append('true' if v else 'false')
+                    else:
+                        vals.append('1' if v else '0')
                     continue
+
+                # numbers (int/float/Decimal) -> raw literal (no quotes)
+                try:
+                    from decimal import Decimal
+                    if isinstance(v, (int, float, Decimal)) and not isinstance(v, bool):
+                        vals.append(str(v))
+                        continue
                 except Exception:
                     pass
 
-                # fallback to JSON serialization then escape single quotes
-                try:
-                    # For non-serializable objects, str() will be used
+                # dict/list -> JSON dump (quote and append ::jsonb for Postgres)
+                if isinstance(v, (dict, list)):
                     sval = json.dumps(v, ensure_ascii=False)
-                except Exception:
-                    sval = str(v)
-                # json.dumps produces quoted string for primitives; if it's a JSON string like '"x"', strip outer quotes
-                if isinstance(sval, str) and len(sval) >= 2 and sval[0] == '"' and sval[-1] == '"':
-                    sval_inner = sval[1:-1]
-                    escaped = sval_inner.replace("'", "''")
-                    vals.append(f"'{escaped}'")
-                else:
+                    # escape single quotes
                     escaped = sval.replace("'", "''")
-                    vals.append(f"'{escaped}'")
+                    if engine.dialect.name == 'postgresql' and c.name in json_col_names:
+                        vals.append(f"'{escaped}'::jsonb")
+                    else:
+                        vals.append(f"'{escaped}'")
+                    continue
+
+                # if it's a plain string, optionally collapse repeated percent signs to single '%'
+                if isinstance(v, str) and collapse_percent:
+                    v = re.sub(r"%+", "%", v)
+
+                # normalize newlines in string columns if requested
+                if isinstance(v, str) and normalize_newlines and normalize_newlines != 'none':
+                    if normalize_newlines == 'strip':
+                        # remove all newline characters
+                        v = re.sub(r"[\r\n]+", "", v)
+                    elif normalize_newlines == 'collapse':
+                        # collapse any whitespace (including newlines) into a single space
+                        v = re.sub(r"\s+", " ", v).strip()
+                    elif normalize_newlines == 'dot':
+                        # replace newline sequences with a simple Chinese period to keep sentences clear
+                        v = re.sub(r"[\r\n]+", "。", v)
+                        # collapse multiple '。' into single
+                        v = re.sub(r"。+", "。", v).strip()
+
+                # fallback: stringify and quote (escape single quotes)
+                try:
+                    sval = str(v)
+                except Exception:
+                    sval = json.dumps(v, ensure_ascii=False)
+                escaped = sval.replace("'", "''")
+                vals.append(f"'{escaped}'")
 
             if col_names:
                 f.write(f"INSERT INTO {qualified} ({', '.join(col_names)}) VALUES ({', '.join(vals)});\n")
@@ -119,11 +165,13 @@ def parse_args(argv):
     p.add_argument("--url", help="Database URL (overrides env)", default=None)
     p.add_argument("--out", help="Output SQL file", default=DEFAULT_OUT)
     p.add_argument("--table", help="Table name (default fields)", default=DEFAULT_TABLE)
+    p.add_argument("--collapse-percent", help="Collapse repeated '%' into single '%' in string fields when dumping", action='store_true')
+    p.add_argument("--normalize-newlines", help="Normalize newline sequences in string fields: none|strip|collapse|dot", choices=['none','strip','collapse','dot'], default='strip')
     args = p.parse_args(argv)
     url = args.url or os.getenv("DATABASE_URL") or DEFAULT_URL
-    return url, args.out, args.table
+    return url, args.out, args.table, args.collapse_percent, args.normalize_newlines
 
 
 if __name__ == "__main__":
-    url, out, table = parse_args(sys.argv[1:])
-    dump_fields(url, out, table)
+    url, out, table, collapse, normalize = parse_args(sys.argv[1:])
+    dump_fields(url, out, table, collapse, normalize)

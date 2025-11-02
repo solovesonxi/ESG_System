@@ -20,6 +20,12 @@ class User(Base):
     avatar = Column(String(60))
     is_active = Column(Boolean, default=True, nullable=False)  # 账号启用/禁用
 
+class Revenue(Base):
+    __tablename__ = 'revenues'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    factory = Column(String(100), nullable=False, unique=True)
+    year = Column(Integer, nullable=False)
+    amount = Column(Float, nullable=False)
 
 class Factory(Base):
     __tablename__ = 'factories'
@@ -135,10 +141,15 @@ class WaterData(Base):
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
 
-    industrial = Column(JSON, nullable=False)
-    domestic = Column(JSON, nullable=False)
-    reclaimed = Column(JSON, nullable=False)
-    total = Column(JSON, nullable=False)
+    industrial_water_intake = Column(JSON, nullable=False)
+    domestic_water_intake = Column(JSON, nullable=False)
+    industrial_water_discharge = Column(JSON, nullable=False)
+    domestic_water_discharge = Column(JSON, nullable=False)
+    industrial_water_consumption = Column(JSON, nullable=False)
+    domestic_water_consumption = Column(JSON, nullable=False)
+    industrial_water_recycling = Column(JSON, nullable=False)
+    domestic_water_recycling = Column(JSON, nullable=False)
+    reclaimed_water_use = Column(JSON, nullable=False)
 
 
 class EmissionData(Base):
@@ -152,7 +163,6 @@ class EmissionData(Base):
     category_four = Column(JSON, nullable=False)
     category_five = Column(JSON, nullable=False)
     category_six = Column(JSON, nullable=False)
-    total_revenue = Column(JSON, nullable=False)
 
 
 class WasteData(Base):
@@ -166,6 +176,10 @@ class WasteData(Base):
     domestic_industrial = Column(JSON, nullable=False)
     hazardous = Column(JSON, nullable=False)
     wastewater = Column(JSON, nullable=False)
+    exceed_events = Column(JSON, nullable=False)
+    recycled_waste = Column(JSON, nullable=False)
+    disposal_waste = Column(JSON, nullable=False)
+    three_wastes_incidents = Column(JSON, nullable=False)
 
 
 class InvestmentData(Base):
@@ -341,6 +355,7 @@ class EnvQuantData(Base):
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
     indicator = Column(String(200), primary_key=True)
+    value = Column(Float)
     reason = Column(Text)
 
 
@@ -349,7 +364,6 @@ class EnvQualData(Base):
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
     indicator = Column(String(100), primary_key=True)
-
     current_text = Column(Text)
     comparison_text = Column(Text)
     reason = Column(Text)
@@ -360,6 +374,7 @@ class SocialQuantLaborData(Base):
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
     indicator = Column(String(100), primary_key=True)
+    value = Column(Float)
     reason = Column(Text)
 
 
@@ -368,7 +383,6 @@ class SocialQualLaborData(Base):
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
     indicator = Column(String(100), primary_key=True)
-
     current_text = Column(Text)
     comparison_text = Column(Text)
     reason = Column(Text)
@@ -379,6 +393,7 @@ class SocialQuantOtherData(Base):
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
     indicator = Column(String(100), primary_key=True)
+    value = Column(Float)
     reason = Column(Text)
 
 
@@ -387,7 +402,6 @@ class SocialQualOtherData(Base):
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
     indicator = Column(String(100), primary_key=True)
-
     current_text = Column(Text)
     comparison_text = Column(Text)
     reason = Column(Text)
@@ -398,7 +412,6 @@ class GovernanceData(Base):
     factory = Column(String(100), primary_key=True)
     year = Column(Integer, primary_key=True)
     indicator = Column(String(100), primary_key=True)
-
     current_text = Column(Text)
     comparison_text = Column(Text)
     reason = Column(Text)

@@ -22,7 +22,7 @@
           <label>搜索字段</label>
           <input v-model="keyword" class="filter-input" placeholder="请输入字段中文名/英文名"/>
         </div>
-        <button class="reset-btn" @click="resetFilters">
+        <button class="btn btn-secondary" @click="resetFilters">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
             <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
             <path

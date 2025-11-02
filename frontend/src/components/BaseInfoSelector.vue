@@ -106,7 +106,7 @@
             <!-- 一级审核 -->
             <div class="review-column" v-if="!isYear">
               <div class="review-title">
-                <i class="fas fa-check-circle"></i>
+                <font-awesome-icon icon="industry" />
                 工厂审核
               </div>
               <div class="status-display">
@@ -135,7 +135,7 @@
             <!-- 二级审核 -->
             <div class="review-column">
               <div class="review-title">
-                <i class="fas fa-shield-alt"></i>
+                <font-awesome-icon icon="building" />
                 总部审核
               </div>
               <div class="status-display">
@@ -202,6 +202,11 @@ import {useSelectionStore} from "@/stores/selectionStore.js";
 import {useAuthStore} from '@/stores/authStore';
 import apiClient from "@/utils/axios.js";
 import {handleError, showInfo} from "@/utils/toast.js";
+import {library} from "@fortawesome/fontawesome-svg-core";
+import { faIndustry, faBuilding } from '@fortawesome/free-solid-svg-icons';
+library.add(faIndustry, faBuilding);
+
+
 
 const selectionStore = useSelectionStore();
 const authStore = useAuthStore();

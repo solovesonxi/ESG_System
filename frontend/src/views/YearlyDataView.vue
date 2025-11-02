@@ -25,7 +25,7 @@
               <th>来源</th>
               <th>{{ (year - 1) + (isQuantitative ? '年数据' : '年的方针、政策、文件、记录等') }}</th>
               <th>{{ year + (isQuantitative ? '年数据' : '年的方针、政策、文件、记录等') }}</th>
-              <th>对比去年</th>
+              <th>{{'对比去年'+(isQuantitative ? '（%）' : '')}}</th>
               <th>原因分析</th>
             </tr>
             </thead>
@@ -36,10 +36,10 @@
               <td v-if="isQuantitative" class="col-unit">{{ item.unit || '' }}</td>
               <td class="col-source" :title="item.source || ''">{{ item.source || '' }}</td>
               <td class="col-last">{{ item.lastYear || '' }}</td>
-              <td v-if="isQuantitative || !isEditing" class="col-current">{{ item.currentYear || '' }}</td>
-              <td v-else>
+              <td v-if="isEditing && (!isQuantitative || !item.calculation)" >
                 <input v-model="item.currentYear" type="text" class="edit-input"/>
               </td>
+              <td v-else class="col-current">{{ item.currentYear || '' }}</td>
               <td v-if="isQuantitative || !isEditing" class="col-compare">{{ item.comparison || '' }}</td>
               <td v-else>
                 <input v-model="item.comparison" type="text" class="edit-input"/>

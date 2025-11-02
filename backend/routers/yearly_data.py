@@ -41,33 +41,31 @@ def fetch_data(category_id: int, factory: str, year: int, db: Session = Depends(
         fields_out = []
         for fo in field_objs:
             name_en = fo.name_en
-            unit = fo.unit
             if is_quantitative:
                 # 定量指标：计算今年、去年、增长率
-                try:
-                    current_value = compute_field_value(fo.calculation, db, factory, year)
-                    last_value = compute_field_value(fo.calculation, db, factory, year - 1)
-                except Exception as e:
-                    logger.error(f"计算字段 {name_en} 失败: {e}")
-                    current_value = None
-                    last_value = None
-
                 def _calc_comparison(cur, last):
                     try:
-                        if last in [None, 0]:
+                        if last in [None, 0] or cur is None:
                             return None
                         return round(100 * (cur - last) / last, 2)
-                    except Exception:
+                    except ValueError:
                         return None
 
+                current_row = db.query(model).filter_by(factory=factory, year=year, indicator=name_en).first()
+                if fo.calculation:
+                    current_value = compute_field_value(fo.calculation, db, factory, year)
+                    last_value = compute_field_value(fo.calculation, db, factory, year - 1)
+                else:  # 没有计算公式，直接查数据库
+                    current_value = getattr(current_row, 'value', None) if current_row else None
+                    last_row = db.query(model).filter_by(factory=factory, year=year - 1, indicator=name_en).first()
+                    last_value = getattr(last_row, 'value', None) if last_row else None
                 comparison = _calc_comparison(current_value, last_value)
-                # reason
-                reason_row = db.query(model).filter_by(factory=factory, year=year, indicator=name_en).first()
-                reason = getattr(reason_row, 'reason', '') if reason_row else ''
+                reason = getattr(current_row, 'reason', '') if current_row else ''
                 fields_out.append(
-                    {"name_en": fo.name_en, "name_zh": fo.name_zh, "unit": unit, "description": fo.description,
-                     "source": fo.source, "lastYear": last_value, "currentYear": current_value,
-                     "comparison": comparison, "reason": reason, })
+                    {"name_en": fo.name_en, "name_zh": fo.name_zh, "calculation": fo.calculation or None,"unit": fo.unit, "description": fo.description,
+                     "source": fo.source, "lastYear": round(last_value, 2) if last_value else None,
+                     "currentYear": round(current_value, 2) if current_value else None, "comparison": comparison,
+                     "reason": reason, })
             else:
                 # 定性指标：查本年和去年结果
                 qual_row = db.query(model).filter_by(factory=factory, year=year, indicator=name_en).first()
@@ -80,8 +78,7 @@ def fetch_data(category_id: int, factory: str, year: int, db: Session = Depends(
                      "reason": getattr(qual_row, 'reason', None) if qual_row else None, })
         if fields_out:
             result_sets.append({"set": set_name, "fields": fields_out})
-    return {"is_quant": is_quantitative, "sets": result_sets,
-            "review": get_review_info(db, factory, year, category_id)}
+    return {"is_quant": is_quantitative, "sets": result_sets, "review": get_review_info(db, factory, year, category_id)}
 
 
 @router.post("")
@@ -111,7 +108,7 @@ def submit_data(payload: dict, db: Session = Depends(get_db), current_user: dict
             key = f.get("name_en")
             if key in model_cols:
                 if is_quantitative:
-                    values.append({"factory": factory, "year": year, "indicator": key, "reason": f.get("reason")})
+                    values.append({"factory": factory, "year": year, "indicator": key, "value": f.get("currentYear"),"reason": f.get("reason")})
                 else:
                     values.append(
                         {"factory": factory, "year": year, "indicator": key, "current_text": f.get("currentYear"),
@@ -120,7 +117,9 @@ def submit_data(payload: dict, db: Session = Depends(get_db), current_user: dict
         existing = db.query(model).filter(and_(getattr(model, "factory") == factory, getattr(model, "year") == year,
                                                getattr(model, "indicator") == v.get("indicator", ""))).first()
         if existing is not None:
-            if not is_quantitative:
+            if is_quantitative:
+                setattr(existing, 'value', v.get('value'))
+            else:
                 setattr(existing, 'current_text', v.get('current_text'))
                 setattr(existing, 'comparison_text', v.get('comparison_text'))
             setattr(existing, 'reason', v.get('reason'))
