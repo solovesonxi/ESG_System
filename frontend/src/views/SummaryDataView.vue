@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector :review="review" :isYear="true" :isSummary="false" @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" :isYear="true" :isSummary="true" @selection-changed="fetchData"/>
       <fieldset class="summary-fieldset" v-for="setObj in sets || []" :key="setObj.set">
         <legend>{{ setObj.set }}</legend>
         <div class="form-row">
@@ -106,7 +106,6 @@ import {handleError, showError, showInfo, showSuccess} from "@/utils/toast.js";
 
 const selectionStore = useSelectionStore();
 const category = computed(() => selectionStore.selectedCategoryYearly);
-const factory = computed(() => selectionStore.selectedFactory);
 const year = computed(() => selectionStore.selectedYear);
 const isEditing = ref(false);
 const sets = ref([]);
@@ -133,10 +132,9 @@ const fetchData = async () => {
   try {
     resetFormData();
     // console.log("请求参数：", category.value, factory.value, year.value)
-    const response = await apiClient.get('/year', {
+    const response = await apiClient.get('/summary', {
       params: {
         category_id: category.value.id,
-        factory: factory.value,
         year: year.value
       }
     });
@@ -144,7 +142,7 @@ const fetchData = async () => {
       isQuantitative.value = response.data.is_quant
       sets.value = response.data.sets
       review.value = response.data.review;
-      console.log("年度结果：", response.data)
+      console.log("汇总结果：", response.data)
     } else {
       showInfo('未找到数据')
     }
@@ -158,13 +156,12 @@ const submitEdit = async (ifSubmit) => {
   try {
     const payload = {
       category_id: category.value.id,
-      factory: factory.value,
       year: parseInt(year.value),
       sets: sets.value,
       isSubmitted: ifSubmit
     }
     // console.log(payload)
-    const response = await apiClient.post(`/year`, payload);
+    const response = await apiClient.post(`/summary`, payload);
     const operation = ifSubmit ? '提交' : '保存';
     if (response.data && response.data.status === 'success') {
       showSuccess('数据' + operation + '成功!')

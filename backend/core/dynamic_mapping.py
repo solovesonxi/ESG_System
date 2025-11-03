@@ -114,14 +114,16 @@ def load_category_mappings(db: Session, force: bool = False) -> Tuple[Dict[int, 
         return mappings, periods
 
 
-def get_quant_map(db: Session, force: bool = False) -> Dict[int, type]:
+def get_monthly_map(db: Session, force: bool = False) -> Dict[int, type]:
     mappings, periods = load_category_mappings(db, force=force)
-    return {k: v for k, v in mappings.items() if periods.get(k) == "month"}
+    monthly_map = {k: v for k, v in mappings.items() if periods.get(k) == "month"}
+    return dict(sorted(monthly_map.items(), key=lambda kv: kv[0]))
 
 
-def get_analy_map(db: Session, force: bool = False) -> Dict[int, type]:
+def get_yearly_map(db: Session, force: bool = False) -> Dict[int, type]:
     mappings, periods = load_category_mappings(db, force=force)
-    return {k: v for k, v in mappings.items() if periods.get(k) == "year"}
+    yearly_map = {k: v for k, v in mappings.items() if periods.get(k) == "year"}
+    return dict(sorted(yearly_map.items(), key=lambda kv: kv[0]))
 
 
 def get_model_for_category(db: Session, category_id: int, force: bool = False) -> Optional[type]:

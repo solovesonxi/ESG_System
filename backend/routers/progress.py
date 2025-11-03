@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db, logger
-from core.dynamic_mapping import get_quant_map, get_analy_map
+from core.dynamic_mapping import get_monthly_map, get_yearly_map
 from core.models import ReviewRecord, FieldData, Category
 from core.permission import get_current_user
 
@@ -26,7 +26,7 @@ def calc_quantitative_progress(factory: str, year: int, db: Session = Depends(ge
 
     progress = []
     total_fields, total_filled = 0, 0
-    quant_map = get_quant_map(db)
+    quant_map = get_monthly_map(db)
     if current_user.get("role", None) == "department":
         quant_map = {k: v for k, v in quant_map.items() if k in current_user.get("departments", {}).get("ids", [])}
     for category_id, model in quant_map.items():
@@ -54,8 +54,8 @@ def calc_quantitative_progress(factory: str, year: int, db: Session = Depends(ge
                     if value:
                         filled += len(submitted_months) + count_json_field_progress(value, [i for i in range(12) if
                                                                                       (i + 1) not in submitted_months])
-        total_fields += total
         total_filled += filled
+        total_fields += total
         progress.append({"title": title, "percent": round(filled / total * 100, 2) if total else 0})
     progress.append({"title": "总计", "percent": round(total_filled / total_fields * 100, 2) if total_fields else 0})
     logger.info("计算工厂 {} 年度 {} 月度数据填写进度：{}".format(factory, year, progress))
@@ -72,7 +72,7 @@ def calc_analytical_progress(factory: str, year: int, db: Session = Depends(get_
 
     progress = []
     total_fields, total_filled = 0, 0
-    analytical_map = get_analy_map(db)
+    analytical_map = get_yearly_map(db)
     for category_id, model in analytical_map.items():
         category = db.query(Category).filter_by(id=category_id).first()
         rows = db.query(model).filter_by(factory=factory, year=year).all()

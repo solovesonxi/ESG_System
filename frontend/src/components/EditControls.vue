@@ -1,5 +1,5 @@
 <template>
-  <div class="edit-controls" :class="{ editing: isEditing }">
+  <div class="edit-controls">
     <button v-if="!isEditing" class="edit-button" @click="$emit('start-edit')">✏️</button>
     <div v-else class="edit-actions">
       <button @click="$emit('cancel-edit')" class="cancel-button">取消</button>
@@ -11,7 +11,7 @@
 
 <script setup>
 defineProps({
-  isEditing: Boolean
+  isEditing: {type: Boolean, default: () => false}
 });
 
 defineEmits(['start-edit', 'cancel-edit', 'save-edit', 'submit-edit']);

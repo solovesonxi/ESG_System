@@ -1,7 +1,7 @@
 <template>
-  <NavBar v-if="showSidebar && !isFullPage" ref="navBar"/>
+  <NavBar v-if="isAuthedPage" ref="navBar"/>
   <div class="app-layout">
-    <Siderbar v-if="showSidebar" ref="siderBar"/>
+    <Siderbar v-if="isAuthedPage" ref="siderBar"/>
     <div :class="'content-wrapper'">
       <router-view v-slot="{ Component }">
         <component :is="Component" ref="currentComponent"/>
@@ -34,13 +34,9 @@ const isEditing = ref(false);
 const currentComponent = ref(null);
 const route = useRoute();
 const isAuthedPage = computed(() => route.path !== '/' && route.path !== '/login');
-// treat root and /login as full-page routes (no sidebar / constrained main)
-const isFullPage = computed(() => route.path === '/' || route.path === '/login');
 const isEditPage = computed(
-    () => isAuthedPage.value && route.path !== '/home' && route.path !== '/review-management' && route.path !== '/profile'
+    () => isAuthedPage.value && route.path === '/monthly-data' || route.path === '/yearly-data' || route.path === '/summary-data'
 );
-// showSidebar mirrors the conditions used previously for Siderbar/NavBar visibility
-const showSidebar = computed(() => isAuthedPage.value || route.path === '/profile' || route.path === '/home');
 
 const handleStartEdit = () => {
   if (currentComponent.value && currentComponent.value.startEditing) {

@@ -104,6 +104,7 @@ def get_accounts(role: str = Query(None), factory: str = Query(None), department
         if keyword:
             query = query.filter(
                 or_(User.username.contains(keyword), User.email.contains(keyword), User.phone.contains(keyword)))
+        query = query.order_by(User.id.desc())
         if department and department > 0:
             all_accounts = query.all()
             filtered_accounts = []
@@ -123,11 +124,10 @@ def get_accounts(role: str = Query(None), factory: str = Query(None), department
             start = (page - 1) * page_size
             end = start + page_size
             accounts = filtered_accounts[start:end]
-            return {"accounts": [a.__dict__ for a in accounts], "total": total, "page": page, "page_size": page_size}
         else:
             total = query.count()
             accounts = query.offset((page - 1) * page_size).limit(page_size).all()
-            return {"accounts": [a.__dict__ for a in accounts], "total": total, "page": page, "page_size": page_size}
+        return {"accounts": [a.__dict__ for a in accounts], "total": total, "page": page, "page_size": page_size}
     except Exception as e:
         logger.error(f"查询账号列表失败: {str(e)}")
         raise HTTPException(status_code=500, detail="服务器内部错误")

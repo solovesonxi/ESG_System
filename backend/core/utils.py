@@ -4,18 +4,17 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from core.dependencies import get_db
-from core.dynamic_mapping import get_quant_map, get_analy_map, get_model_for_category
+from core.dynamic_mapping import get_monthly_map, get_yearly_map, get_model_for_category
 from core.models import Message, ReviewRecord, Category
 from core.permission import get_current_user
 
 
-def _calc_comparison(current_value, last_value):
+def calc_comparison(cur, last):
     try:
-        if last_value is None or last_value == 0 or current_value is None:
+        if last in [None, 0] or cur is None:
             return None
-        value = ((current_value - last_value) / last_value) * 100
-        return round(value, 2)
-    except Exception:
+        return round(100 * (cur - last) / last, 2)
+    except ValueError:
         return None
 
 
@@ -28,8 +27,8 @@ def require_edit(factory: str, category: int, current_user: dict = Depends(get_c
     elif current_user["factory"] != factory:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权提交其他工厂数据")
     else:
-        analy_map = get_analy_map(db)
-        quant_map = get_quant_map(db)
+        analy_map = get_yearly_map(db)
+        quant_map = get_monthly_map(db)
         if current_user["role"] == "factory":
             # factory 角色只能提交年度类型
             if category not in analy_map:
@@ -69,8 +68,8 @@ def send_message(db: Session, msg_type: str, title: str, content: str = None, se
 # 获取各类数据审核信息
 def get_review_info(db, factory, year, category_id, months=12):
     # 判断类型
-    is_quant = category_id in get_quant_map(db)
-    is_analytical = category_id in get_analy_map(db)
+    is_quant = category_id in get_monthly_map(db)
+    is_analytical = category_id in get_yearly_map(db)
     fields = [("id", "id", -1), ("category", "category", 0), ("is_submitted", "is_submitted", False),
               ("level1_status", "status1", "pending"), ("level1_comment", "comment1", ""),
               ("level2_status", "status2", "pending"), ("level2_comment", "comment2", "")]

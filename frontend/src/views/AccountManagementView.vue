@@ -22,7 +22,7 @@
           </select>
         </div>
         <div class="filter-item">
-          <label>部门</label>
+          <label>数据类型</label>
           <select v-model="filterDepartment">
             <option value=0>全部</option>
             <option v-for="d in authStore.monthCategories" :key="d.id" :value="d.id">{{ d.name_zh }}</option>
@@ -62,7 +62,7 @@
           <span class="header-cell">用户名</span>
           <span class="header-cell">角色</span>
           <span class="header-cell">工厂</span>
-          <span class="header-cell">部门</span>
+          <span class="header-cell">数据类型</span>
           <span class="header-cell">电话</span>
           <span class="header-cell">邮箱</span>
           <span class="header-cell">启用</span>
@@ -143,21 +143,18 @@
             </div>
             <div class="form-group" v-if="detailAccount.role === 'department'">
               <label class="form-label">部门</label>
-              <div class="departments-tags">
-                <div class="add-dept">
-                  <select v-model="newDepartment" class="form-input">
-                    <option value=0>请选择部门</option>
-                    <option v-for="dep in availableDepartments" :key="dep.id" :value="dep.id">{{dep.name_zh }}</option>
-                  </select>
-                  <button @click="addDepartment" class="btn btn-primary add-btn" :disabled="!newDepartment">＋</button>
-                </div>
-              </div>
+              <input v-model="detailAccount.departments.name" class="form-input" placeholder="请输入部门名称" style="width: 200px;">
+              <select v-model="newDepartment" class="form-input" style="max-width: 150px;">
+                <option value=0>请选择数据类型</option>
+                <option v-for="dep in availableDepartments" :key="dep.id" :value="dep.id">{{ dep.name_zh }}</option>
+              </select>
+              <button @click="addDepartment" class="btn btn-primary" style="width: fit-content" :disabled="!newDepartment">＋</button>
             </div>
             <span v-for="dep in detailAccount.departments.ids" :key="dep" class="dept-tag"
                   v-if="detailAccount.role === 'department'">
                   {{ authStore.getCategoryMapping(dep).name_zh }}
                   <span class="tag-remove" @click.stop="removeDepartment(dep)">×</span>
-            </span>
+                </span>
             <div class="form-group">
               <label class="form-label">电话</label>
               <input v-model="detailAccount.phone" class="form-input">
@@ -240,10 +237,6 @@ const availableDepartments = computed(() => {
   return authStore.monthCategories;
 })
 
-watch(() => detailAccount.value?.role, (newRole, oldRole) => {
-  console.log(`detailAccount.role changed from ${oldRole} to ${newRole}`);
-});
-
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
@@ -296,6 +289,7 @@ function resetFilters() {
 
 function openDetail(account) {
   detailAccount.value = deepClone(account);
+  detailAccount.value.departments = {name: account.departments?.name || "部门", ids: account.departments ? deepClone(account.departments.ids) : []};
   console.log(detailAccount.value)
   newPassword.value = '';
   showDetail.value = true

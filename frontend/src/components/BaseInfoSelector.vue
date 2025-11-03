@@ -25,7 +25,7 @@
           </div>
 
           <!-- 工厂名称 -->
-          <div class="info-item">
+          <div class="info-item" v-if="!isSummary">
             <label class="info-label">工厂名称</label>
             <div class="custom-select" :class="{ 'disabled': authStore.isDepartment }">
               <div class="selected" @click="selectionStore.toggleFactoryDropdown">
@@ -87,23 +87,20 @@
         </div>
       </div>
       <!-- 提交状态指示器 -->
-      <div class="submission-indicator">
+      <div class="submission-indicator" v-if="!isSummary">
         <div class="status-badge" :class="submissionStatusClass">
           <i class="fas" :class="submissionStatusIcon"></i>
           {{ submissionStatusText }}
         </div>
-        <div class="status-detail">
-          提交状态
-        </div>
       </div>
     </div>
     <!-- 审核信息区域 -->
-    <div class="review-section" v-if="hasReviewData">
+    <div class="review-section" v-if="!isSummary && hasReviewData">
       <h3 class="section-title">审核信息</h3>
       <div class="review">
         <div class="review-item">
-          <div class="review-grid">
-            <!-- 一级审核 -->
+          <div class="review-grid" v-if="currentSubmissionStatus">
+            <!-- 工厂审核 -->
             <div class="review-column" v-if="!isYear">
               <div class="review-title">
                 <font-awesome-icon icon="industry" />
@@ -132,7 +129,7 @@
               </div>
             </div>
 
-            <!-- 二级审核 -->
+            <!-- 总部审核 -->
             <div class="review-column">
               <div class="review-title">
                 <font-awesome-icon icon="building" />
@@ -161,6 +158,9 @@
                 <div class="comment-text">{{ currentLevel2Comment }}</div>
               </div>
             </div>
+          </div>
+          <div v-else class="review-title">
+              数据未提交，无法查看审核信息
           </div>
         </div>
       </div>
@@ -217,7 +217,8 @@ const props = defineProps({
     type: Object, default: () => {
     }
   },
-  isYear: {type: Boolean, default: () => false}
+  isYear: {type: Boolean, default: () => false},
+  isSummary: {type: Boolean, default: () => false},
 });
 
 const emit = defineEmits(['selection-changed']);

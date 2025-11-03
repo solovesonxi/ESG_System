@@ -26,10 +26,10 @@ import {computed, onMounted, ref} from 'vue';
 import apiClient from "@/utils/axios.js";
 import {useAuthStore} from '@/stores/authStore';
 import {library} from '@fortawesome/fontawesome-svg-core';
-import {faBullhorn, faCalendarAlt, faChartBar, faChartLine, faCheckCircle, faTags, faUserCog} from '@fortawesome/free-solid-svg-icons';
+import {faBullhorn, faCalendarAlt, faCalendarDay, faChartPie, faChartLine, faCheckCircle, faTags, faUserCog, faSlidersH} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 // 添加图标到库
-library.add(faChartLine, faCalendarAlt, faCheckCircle, faUserCog, faTags, faChartBar, faBullhorn);
+library.add(faChartLine, faCalendarAlt, faCalendarDay, faChartPie, faCheckCircle, faUserCog, faTags, faBullhorn, faSlidersH);
 
 const route = useRoute();
 const isCollapsed = ref(false);
@@ -37,19 +37,20 @@ const authStore = useAuthStore();
 
 const menuItems = computed(() => {
   const items = [
-    { name: 'monthly-data', path: '/monthly-data', label: '月度数据', icon: 'chart-line' }
+    { name: 'monthly-data', path: '/monthly-data', label: '月度数据', icon: 'calendar-day' }
   ];
   if (!authStore.isDepartment) {
-    items.push(
-        { name: 'yearly-data', path: '/yearly-data', label: '年度数据', icon: 'calendar-alt' },
-        { name: 'review', path: '/review-management', label: '审核管理', icon: 'check-circle' }
-    );
+    items.push({ name: 'yearly-data', path: '/yearly-data', label: '年度数据', icon: 'calendar-alt' });
+    if(authStore.isHeadquarter||authStore.isAdmin) {
+      items.push({ name: 'audit', path: '/summary-data', label: '汇总数据', icon: 'chart-pie' });
+    }
+    items.push({ name: 'review', path: '/review-management', label: '审核管理', icon: 'check-circle' });
   }
   if (authStore.isAdmin) {
     items.push(
         { name: 'account', path: '/account-management', label: '账号管理', icon: 'user-cog' },
         { name: 'category', path: '/category-management', label: '分类管理', icon: 'tags' },
-        { name: 'field', path: '/field-management', label: '指标管理', icon: 'chart-bar' },
+        { name: 'field', path: '/field-management', label: '指标管理', icon: 'sliders-h' },
         { name: 'announcement', path: '/announcement-board', label: '公告发布', icon: 'bullhorn' }
     );
   }

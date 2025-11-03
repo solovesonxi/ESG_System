@@ -1,7 +1,7 @@
 <template>
   <div class="shared-form">
     <form>
-      <BaseInfoSelector :review="review" :isYear="false" @selection-changed="fetchData"/>
+      <BaseInfoSelector :review="review" :isYear="false" :isSummary="false" @selection-changed="fetchData"/>
       <div v-if="isLoading" class="loading">数据加载中...</div>
       <template v-else>
         <fieldset v-for="(s, si) in sets" :key="si" class="summary-fieldset">

@@ -12,8 +12,7 @@ import FieldManagement from "@/views/FieldManagement.vue";
 import AnnouncementBoardView from "@/views/AnnouncementBoardView.vue";
 import MonthlyDataView from '@/views/MonthlyDataView.vue';
 import YearlyDataView from '@/views/YearlyDataView.vue';
-import {showError} from "@/utils/toast.js";
-import DataView from "@/views/DataView.vue";
+import SummaryDataView from "@/views/SummaryDataView.vue";
 import NotificationsView from "@/views/NotificationsView.vue";
 import SettingsView from "@/views/SettingsView.vue";
 
@@ -23,7 +22,7 @@ const routes = [{path: '/', redirect: '/home'}, {path: '/login', component: Logi
     path: '/profile', component: ProfileView
 }, {path: '/settings', component: SettingsView}, {
     path: '/monthly-data', component: MonthlyDataView
-}, {path: '/yearly-data', component: YearlyDataView}, {
+}, {path: '/yearly-data', component: YearlyDataView}, {path: '/summary-data', component: SummaryDataView}, {
     path: '/review-management', component: ReviewManagement
 }, {path: '/account-management', component: AccountManagementView}, {
     path: '/category-management', component: CategoryManagement
