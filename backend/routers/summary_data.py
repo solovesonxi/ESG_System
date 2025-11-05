@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from core.calculations import compute_field_value
 from core.dependencies import get_db, logger
-from core.models import FieldData, Factory
+from core.models import FieldData
 from core.permission import get_current_user
 from core.utils import get_model, calc_comparison
 
@@ -48,12 +48,11 @@ def fetch_data(category_id: int, year: int, db: Session = Depends(get_db),
                     last_value = getattr(last_row, 'value', None) if last_row else None
                 comparison = calc_comparison(current_value, last_value)
                 reason = getattr(current_row, 'reason', '') if current_row else ''
-                fields_out.append(
-                    {"name_en": fo.name_en, "name_zh": fo.name_zh, "calculation": fo.calculation or None,
-                     "unit": fo.unit, "description": fo.description,
-                     "source": fo.source, "lastYear": round(last_value, 2) if last_value else None,
-                     "currentYear": round(current_value, 2) if current_value else None, "comparison": comparison,
-                     "reason": reason, })
+                fields_out.append({"name_en": fo.name_en, "name_zh": fo.name_zh, "calculation": fo.calculation or None,
+                                   "unit": fo.unit, "description": fo.description, "source": fo.source,
+                                   "lastYear": last_value if last_value else None,
+                                   "currentYear": current_value if current_value else None, "comparison": comparison,
+                                   "reason": reason, })
             else:
                 # 定性指标：为所有工厂返回本年和去年结果（按工厂返回数组）
                 qual_row = db.query(model).filter_by(factory="所有工厂", year=year, indicator=name_en).first()

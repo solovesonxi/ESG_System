@@ -393,7 +393,9 @@ const getStatusLabel = (status) => {
 
 // 监听选择变化
 watch([category, factory, year, month], () => {
-  emit('selection-changed');
+  if (authStore.isAuthenticated){
+    emit('selection-changed');
+  }
 });
 </script>
 

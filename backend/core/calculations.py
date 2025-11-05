@@ -89,16 +89,14 @@ def compute_sum_total(fields: List[int], coefficient: List[float], db: Session, 
     return total
 
 
-def compute_intensity(fields: List[int], coefficient: List[float], db: Session, factory: str, year: int) -> Optional[
+def compute_intensity(fields: int, coefficient: float, db: Session, factory: str, year: int) -> Optional[
     float]:
-    if len(fields) != 2:
-        return None
-    numerator = get_field_value_by_id(fields[0], coefficient[0], db, factory, year)
+    numerator = get_field_value_by_id(fields, coefficient, db, factory, year)
     query = db.query(Revenue.amount).filter_by(year=year)
     if isinstance(factory, str) and factory.strip():
         query = query.filter_by(factory=factory.strip())
     data = query.all()
-    revenue = sum(d[0] for d in data if d and d[0] is not None) * coefficient[1]
+    revenue = sum(d[0] for d in data if d and d[0] is not None)
     if revenue and revenue != 0:
         return numerator / revenue
     return None
@@ -127,15 +125,18 @@ def compute_field_value(calculation: Optional[str], db: Session, factory: str, y
         logger.error(f"解析 calculation 失败: {e}")
         return None
 
-    op = calc.get("operation") or "总和"
+    op = calc.get("operation", "总和")
     fields = calc.get("fields", [])
     coefficient = calc.get("coefficient", [1] * len(fields))
-    if len(fields) == 1:
-        return get_field_value_by_id(fields[0], coefficient[0], db, factory, year, op)
+    res = None
+    if op == "强度":
+        res = compute_intensity(fields[0], coefficient[0], db, factory, year)
+    elif len(fields) == 1:
+        res = get_field_value_by_id(fields[0], coefficient[0], db, factory, year, op)
     elif op == "总和":
-        return compute_sum_total(fields, coefficient, db, factory, year)
-    elif op == "强度":
-        return compute_intensity(fields, coefficient, db, factory, year)
+        res = compute_sum_total(fields, coefficient, db, factory, year)
     elif op == "占比":
-        return compute_quotient(fields, coefficient, db, factory, year)
-    return None
+        res = compute_quotient(fields, coefficient, db, factory, year)
+    if res is None:
+        return None
+    return round(res, 4 if op == "强度" else 2)

@@ -199,6 +199,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     // 登出
     const logout = async () => {
+        isAuthenticated.value = false;
         selectionStore.resetSelection();
         accessToken.value = null;
         user.value = null;

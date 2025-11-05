@@ -55,8 +55,8 @@ def fetch_data(category_id: int, factory: str, year: int, db: Session = Depends(
                 reason = getattr(current_row, 'reason', '') if current_row else ''
                 fields_out.append(
                     {"name_en": fo.name_en, "name_zh": fo.name_zh, "calculation": fo.calculation or None,"unit": fo.unit, "description": fo.description,
-                     "source": fo.source, "lastYear": round(last_value, 2) if last_value else None,
-                     "currentYear": round(current_value, 2) if current_value else None, "comparison": comparison,
+                     "source": fo.source, "lastYear": last_value if last_value else None,
+                     "currentYear": current_value if current_value else None, "comparison": comparison,
                      "reason": reason, })
             else:
                 # 定性指标：查本年和去年结果

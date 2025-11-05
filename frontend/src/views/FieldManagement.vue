@@ -45,6 +45,7 @@
 
       <div class="records-list-modern">
         <div class="record-header-row">
+          <span class="header-cell">ID</span>
           <span class="header-cell">数据类型</span>
           <span class="header-cell">分组</span>
           <span class="header-cell">英文标识</span>
@@ -54,6 +55,7 @@
           <span class="header-cell">启用</span>
         </div>
         <div v-for="field in fields" :key="field.id" class="record-row">
+          <span class="cell" @click="openDetail(field)">{{ field.id }}</span>
           <span class="cell" @click="openDetail(field)">{{ getCategoryName(field.category) }}</span>
           <span class="cell" @click="openDetail(field)">{{ field.set }}</span>
           <span class="cell" @click="openDetail(field)">{{ field.name_en }}</span>
@@ -90,53 +92,49 @@
           <div class="modal-header">
             <h3>{{ detailField && detailField.id ? '编辑字段' : '添加字段' }}</h3>
           </div>
-          <div class="modal-body"><div class="form-group">
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label">ID</label>
+              <input v-model="detailField.id" class="form-input" placeholder="自增生成的ID" />
+            </div>
+            <div class="form-group">
               <label class="form-label">数据类型</label>
               <select v-model="detailField.category" class="form-input">
                 <option v-for="c in allCategories" :key="c.id" :value="c.id">{{ c.name_zh }}</option>
               </select>
             </div>
-
             <div class="form-group">
               <label class="form-label">分组</label>
               <input v-model="detailField.set" class="form-input" placeholder="例如 default 或 v1" />
             </div>
-
             <div class="form-group">
               <label class="form-label">英文标识</label>
               <input v-model="detailField.name_en" class="form-input" />
             </div>
-
             <div class="form-group">
               <label class="form-label">中文名称</label>
               <input v-model="detailField.name_zh" class="form-input" />
             </div>
-
             <div class="form-group" v-if="isMonthlyField || isCalculativeField">
               <label class="form-label">步长</label>
               <input v-model.number="detailField.step" class="form-input" type="number" step="any" />
             </div>
-
             <div class="form-group" v-if="isCalculativeField">
               <label class="form-label">计算</label>
               <textarea v-model="calculationText" class="form-input" rows="4" placeholder='可以输入 JSON 或 简单公式文本'></textarea>
             </div>
-
             <div class="form-group" v-if="isMonthlyField || isCalculativeField">
               <label class="form-label">单位</label>
               <input v-model="detailField.unit" class="form-input" />
             </div>
-
             <div class="form-group">
               <label class="form-label">释义</label>
               <textarea v-model="detailField.description" class="form-input" rows="3"></textarea>
             </div>
-
             <div class="form-group" v-if="!isMonthlyField">
               <label class="form-label">来源</label>
               <input v-model="detailField.source" class="form-input" />
             </div>
-
             <div class="button-row">
               <button v-if="detailField?.id" class="btn btn-danger" @click="prepareDeleteField(detailField)">删除字段</button>
               <button class="btn btn-primary" @click="saveField">{{ detailField?.id ? '保存修改' : '确认添加' }}</button>
@@ -237,6 +235,7 @@ function resetFilters() {
 
 function openDetail(field) {
   detailField.value = JSON.parse(JSON.stringify(field || {
+    id: null,
     category: allCategories.value[0]?.id || null,
     set: 'default',
     name_en: '',

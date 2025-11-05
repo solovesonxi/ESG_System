@@ -8,12 +8,6 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(6px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
-}
-
-.shared-form:hover {
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px);
 }
 
 /* global.css */
@@ -318,11 +312,8 @@ button {
     border: 1px solid #232526;
     box-shadow: 0 4px 24px rgba(0,0,0,0.18);
     backdrop-filter: blur(4px);
-    transition: box-shadow 0.2s, background 0.2s;
 }
-.dark-theme .shared-form:hover {
-    box-shadow: 0 8px 32px rgba(0,0,0,0.22);
-}
+
 .dark-theme h1, .dark-theme legend {
     color: #e0e0e0;
     text-shadow: none;
