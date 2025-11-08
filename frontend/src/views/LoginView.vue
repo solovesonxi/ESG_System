@@ -10,11 +10,7 @@
       <div class="features">
         <div class="feature">
           <span class="feature-icon">✓</span>
-          <span>全面的ESG数据监控与分析</span>
-        </div>
-        <div class="feature">
-          <span class="feature-icon">✓</span>
-          <span>实时消息自动推送</span>
+          <span>全面的ESG数据填报与监控</span>
         </div>
         <div class="feature">
           <span class="feature-icon">✓</span>
@@ -22,7 +18,15 @@
         </div>
         <div class="feature">
           <span class="feature-icon">✓</span>
-          <span>支持自定义指标</span>
+          <span>支持自定义分类和指标</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">✓</span>
+          <span>多种图表可视化数据</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">✓</span>
+          <span>AI聊天智能分析</span>
         </div>
       </div>
 
