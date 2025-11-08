@@ -256,7 +256,7 @@ onMounted(() => {
 <style scoped>
 .announcement-board {
   padding: 24px;
-  background: #f9fafb;
+  background: transparent;
   min-height: 100vh;
   transition: all 0.3s ease;
 }
@@ -308,10 +308,8 @@ onMounted(() => {
 }
 
 .card {
-  background: #ffffff;
-  border-radius: 12px;
+  background: transparent;
   padding: 20px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .dark-theme .card {

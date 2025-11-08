@@ -99,7 +99,7 @@
           <div class="modal-body">
             <div class="form-group">
               <label class="form-label">ID</label>
-              <input v-model="detailField.id" class="form-input" placeholder="自增生成的ID"/>
+              <input v-model="detailField.id" class="form-input" placeholder="自增生成的ID" disabled/>
             </div>
             <div class="form-group">
               <label class="form-label">数据类型</label>

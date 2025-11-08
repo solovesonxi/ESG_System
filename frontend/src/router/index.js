@@ -14,14 +14,13 @@ import MonthlyDataView from '@/views/MonthlyDataView.vue';
 import YearlyDataView from '@/views/YearlyDataView.vue';
 import SummaryDataView from "@/views/SummaryDataView.vue";
 import NotificationsView from "@/views/NotificationsView.vue";
-import SettingsView from "@/views/SettingsView.vue";
 import AIChatView from '@/views/AIChatView.vue';
 
 const routes = [{path: '/', redirect: '/home'}, {path: '/login', component: LoginView}, {
     path: '/home', component: Home
 }, {path: '/notifications', component: NotificationsView}, {
     path: '/profile', component: ProfileView
-}, {path: '/settings', component: SettingsView}, {
+}, {
     path: '/monthly-data', component: MonthlyDataView
 }, {path: '/yearly-data', component: YearlyDataView}, {path: '/summary-data', component: SummaryDataView}, {
     path: '/review-management', component: ReviewManagement

@@ -1,6 +1,7 @@
 <template>
   <div class="navbar-wrapper">
-    <nav class="navbar" :class="{ 'navbar-hidden': isNavbarHidden }">
+    <!-- inline style ensures the transform is always applied even if CSS specificity varies -->
+    <nav class="navbar" :class="{ 'navbar-hidden': isNavbarHidden }" :style="{ transform: isNavbarHidden ? 'translateY(-100%)' : 'translateY(0)' }">
       <div class="esg-logo" @click="navigateToDashboard">
         ESG
       </div>
@@ -45,22 +46,49 @@ const isDarkTheme = computed(() => {
 const authStore = useAuthStore();
 const showLogout = ref(false);
 const isNavbarHidden = ref(false);
-const lastScrollY = ref(0);
+// Init from current scroll to avoid jump on mount
+const lastScrollY = ref(typeof window !== 'undefined' ? window.scrollY : 0);
 
+// helper to read the real scrollTop from common roots
+const getScrollY = () => {
+  if (typeof window === 'undefined') return 0;
+  const se = document.scrollingElement || document.documentElement || document.body;
+  return (se && se.scrollTop) || window.scrollY || 0;
+};
 
-// 滚轮监听逻辑
-const handleScroll = () => {
-  const currentScrollY = window.scrollY;
+// rAF 节流与阈值，防止频繁切换或抖动
+const lastKnownScrollY = ref(lastScrollY.value);
+const ticking = ref(false);
+const SCROLL_THRESHOLD = 10; // 忽略小于此像素的抖动
+const SHOW_AT_TOP = 80; // 当滚动到顶部附近时总是显示导航栏
 
-  if (currentScrollY > lastScrollY.value && currentScrollY > 100) {
-    // 向下滚动且超过100px时隐藏
-    isNavbarHidden.value = true;
-  } else if (currentScrollY < lastScrollY.value) {
-    // 向上滚动时显示
-    isNavbarHidden.value = false;
+// 更稳健的滚动处理器：使用 requestAnimationFrame 节流并检测方向
+const onScroll = () => {
+  lastKnownScrollY.value = getScrollY();
+  if (!ticking.value) {
+    ticking.value = true;
+    window.requestAnimationFrame(() => {
+      const current = lastKnownScrollY.value;
+      console.debug('[NavBar] onScroll rAF current=', current, 'last=', lastScrollY.value);
+      const delta = current - lastScrollY.value;
+
+      if (Math.abs(delta) > SCROLL_THRESHOLD) {
+        if (current <= SHOW_AT_TOP) {
+          // 接近页面顶部时显示
+          isNavbarHidden.value = false;
+        } else if (delta > 0) {
+          // 向下滚动，隐藏
+          isNavbarHidden.value = true;
+        } else if (delta < 0) {
+          // 向上滚动，显示
+          isNavbarHidden.value = false;
+        }
+        lastScrollY.value = current;
+      }
+
+      ticking.value = false;
+    });
   }
-
-  lastScrollY.value = currentScrollY;
 };
 
 // 新增：右上角区域检测逻辑
@@ -68,18 +96,128 @@ function handleMouseMove(e) {
   const {clientX, clientY} = e;
   const w = window.innerWidth;
   const h = window.innerHeight;
+  // 当鼠标靠近页面顶部时自动显示导航栏，避免用户找不到导航
+  if (clientY < 60) {
+    isNavbarHidden.value = false;
+  }
   showLogout.value = clientX > w * 0.7 && clientY < h * 0.3;
 }
 
+// 触摸设备上的初始滚动记录（用于避免刚进入页面时导航栏跳动）
+const handleTouchStart = () => {
+  lastScrollY.value = getScrollY() || 0;
+};
+
+// 更稳健的滚轮处理器，补充在某些页面只触发 wheel 事件的情况
+const onWheel = (e) => {
+  const dy = e.deltaY || 0;
+  console.debug('[NavBar] onWheel dy=', dy);
+  if (Math.abs(dy) < 5) return; // 忽略微小滚动
+  if (dy > 0) {
+    // 向下滚，隐藏
+    isNavbarHidden.value = true;
+  } else {
+    // 向上滚，显示
+    isNavbarHidden.value = false;
+  }
+  // 保持 lastScrollY 与当前位置一致，避免后续 scroll 处理抖动
+  lastScrollY.value = getScrollY() || lastScrollY.value;
+};
+
 onMounted(() => {
-  window.addEventListener('scroll', handleScroll, {passive: true});
+  // 初始化 scroll 位置，避免挂载时出现闪动
+  lastScrollY.value = getScrollY() || 0;
+
+  // determine best scroll container
+  scrollContainer = findScrollableContainer();
+  console.debug('[NavBar] detected scroll container:', scrollContainer);
+
+  // 使用 passive listener 并绑定到常见滚动根，便于在容器滚动时也能捕获
+  window.addEventListener('scroll', onScroll, {passive: true});
+  document.addEventListener('scroll', onScroll, {passive: true});
+  // also attach to documentElement and body to be robust across apps
+  if (document.documentElement) document.documentElement.addEventListener('scroll', onScroll, {passive: true});
+  if (document.body) document.body.addEventListener('scroll', onScroll, {passive: true});
+
+  if (scrollContainer && scrollContainer !== document && scrollContainer !== window) {
+    try {
+      scrollContainer.addEventListener('scroll', onScroll, {passive: true});
+    } catch (e) {
+      console.debug('[NavBar] failed to attach to scrollContainer', e);
+    }
+  }
+
+  // 监听 wheel（鼠标滚轮）来补充 scroll
+  try {
+    window.addEventListener('wheel', onWheel, {passive: true});
+    document.addEventListener('wheel', onWheel, {passive: true});
+    if (document.documentElement) document.documentElement.addEventListener('wheel', onWheel, {passive: true});
+    if (document.body) document.body.addEventListener('wheel', onWheel, {passive: true});
+    if (scrollContainer && scrollContainer !== document && scrollContainer !== window) {
+      scrollContainer.addEventListener('wheel', onWheel, {passive: true});
+    }
+  } catch (e) {
+    console.debug('[NavBar] wheel listener attach failed', e);
+  }
+
+  window.addEventListener('touchstart', handleTouchStart, {passive: true});
+  window.addEventListener('touchmove', onScroll, {passive: true});
   window.addEventListener('mousemove', handleMouseMove);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll);
+  window.removeEventListener('scroll', onScroll);
+  document.removeEventListener('scroll', onScroll);
+  if (document.documentElement) document.documentElement.removeEventListener('scroll', onScroll);
+  if (scrollContainer && scrollContainer !== document && scrollContainer !== window && scrollContainer.removeEventListener) {
+    try {
+      scrollContainer.removeEventListener('scroll', onScroll);
+    } catch (e) {
+      console.debug('[NavBar] failed to remove from scrollContainer', e);
+    }
+  }
+
+  // 移除 wheel 监听
+  try {
+    window.removeEventListener('wheel', onWheel);
+    document.removeEventListener('wheel', onWheel);
+    if (scrollContainer && scrollContainer !== document && scrollContainer !== window && scrollContainer.removeEventListener) {
+      scrollContainer.removeEventListener('wheel', onWheel);
+    }
+  } catch (e) {
+    console.debug('[NavBar] wheel listener remove failed', e);
+  }
+
+  window.removeEventListener('touchstart', handleTouchStart);
+  window.removeEventListener('touchmove', onScroll);
   window.removeEventListener('mousemove', handleMouseMove);
+
+  console.debug('[NavBar] unmounted');
 });
+
+// helper to find a likely scrollable container in the app
+const findScrollableContainer = () => {
+  if (typeof document === 'undefined') return null;
+  const candidates = ['#app', '.app', '#root', '#main', '.main'];
+  for (const sel of candidates) {
+    const el = document.querySelector(sel);
+    if (el) return el;
+  }
+  // fallback: check document.scrollingElement
+  if (document.scrollingElement) return document.scrollingElement;
+  // otherwise find first child of body that actually scrolls
+  for (const child of Array.from(document.body.children)) {
+    try {
+      if (child.scrollHeight > child.clientHeight) return child;
+    } catch (e) {
+      // ignore
+    }
+  }
+  // ultimate fallback: body
+  return document.body;
+};
+
+let scrollContainer = null;
 
 const route = useRoute()
 const router = useRouter();
@@ -105,7 +243,6 @@ const menuItems = computed(() => {
   return [
     {name: 'home', path: '/home', label: '首页', icon: 'home'},
     {name: 'notifications', path: '/notifications', label: '通知', icon: 'bell'},
-    {name: 'settings', path: '/settings', label: '设置', icon: 'cog'},
     {name: 'profile', path: '/profile', label: '个人中心', icon: 'user'}
   ];
 })

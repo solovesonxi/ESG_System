@@ -1,11 +1,11 @@
 .review-management {
     padding: 2rem;
     min-height: 100vh;
-    background: linear-gradient(135deg, #b1bfe5 0%, #fffcfc 50%, #e8e0ae 100%);
+    background: linear-gradient(135deg, #ced8f3 0%, #f8f4d6 100%);
 }
 
 .dark-theme .review-management {
-    background: linear-gradient(135deg, #3e1617 0%, #1a1542 50%, #052142 100%);
+    background: linear-gradient(135deg, #3e1617 0%, #052142 100%);
 }
 
 .quick-actions {

@@ -4,13 +4,23 @@
       <header class="chat-header">
         <div class="title">{{ currentConversation?.title || '聊天' }}</div>
         <div class="header-actions">
-          <button class="icon-btn" title="清空聊天记录" aria-label="清空聊天记录" @click="clearChat"
+          <button class="icon-btn" title="清空聊天记录" aria-label="清空聊天记录" @click="onClickClear"
                   :disabled="clearing">
             <font-awesome-icon icon="trash-alt"/>
           </button>
           <div class="draft" v-if="hasDraft">草稿已保存</div>
         </div>
       </header>
+
+      <!-- Confirm modal for clearing chat -->
+      <div v-if="showClearConfirm" class="confirm-overlay" @keydown.esc="cancelClear" @click.self="cancelClear" tabindex="-1">
+        <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title" ref="confirmDialogRef" tabindex="0">
+            <div class="confirm-body">清空后将无法恢复历史消息，是否确认清空当前会话的所有消息？</div>
+            <div class="confirm-actions">
+              <button class="btn btn-confirm" @click="confirmClear" :disabled="clearing">确认</button>
+            </div>
+        </div>
+      </div>
 
       <div class="messages" ref="messagesEl">
         <div v-for="m in messages" :key="m.id + (m.streaming ? '-s' : '-f')" :class="['message', m.role]">
@@ -301,6 +311,37 @@ const hasDraft = computed(() => {
   return localStorage.getItem(draftKey(uid));
 });
 
+// Confirmation modal state for clearing chat
+const showClearConfirm = ref(false);
+const confirmDialogRef = ref(null);
+
+function onClickClear() {
+  // open the confirmation dialog instead of clearing immediately
+  showClearConfirm.value = true;
+  nextTick(() => {
+    try {
+      confirmDialogRef.value && confirmDialogRef.value.focus();
+    } catch (e) {}
+  });
+}
+
+async function confirmClear() {
+  if (clearing.value) return;
+  clearing.value = true;
+  try {
+    await clearChat();
+    showClearConfirm.value = false;
+  } catch (e) {
+    console.error('clearChat failed', e);
+  } finally {
+    clearing.value = false;
+  }
+}
+
+function cancelClear() {
+  showClearConfirm.value = false;
+}
+
 onMounted(() => {
   loadConversations();
   nextTick(() => adjustTextareaHeight());
@@ -310,7 +351,7 @@ onMounted(() => {
 <style scoped>
 .ai-chat-page {
   display: flex;
-  background: #ffffff; /* light bg */
+  background: transparent; /* light bg */
   color: #111827; /* light text */
 }
 
@@ -318,7 +359,7 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #ffffff; /* panel */
+  background: transparent;
   border-radius: 12px;
   align-items: center;
 }
@@ -613,10 +654,6 @@ onMounted(() => {
   color: #e6eef8;
 }
 
-.dark-theme .chat-area {
-  background: #0f1724;
-}
-
 .dark-theme .chat-header {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   color: #e6eef8;
@@ -657,5 +694,76 @@ onMounted(() => {
 
 .dark-theme .message .status {
   color: #9ca3af;
+}
+
+/* Confirm dialog styles */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.confirm-dialog {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+.dark-theme .confirm-dialog {
+  background: #0b1320;
+  color: #e6eef8;
+}
+
+.confirm-body {
+  font-size: 1rem;
+  margin-bottom: 24px;
+  color: #374151;
+}
+.dark-theme .confirm-body {
+  background: #0b1320;
+  color: #e6eef8;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.dark-theme .confirm-actions {
+  color: #e6eef8;
+}
+
+.btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+}
+
+.btn-confirm {
+  background: #2563eb;
+  color: #ffffff;
+}
+.dark-theme .btn-confirm {
+  background: #5787f5;
+  color: #ffffff;
+}
+
+.btn-confirm:hover {
+  background: #1d4ed8;
+}
+.dark-theme .btn-confirm:hover {
+  background: #5686ef !important;
 }
 </style>

@@ -279,7 +279,6 @@ onMounted(() => {
 
 .list-modal {
   width: 100%;
-  background: linear-gradient(120deg, #f8f1f1 0%, #fadcb3 100%);
   flex: 1 1 auto;
   box-sizing: border-box;
   display: flex;
@@ -710,6 +709,12 @@ onMounted(() => {
 
 .dark-theme .select-all-text {
   color: #c8d9ea;
+}
+
+/* Keep the full-screen messages overlay transparent in dark mode so it doesn't obscure the main list */
+.dark-theme .messages-view {
+  background: transparent;
+  pointer-events: none; /* keep passthrough behavior for underlying content */
 }
 
 </style>

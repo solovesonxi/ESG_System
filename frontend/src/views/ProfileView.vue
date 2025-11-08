@@ -22,20 +22,17 @@
             <span>{{ user[item.field] }}</span>
           </div>
           <button v-if="item.editable" class="edit-btn" @click="openEditModal(item.field)">
-            <i class="fas fa-edit"></i>
+            <font-awesome-icon icon="edit"/>
             <span>编辑</span>
           </button>
         </div>
       </div>
     </div>
     <!-- 编辑信息模态框 -->
-    <div class="modal-overlay" v-if="showEditModal">
+    <div class="modal-overlay" v-if="showEditModal" @click.self="closeEditModal">
       <div class="edit-modal">
         <div class="modal-header">
           <h2>{{ modalTitle }}</h2>
-          <button class="close-modal-btn" @click="closeEditModal">
-            <i class="fas fa-times"></i>
-          </button>
         </div>
         <div class="input-group">
           <label>{{ fieldLabel }}</label>
@@ -63,14 +60,14 @@
         </div>
         <div class="modal-actions">
           <button class="submit-btn" @click="submitEdit">
-            <i class="fas fa-check"></i>
+            <font-awesome-icon icon="check"/>
             <span>提交</span>
           </button>
         </div>
       </div>
     </div>
     <!-- 更改密码模态框 -->
-    <div class="modal-overlay" v-if="showPasswordModal">
+    <div class="modal-overlay" v-if="showPasswordModal" @click.self="closePasswordModal">
       <div class="edit-modal">
         <div class="modal-header">
           <h2>更改密码</h2>
@@ -104,11 +101,11 @@
         </div>
         <div class="modal-actions">
           <button class="action-btn" @click="closePasswordModal">
-            <i class="fas fa-times"></i>
+            <font-awesome-icon icon="times"/>
             <span>取消</span>
           </button>
           <button class="submit-btn" @click="submitPassword">
-            <i class="fas fa-check"></i>
+            <font-awesome-icon icon="check"/>
             <span>提交</span>
           </button>
         </div>
@@ -122,10 +119,25 @@ import {computed, ref} from 'vue';
 import {useAuthStore} from '@/stores/authStore';
 import apiClient from '@/utils/axios';
 import {showError, showInfo, showSuccess} from '@/utils/toast.js';
-import {faBullhorn, faCalendarAlt, faChartBar, faChartLine, faCheckCircle, faEnvelope, faIndustry, faPhone, faTags, faUser, faUserCog, faUserTag} from '@fortawesome/free-solid-svg-icons';
+import {
+  faBullhorn,
+  faCalendarAlt,
+  faChartBar,
+  faChartLine,
+  faCheck,
+  faCheckCircle,
+  faEdit,
+  faEnvelope,
+  faIndustry,
+  faPhone,
+  faTags,
+  faUser,
+  faUserCog,
+  faUserTag
+} from '@fortawesome/free-solid-svg-icons';
 import {library} from "@fortawesome/fontawesome-svg-core";
 
-library.add(faUser, faIndustry, faUserTag, faPhone, faEnvelope, faBullhorn, faCalendarAlt, faChartBar, faChartLine, faCheckCircle, faTags, faUserCog);
+library.add(faUser, faIndustry, faUserTag, faPhone, faEnvelope, faBullhorn, faCalendarAlt, faChartBar, faChartLine, faCheckCircle, faTags, faUserCog, faCheck, faEdit);
 const infoItems = [
   {field: 'username', label: '用户名', icon: faUser, editable: true},
   {field: 'factory', label: '工厂名', icon: faIndustry, editable: false},
@@ -144,7 +156,6 @@ const user = ref({
   email: authStore.user?.email || '未设置',
   avatar: authStore.user?.avatar || '/default-avatar.jpg'
 });
-
 
 
 // 打开头像选择器
@@ -366,7 +377,7 @@ const submitPassword = async () => {
   display: flex;
   flex-direction: row;
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
   background: rgba(30, 30, 40, 0.85);
   border-radius: 0;
   box-shadow: none;
@@ -387,9 +398,9 @@ const submitPassword = async () => {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 12% 0 12% 0;
+  padding: 10% 0 18% 0;
   width: auto;
-  height: 100%;
+  height: 100vh;
   position: relative;
 }
 
@@ -510,7 +521,8 @@ const submitPassword = async () => {
 .account-info {
   width: 100%;
   max-width: 600px;
-  margin: 0 auto;
+  margin: 10% auto;
+
 }
 
 .info-item {

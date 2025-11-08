@@ -24,12 +24,11 @@ a,
 }
 
 .announcement-table {
-    background-color: #ffffff;
+    background: transparent;
     color: #000000;
 }
 
 .dark-theme .announcement-table {
-    background-color: #1c1c1c;
     color: #ffffff;
 }
 

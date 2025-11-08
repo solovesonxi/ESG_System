@@ -148,7 +148,7 @@ export default {
   backdrop-filter: blur(10px);
   overflow: hidden;
   width: 100%;
-  height: 100%;
+  height: 100vh;
 }
 
 @keyframes gradientBG {

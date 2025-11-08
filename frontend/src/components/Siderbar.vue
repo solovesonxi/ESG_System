@@ -22,7 +22,7 @@
 
 <script setup>
 import {useRoute} from 'vue-router';
-import {computed, onMounted, ref} from 'vue';
+import {computed, onMounted, onUnmounted, ref} from 'vue';
 import apiClient from "@/utils/axios.js";
 import {useAuthStore} from '@/stores/authStore';
 import {library} from '@fortawesome/fontawesome-svg-core';
@@ -34,6 +34,18 @@ library.add(faChartLine, faCalendarAlt, faCalendarDay, faChartPie, faCheckCircle
 const route = useRoute();
 const isCollapsed = ref(false);
 const authStore = useAuthStore();
+
+const SIDEBAR_EXPANDED_WIDTH = '180px'; // when expanded (keep consistent with :root default)
+const SIDEBAR_COLLAPSED_WIDTH = '45px'; // when collapsed
+
+// helper to update CSS variable used by App.vue
+const applySidebarWidthVar = (width) => {
+  try {
+    document.documentElement.style.setProperty('--sidebar-width', width);
+  } catch (e) {
+    // ignore in non-browser environments
+  }
+};
 
 const menuItems = computed(() => {
   const items = [
@@ -66,6 +78,7 @@ const isActive = (path) => {
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
   localStorage.setItem('sidebarCollapsed', isCollapsed.value);
+  applySidebarWidthVar(isCollapsed.value ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH);
 };
 
 onMounted(() => {
@@ -73,27 +86,46 @@ onMounted(() => {
   if (savedState !== null) {
     isCollapsed.value = savedState === 'true';
   }
+  // apply CSS var so `.content-wrapper` can react to sidebar width
+  applySidebarWidthVar(isCollapsed.value ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH);
+});
+
+onUnmounted(() => {
+  // remove the inline CSS variable so the root/default value is used again
+  try {
+    document.documentElement.style.removeProperty('--sidebar-width');
+  } catch (e) {
+    // ignore in non-browser environments
+  }
 });
 </script>
 
 <style scoped>
 .siderbar {
-  width: 10%;
-  min-height: 100%;
-  background: linear-gradient(180deg, #171616 0%, #3e1616 100%);
+  /* make sidebar fixed to left side and not scroll with page */
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width, 180px);
+  min-height: calc(100vh - var(--navbar-height, 70px));
+  background: linear-gradient(135deg, #3e1616 0%, #171616 100%);
   color: #ffffff;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  transition: width 0.3s ease;
+  transition: width 0.25s ease;
+  z-index: 998; /* below navbar (1000) */
+  overflow: auto; /* allow internal scrolling if content taller than viewport */
 }
 
 .siderbar.collapsed {
-  width: 45px;
+  width: 45px; /* keep collapsed width small */
 }
 
 .toggle-icon {
   display: flex;
   justify-content: flex-end;
   padding: 10px;
+  margin-top: 70px;
   cursor: pointer;
   color: rgba(255, 255, 255, 0.8);
   transition: all 0.3s ease;
@@ -118,6 +150,7 @@ onMounted(() => {
 
 .menu-list {
   list-style: none;
+  padding: 8px 0 24px 0;
 }
 
 .menu-list li {
@@ -131,10 +164,11 @@ onMounted(() => {
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   transition: all 0.3s ease;
+  justify-content: center;
 }
 
 .siderbar.collapsed .menu-list a {
-  padding: 12px 12px 12px 8px;
+  padding: 12px 8px;
 }
 
 

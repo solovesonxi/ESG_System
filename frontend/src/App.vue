@@ -2,7 +2,14 @@
   <NavBar v-if="isAuthedPage" ref="navBar"/>
   <div class="app-layout">
     <Siderbar v-if="isAuthedPage" ref="siderBar"/>
-    <div :class="'content-wrapper'">
+    <div
+      class="content-wrapper"
+      :style="{
+        marginLeft: isAuthedPage ? 'var(--sidebar-width)' : '0',
+        paddingTop: '0',
+        height: '100%'
+      }"
+    >
       <router-view v-slot="{ Component }">
         <component :is="Component" ref="currentComponent"/>
       </router-view>
@@ -68,7 +75,7 @@ const handleSubmitEdit = (ifSubmit) => {
   }
 };
 
-watch(() => route.path, (newPath, oldPath) => {
+watch(() => route.path, () => {
   isEditing.value = false;
   setTimeout(() => {
     if (currentComponent.value) {
@@ -89,6 +96,12 @@ watch(() => route.path, (newPath, oldPath) => {
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Playfair+Display:wght@600;800&display=swap');
+
+:root {
+  /* default width so CSS variables resolve during build/lint */
+  --sidebar-width: 180px;
+  --navbar-height: 70px; /* 默认导航栏高度 */
+}
 
 /* Ensure the document and root app element fill the viewport so children using 100vh/dvh behave correctly */
 html, body, #app {
@@ -115,21 +128,24 @@ body {
 }
 
 .app-layout {
-  display: flex;
+  display: block; /* let sidebar be fixed; content wrapper will be positioned */
   min-height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
+  position: relative;
+  background: linear-gradient(120deg, #f8f1f1 0%, #fadcb3 100%);
 
+}
+.dark-theme .app-layout {
+  background: linear-gradient(120deg, #3e1617 0%, #1a1542 100%);
 }
 
 .content-wrapper {
-  flex: 1;
-  margin-left: 0; /* default no sidebar */
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: auto;
+  margin-left: var(--sidebar-width, 0);
+  transition: margin-left 0.25s ease;
+  box-sizing: border-box;
+  height: 100%;
 }
 
 main {
@@ -186,6 +202,11 @@ td {
 
   h1 {
     font-size: 2rem;
+  }
+
+  .content-wrapper {
+    margin-left: 0; /* on small screens let the sidebar overlay or be hidden */
+    padding-top: 60px;
   }
 }
 </style>

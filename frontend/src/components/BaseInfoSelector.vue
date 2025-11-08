@@ -401,13 +401,12 @@ watch([category, factory, year, month], () => {
 
 <style scoped>
 .base-info-container {
-  background: #f7f8fa;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   backdrop-filter: blur(20px);
-  border: 1px solid #e3e6ee;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border: 2px solid #480202;
 }
 
 .info-header {
