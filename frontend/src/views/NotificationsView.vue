@@ -1,5 +1,5 @@
 <template>
-  <div class="modal-container list-modal">
+  <div class="list-modal">
     <div class="modal-header">
       <h3>系统通知</h3>
       <div v-if="!isSelectMode" class="header-actions">
@@ -100,7 +100,6 @@ import axios from '@/utils/axios';
 const messages = ref([]);
 const selectedNotifications = ref(new Set());
 const isSelectMode = ref(false);
-const showAllMessagesModal = ref(false);
 const showMessageModal = ref(false);
 const showDeleteConfirmModal = ref(false);
 const currentMessage = ref(null);
@@ -108,7 +107,6 @@ const deleteMode = ref('');
 
 const unreadCount = computed(() => messages.value.filter(m => !m.is_read).length);
 const readMessagesCount = computed(() => messages.value.filter(m => m.is_read).length);
-const previewMessages = computed(() => messages.value.slice(0, 4));
 
 const allNotificationsSelected = computed(() =>
     messages.value.length > 0 && selectedNotifications.value.size === messages.value.length
@@ -138,9 +136,6 @@ const openMessageDetail = (msg) => {
   }
 };
 
-const closeAllModals = () => {
-  showAllMessagesModal.value = false;
-};
 const closeDetailModal = () => {
   showMessageModal.value = false;
 };
@@ -212,7 +207,8 @@ const toggleNotificationSelection = (id) => {
   selectedNotifications.value.has(id) ? selectedNotifications.value.delete(id) : selectedNotifications.value.add(id);
 };
 const toggleAllNotifications = () => {
-  if (allNotificationsSelected.value) selectedNotifications.value.clear(); else messages.value.forEach(msg => selectedNotifications.value.add(msg.id));
+  if (allNotificationsSelected.value) selectedNotifications.value.clear();
+  else messages.value.forEach(msg => selectedNotifications.value.add(msg.id));
 };
 const confirmBatchDelete = () => {
   showDeleteConfirmModal.value = true;
@@ -255,6 +251,16 @@ onMounted(() => {
 }
 
 
+.messages-view {
+  /* remove from document flow so overlays don't affect layout height */
+  position: fixed;
+  inset: 0; /* top:0; right:0; bottom:0; left:0; */
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* let overlays enable pointer events individually */
+  z-index: 2000;
+}
+
 .modal-mask {
   position: fixed;
   z-index: 9999;
@@ -267,20 +273,38 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(2px);
+  pointer-events: auto; /* allow interactions */
 }
 
-.modal-container {
-  background: linear-gradient(120deg, #f8f1f1 0%, #fadcb3 100%);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-}
 
 .list-modal {
   width: 100%;
+  background: linear-gradient(120deg, #f8f1f1 0%, #fadcb3 100%);
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   height: 100%;
+}
+
+/* ensure modal content grows and scrolls correctly */
+.modal-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex: 1 1 auto; /* allow content to expand */
+  overflow: auto; /* enable scrolling when content overflows */
+  min-height: 0; /* important for flex children to allow proper scrolling */
+}
+
+.list-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  overflow: auto;
+  min-height: 100%;
 }
 
 .detail-modal {
@@ -303,6 +327,7 @@ onMounted(() => {
   font-size: 1.2rem;
   font-weight: 600;
 }
+
 .dark-theme .modal-header h3 {
   color: #b3c0f3;
 }

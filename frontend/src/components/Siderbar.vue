@@ -26,10 +26,10 @@ import {computed, onMounted, ref} from 'vue';
 import apiClient from "@/utils/axios.js";
 import {useAuthStore} from '@/stores/authStore';
 import {library} from '@fortawesome/fontawesome-svg-core';
-import {faBullhorn, faCalendarAlt, faCalendarDay, faChartPie, faChartLine, faCheckCircle, faTags, faUserCog, faSlidersH} from '@fortawesome/free-solid-svg-icons';
+import {faBullhorn, faCalendarAlt, faCalendarDay, faChartPie, faChartLine, faCheckCircle, faTags, faUserCog, faSlidersH, faRobot} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 // 添加图标到库
-library.add(faChartLine, faCalendarAlt, faCalendarDay, faChartPie, faCheckCircle, faUserCog, faTags, faBullhorn, faSlidersH);
+library.add(faChartLine, faCalendarAlt, faCalendarDay, faChartPie, faCheckCircle, faUserCog, faTags, faBullhorn, faSlidersH, faRobot);
 
 const route = useRoute();
 const isCollapsed = ref(false);
@@ -44,14 +44,15 @@ const menuItems = computed(() => {
     if(authStore.isHeadquarter||authStore.isAdmin) {
       items.push({ name: 'audit', path: '/summary-data', label: '汇总数据', icon: 'chart-pie' });
     }
+    items.push({ name: 'announcement', path: '/announcement-board', label: '公告发布', icon: 'bullhorn' });
     items.push({ name: 'review', path: '/review-management', label: '审核管理', icon: 'check-circle' });
+    items.push({ name: 'ai', path: '/ai-chat', label: '聊天助手', icon: 'robot' });
   }
   if (authStore.isAdmin) {
     items.push(
         { name: 'account', path: '/account-management', label: '账号管理', icon: 'user-cog' },
         { name: 'category', path: '/category-management', label: '分类管理', icon: 'tags' },
         { name: 'field', path: '/field-management', label: '指标管理', icon: 'sliders-h' },
-        { name: 'announcement', path: '/announcement-board', label: '公告发布', icon: 'bullhorn' }
     );
   }
   return items;

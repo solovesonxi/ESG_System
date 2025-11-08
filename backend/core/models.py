@@ -415,3 +415,20 @@ class GovernanceData(Base):
     current_text = Column(Text)
     comparison_text = Column(Text)
     reason = Column(Text)
+
+class AgentConversation(Base):
+    __tablename__ = 'agent_conversations'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    title = Column(String(200))
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=datetime.now(timezone.utc))
+
+class AgentMessage(Base):
+    __tablename__ = 'agent_messages'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(Integer, ForeignKey('agent_conversations.id'), nullable=False, index=True)
+    role = Column(String(32), nullable=False)  # 'user' | 'assistant' | 'system'
+    content = Column(Text, nullable=False)
+    meta = Column(JSON)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))

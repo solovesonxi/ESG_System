@@ -352,6 +352,16 @@ const submitPassword = async () => {
 </script>
 
 <style scoped>
+.dashboard {
+  padding: 3rem;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  animation: gradientFlow 8s ease infinite;
+  position: relative;
+  overflow: hidden;
+}
+
 .account-container {
   display: flex;
   flex-direction: row;

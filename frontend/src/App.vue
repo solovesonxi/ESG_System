@@ -129,13 +129,13 @@ body {
   display: flex;
   flex-direction: column;
   width: 100%;
+  height: auto;
 }
 
 main {
   flex: 1;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   position: relative;
   width: 100%;
   max-width: 1200px; /* keep content centered and readable */

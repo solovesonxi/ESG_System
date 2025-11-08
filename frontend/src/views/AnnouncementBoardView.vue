@@ -5,7 +5,6 @@
       <button class="btn btn-primary" @click="openCreateModal">发布公告</button>
     </div>
     <div class="announcement-list card">
-      <h3>公告列表</h3>
       <table class="announcement-table">
         <thead>
           <tr>
@@ -21,7 +20,7 @@
             <td>{{ announcement.content }}</td>
             <td>{{ formatDate(announcement.created_at) }}</td>
             <td>
-              <button class="btn btn-danger" @click="deleteAnnouncement(announcement.id)">删除</button>
+              <button class="btn btn-danger" @click.stop="deleteAnnouncement(announcement.id)">删除</button>
             </td>
           </tr>
         </tbody>
@@ -45,8 +44,8 @@
               <textarea v-model="currentAnnouncement.content" class="form-input" readonly></textarea>
             </div>
             <div class="form-group">
-              <label>接收角色</label>
-              <input v-model="currentAnnouncement.receiver_role" class="form-input" readonly />
+              <label>接收目标</label>
+              <input :value="viewTargetText(currentAnnouncement)" class="form-input" readonly />
             </div>
             <div class="form-group" v-if="currentAnnouncement.receiver_factory">
               <label>接收工厂</label>
@@ -54,8 +53,8 @@
             </div>
             <div class="form-group" v-if="currentAnnouncement.receiver_department">
               <label>接收部门</label>
-            <input v-model="currentAnnouncement.receiver_department" class="form-input" readonly />
-          </div>
+              <input v-model="currentAnnouncement.receiver_department" class="form-input" readonly />
+            </div>
           </div>
         </div>
       </div>
@@ -76,22 +75,30 @@
               <label>内容</label>
               <textarea v-model="newAnnouncement.content" class="form-input" placeholder="请输入公告内容"></textarea>
             </div>
-            <div class="form-group">
-              <label>接收角色</label>
-              <select v-model="newAnnouncement.receiver_role" class="form-input">
-                <option value="all">全员</option>
-                <option value="工厂">工厂</option>
-                <option value="部门">部门</option>
+
+            <!-- 根据用户角色显示不同的接收目标 -->
+            <div class="form-group" v-if="isHeadquarter || isAdmin">
+              <label>接收工厂</label>
+              <select v-model="newAnnouncement.receiver_factory" class="form-input">
+                <option value="">全部工厂</option>
+                <option v-for="f in factories" :key="f" :value="f">{{ f }}</option>
               </select>
             </div>
-            <div class="form-group" v-if="newAnnouncement.receiver_role === '工厂' || newAnnouncement.receiver_role === '部门'">
-              <label>接收工厂</label>
-              <input v-model="newAnnouncement.receiver_factory" class="form-input" placeholder="请输入接收工厂" />
-            </div>
-            <div class="form-group" v-if="newAnnouncement.receiver_role === '部门'">
+
+            <div class="form-group" v-else-if="isFactory">
               <label>接收部门</label>
-              <input v-model="newAnnouncement.receiver_department" class="form-input" placeholder="请输入接收部门" />
+              <select v-model="newAnnouncement.receiver_department" class="form-input">
+                <option value="">全部部门</option>
+                <option v-for="d in departments" :key="d.id" :value="d.name">{{ d.name }}</option>
+              </select>
             </div>
+
+            <!-- 发送时间，可选：为空代表立即发送 -->
+            <div class="form-group">
+              <label>发布时间（可选）</label>
+              <input type="datetime-local" v-model="newAnnouncement.send_time" class="form-input" />
+            </div>
+
             <div class="button-row center">
               <button class="btn btn-secondary" @click="closeCreateModal">取消</button>
               <button class="btn btn-primary" @click="createAnnouncement">发布</button>
@@ -104,7 +111,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useAuthStore } from '@/stores/authStore.js';
+import { useSelectionStore } from '@/stores/selectionStore.js';
+import apiClient from '@/utils/axios';
+
+const authStore = useAuthStore();
+const selectionStore = useSelectionStore();
 
 const announcements = ref([
   { id: 1, title: '系统维护通知', content: '系统将于今晚12点进行维护，请提前保存数据。', created_at: new Date() },
@@ -114,17 +127,27 @@ const showViewModal = ref(false);
 const newAnnouncement = ref({
   title: '',
   content: '',
-  type: 'announcement',
-  sender_role: '',
-  receiver_role: 'all',
+  // receiver_factory or receiver_department will be set depending on role
   receiver_department: '',
   receiver_factory: '',
+  send_time: '', // ISO-like from datetime-local, or empty = now
 });
 const currentAnnouncement = ref({});
 const darkMode = ref(false);
 
+const factories = computed(() => selectionStore.factories || []);
+const departments = ref([]);
+const fetchedDepartments = ref(false);
+
+const isHeadquarter = computed(() => authStore.isHeadquarter)
+const isAdmin = computed(() => authStore.isAdmin)
+const isFactory = computed(() => authStore.isFactory)
+
 function openCreateModal() {
   showCreateModal.value = true;
+  if (!fetchedDepartments.value) {
+    fetchDepartments();
+  }
 }
 
 function closeCreateModal() {
@@ -132,37 +155,87 @@ function closeCreateModal() {
   newAnnouncement.value = {
     title: '',
     content: '',
-    type: 'announcement',
-    sender_role: '',
-    receiver_role: 'all',
     receiver_department: '',
     receiver_factory: '',
+    send_time: '',
   };
 }
 
-function createAnnouncement() {
-  const newId = announcements.value.length + 1;
-  announcements.value.push({
-    id: newId,
+async function fetchDepartments() {
+  try {
+    const res = await apiClient.get('/messages/departments');
+    if (res && res.data && Array.isArray(res.data.departments)) {
+      departments.value = res.data.departments;
+    } else {
+      departments.value = [];
+    }
+  } catch (e) {
+    console.warn('获取部门列表失败', e);
+    departments.value = [];
+  } finally {
+    fetchedDepartments.value = true;
+  }
+}
+
+function formatDate(date) {
+  if (!date) return '';
+  try {
+    return new Date(date).toLocaleString();
+  } catch (e) {
+    return '';
+  }
+}
+
+function viewTargetText(item) {
+  if (!item) return '';
+  if (item.receiver_factory) return `工厂: ${item.receiver_factory}`;
+  if (item.receiver_department) return `部门: ${item.receiver_department}`;
+  return '全部';
+}
+
+async function createAnnouncement() {
+  if (!newAnnouncement.value.title || !newAnnouncement.value.content) {
+    alert('请填写标题和内容');
+    return;
+  }
+  const payload = {
     title: newAnnouncement.value.title,
     content: newAnnouncement.value.content,
-    type: newAnnouncement.value.type,
-    sender_role: newAnnouncement.value.sender_role,
-    receiver_role: newAnnouncement.value.receiver_role,
-    receiver_department: newAnnouncement.value.receiver_department,
-    receiver_factory: newAnnouncement.value.receiver_factory,
-    created_at: new Date(),
-    is_read: false,
+  };
+  if (isHeadquarter.value || isAdmin.value) {
+    if (newAnnouncement.value.receiver_factory && newAnnouncement.value.receiver_factory !== '') {
+      payload.receiver_factory = newAnnouncement.value.receiver_factory;
+    }
+  } else if (isFactory.value) {
+    if (newAnnouncement.value.receiver_department && newAnnouncement.value.receiver_department !== '') {
+      payload.receiver_department = newAnnouncement.value.receiver_department;
+    }
+  }
+
+  if (newAnnouncement.value.send_time && newAnnouncement.value.send_time !== '') {
+    const dt = new Date(newAnnouncement.value.send_time);
+    if (!isNaN(dt.getTime())) {
+      payload.send_time = dt.toISOString();
+    }
+  }
+
+  announcements.value.push({
+    title: payload.title,
+    content: payload.content,
+    send_time: payload.send_time ? payload.send_time : new Date(),
+    receiver_factory: payload.receiver_factory || null,
+    receiver_department: payload.receiver_department || null,
   });
+  try {
+    await apiClient.post('/messages', payload);
+  } catch (e) {
+    console.warn('公告发布失败：', e);
+  }
   closeCreateModal();
 }
 
 function deleteAnnouncement(id) {
   announcements.value = announcements.value.filter((a) => a.id !== id);
-}
-
-function formatDate(date) {
-  return new Date(date).toLocaleString();
 }
 
 function viewAnnouncement(announcement) {
@@ -173,6 +246,11 @@ function viewAnnouncement(announcement) {
 function closeViewModal() {
   showViewModal.value = false;
 }
+
+onMounted(() => {
+  selectionStore.initSelection?.();
+  if (!fetchedDepartments.value) fetchDepartments();
+});
 </script>
 
 <style scoped>

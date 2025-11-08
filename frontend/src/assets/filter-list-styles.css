@@ -11,8 +11,8 @@
 .quick-actions {
     display: flex;
     flex-direction: row;
+    height: fit-content;
     gap: 1rem;
-    margin-bottom: 2rem;
 }
 
 .card {
@@ -26,10 +26,12 @@
 .filter-section {
     margin-bottom: 2rem;
 }
-.filter-section h3{
+
+.filter-section h3 {
     color: #260f93;
 }
-.dark-theme .filter-section h3{
+
+.dark-theme .filter-section h3 {
     color: #b3c0f3;
 }
 
@@ -69,15 +71,21 @@
     box-shadow: 0 4px 24px rgba(103, 126, 234, 0.08);
     padding: 1.5rem;
 }
-.records-header-row{
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+
+.records-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
 }
-.records-header-row h3{
+
+.records-header-row h3 {
     font-size: 1.25rem;
     font-weight: 600;
     color: #260f93;
 }
-.dark-theme .records-header-row h3{
+
+.dark-theme .records-header-row h3 {
     color: #b3c0f3;
 }
 
@@ -357,25 +365,19 @@
     padding-right: 0.5rem;
 }
 
-.text-muted {
-    font-size: 1rem;
-    color: #736300;
-}
-.dark-theme .text-muted {
-    color: #f3f3a5;
-}
-
 .button-row {
     display: flex;
     gap: 12px;
     justify-content: flex-end;
     margin-top: 12px;
 }
+
 .add-dept {
     display: flex;
     gap: 12px;
     flex-direction: row;
 }
+
 .header-cell {
     padding: 0.1rem 0.2rem;
     overflow: hidden;
@@ -414,7 +416,7 @@
 
 /* Buttons */
 .btn {
-    padding: 8px 12px;
+    padding: 6px 8px;
     border-radius: 8px;
     font-weight: 500;
     font-size: 14px;
@@ -458,6 +460,7 @@
     color: #fff;
     justify-content: center;
 }
+
 .btn-danger:hover {
     background: linear-gradient(135deg, #b91414, #ea0a33) !important;
 }
@@ -465,9 +468,11 @@
 .dark-theme .btn-primary {
     background: linear-gradient(135deg, #033e62, #4c038f);
 }
+
 .dark-theme .btn-primary:hover {
     background: linear-gradient(135deg, #044a75, #6a04b1) !important;
 }
+
 .dark-theme .btn-secondary {
     background: rgba(26, 26, 46, 0.85);
     border-color: rgba(118, 75, 162, 0.5);
@@ -490,7 +495,8 @@
     background: #fff;
     color: #222;
     border-radius: 12px;
-    width: 36%;
+    min-width: 36%;
+    max-width: 50%;
     max-height: 90vh;
     overflow: auto;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
@@ -524,6 +530,7 @@
 /* form helpers */
 .form-group {
     display: flex;
+    flex-direction: row;
     gap: 12px;
     align-items: center;
     flex-wrap: wrap;
@@ -703,9 +710,11 @@ input:checked + .slider:before {
     justify-content: center;
     transition: all 0.3s ease;
 }
+
 .password-toggle:hover {
     background: rgba(0, 0, 0, 0.1);
 }
+
 /* icons as pseudo elements for small buttons */
 .icon-add::before {
     content: '\2795';

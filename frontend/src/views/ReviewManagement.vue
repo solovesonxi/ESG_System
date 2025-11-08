@@ -79,7 +79,9 @@
       </div>
     </div>
     <div class="records-section">
-      <h3>审核记录列表</h3>
+      <div class="records-header-row">
+        <h3>审核记录列表</h3>
+      </div>
       <div class="records-list-modern">
         <div class="record-header-row">
           <span class="header-cell">数据类型</span>

@@ -38,8 +38,11 @@
       <div class="records-header-row">
         <h3>字段列表 <span class="text-muted">（共 {{ totalCount }} 条）</span></h3>
         <div class="quick-actions">
-          <button class="btn btn-secondary" @click="openDetail(null)" title="添加字段"><span class="icon-add"></span> 添加字段</button>
-          <button class="btn btn-secondary" @click="refreshFields" title="刷新"><span class="icon-refresh"></span> 刷新</button>
+          <button class="btn btn-secondary" @click="openDetail(null)" title="添加字段"><span class="icon-add"></span>
+            添加字段
+          </button>
+          <button class="btn btn-secondary" @click="refreshFields" title="刷新"><span class="icon-refresh"></span> 刷新
+          </button>
         </div>
       </div>
 
@@ -79,7 +82,8 @@
       <div class="pagination-bar pagination-horizontal">
         <button @click="goToPage(1)" :disabled="currentPage===1">首页</button>
         <button @click="goToPage(currentPage-1)" :disabled="currentPage===1">上一页</button>
-        <span class="page-text">第 <input type="number" v-model.number="currentPage" min="1" :max="totalPages" style="width:3em;"> 页 / 共 {{ totalPages }} 页</span>
+        <span class="page-text">第 <input type="number" v-model.number="currentPage" min="1" :max="totalPages"
+                                          style="width:3em;"> 页 / 共 {{ totalPages }} 页</span>
         <button @click="goToPage(currentPage+1)" :disabled="currentPage===totalPages">下一页</button>
         <button @click="goToPage(totalPages)" :disabled="currentPage===totalPages">尾页</button>
       </div>
@@ -95,7 +99,7 @@
           <div class="modal-body">
             <div class="form-group">
               <label class="form-label">ID</label>
-              <input v-model="detailField.id" class="form-input" placeholder="自增生成的ID" />
+              <input v-model="detailField.id" class="form-input" placeholder="自增生成的ID"/>
             </div>
             <div class="form-group">
               <label class="form-label">数据类型</label>
@@ -105,27 +109,23 @@
             </div>
             <div class="form-group">
               <label class="form-label">分组</label>
-              <input v-model="detailField.set" class="form-input" placeholder="例如 default 或 v1" />
+              <input v-model="detailField.set" class="form-input" placeholder="例如 default 或 v1"/>
             </div>
             <div class="form-group">
               <label class="form-label">英文标识</label>
-              <input v-model="detailField.name_en" class="form-input" />
+              <input v-model="detailField.name_en" class="form-input"/>
             </div>
             <div class="form-group">
               <label class="form-label">中文名称</label>
-              <input v-model="detailField.name_zh" class="form-input" />
+              <input v-model="detailField.name_zh" class="form-input"/>
             </div>
             <div class="form-group" v-if="isMonthlyField || isCalculativeField">
               <label class="form-label">步长</label>
-              <input v-model.number="detailField.step" class="form-input" type="number" step="any" />
-            </div>
-            <div class="form-group" v-if="isCalculativeField">
-              <label class="form-label">计算</label>
-              <textarea v-model="calculationText" class="form-input" rows="4" placeholder='可以输入 JSON 或 简单公式文本'></textarea>
+              <input v-model.number="detailField.step" class="form-input" type="number" step="any"/>
             </div>
             <div class="form-group" v-if="isMonthlyField || isCalculativeField">
               <label class="form-label">单位</label>
-              <input v-model="detailField.unit" class="form-input" />
+              <input v-model="detailField.unit" class="form-input"/>
             </div>
             <div class="form-group">
               <label class="form-label">释义</label>
@@ -133,11 +133,26 @@
             </div>
             <div class="form-group" v-if="!isMonthlyField">
               <label class="form-label">来源</label>
-              <input v-model="detailField.source" class="form-input" />
+              <input v-model="detailField.source" class="form-input"/>
+            </div>
+            <div class="form-group" v-if="isCalculativeField">
+              <label class="form-label">计算</label>
+              <select v-model="calculationOperation" class="form-input">
+                <option v-for="op in operationOptions" :key="op" :value="op">{{ op }}</option>
+              </select>
+              <input v-model="calculationFieldsText" class="form-input" placeholder="字段ID"/>
+              <input v-model="calculationCoefficientsText" class="form-input" placeholder="系数"/>
+            </div>
+            <div class="calc-row hint" v-if="isCalculativeField">
+              <small>提示：字段ID必须是使用逗号分隔的id列表，系数列表长度需与字段数量一致。</small>
             </div>
             <div class="button-row">
-              <button v-if="detailField?.id" class="btn btn-danger" @click="prepareDeleteField(detailField)">删除字段</button>
-              <button class="btn btn-primary" @click="saveField">{{ detailField?.id ? '保存修改' : '确认添加' }}</button>
+              <button v-if="detailField?.id" class="btn btn-danger" @click="prepareDeleteField(detailField)">删除字段
+              </button>
+              <button class="btn btn-primary" @click="saveField">{{
+                  detailField?.id ? '保存修改' : '确认添加'
+                }}
+              </button>
             </div>
           </div>
         </div>
@@ -177,7 +192,11 @@ const keyword = ref('')
 
 const detailField = ref(null)
 const showDetail = ref(false)
-const calculationText = ref('')
+// Structured calculation editor state
+const operationOptions = ['总和', '最大', '最小', '平均', '最终有效值', '强度', '占比']
+const calculationFieldsText = ref('') // comma separated ids
+const calculationOperation = ref(operationOptions[0])
+const calculationCoefficientsText = ref('') // comma separated coefficients
 const showConfirmDelete = ref(false)
 const deleteTarget = ref(null)
 
@@ -199,6 +218,7 @@ const isMonthlyField = computed(() => {
 const isCalculativeField = computed(() => {
   return getCategoryName(detailField.value.category).includes('定量')
 })
+
 function getCategoryName(id) {
   if (!id) return ''
   const found = allCategories.value.find(c => c.id === id)
@@ -247,25 +267,117 @@ function openDetail(field) {
     source: '',
     is_active: true
   }))
-  calculationText.value = typeof detailField.value.calculation === 'object' ? JSON.stringify(detailField.value.calculation, null, 2) : (detailField.value.calculation || '')
+  // populate calculation editor from existing calculation
+  const calc = detailField.value.calculation
+  if (calc && typeof calc === 'object') {
+    const f = Array.isArray(calc.fields) ? calc.fields : []
+    calculationFieldsText.value = f.join(',')
+    calculationOperation.value = calc.operation || operationOptions[0]
+    // 支持 coefficient 或 'coefficient ' 等带空格的键名
+    let coeffVal = null
+    for (const k in calc) {
+      if (k && k.toString().trim().toLowerCase() === 'coefficient') {
+        coeffVal = calc[k]
+        break
+      }
+    }
+    if (coeffVal != null && Array.isArray(coeffVal) && coeffVal.length > 0) {
+      calculationCoefficientsText.value = coeffVal.join(',')
+    } else {
+      calculationCoefficientsText.value = ''
+    }
+  } else if (typeof calc === 'string' && calc.trim() !== '') {
+    try {
+      const parsed = JSON.parse(calc)
+      const f = Array.isArray(parsed.fields) ? parsed.fields : []
+      calculationFieldsText.value = f.join(',')
+      calculationOperation.value = parsed.operation || operationOptions[0]
+      // parsed 也可能含有带空格的键
+      let parsedCoeff = null
+      for (const k in parsed) {
+        if (k && k.toString().trim().toLowerCase() === 'coefficient') {
+          parsedCoeff = parsed[k]
+          break
+        }
+      }
+      if (parsedCoeff != null && Array.isArray(parsedCoeff) && parsedCoeff.length > 0) {
+        calculationCoefficientsText.value = parsedCoeff.join(',')
+      } else {
+        calculationCoefficientsText.value = ''
+      }
+    } catch (e) {
+      calculationFieldsText.value = ''
+      calculationOperation.value = operationOptions[0]
+      calculationCoefficientsText.value = ''
+    }
+  } else {
+    calculationFieldsText.value = ''
+    calculationOperation.value = operationOptions[0]
+    calculationCoefficientsText.value = ''
+  }
   showDetail.value = true
 }
 
 function closeDetail() {
   detailField.value = null
-  calculationText.value = ''
+  calculationFieldsText.value = ''
+  calculationOperation.value = operationOptions[0]
+  calculationCoefficientsText.value = ''
   showDetail.value = false
 }
 
 async function saveField() {
   try {
-    let calc = calculationText.value && calculationText.value.trim() !== '' ? (() => {
-      try { return JSON.parse(calculationText.value) } catch (e) { return calculationText.value }
-    })() : null
+    // validate and construct calculation JSON if applicable
+    let calculationPayload = null
+    if (isCalculativeField.value) {
+      // parse fields
+      const fieldsText = (calculationFieldsText.value || '').trim()
+      if (!fieldsText) {
+        showInfo('请填写计算涉及的字段 IDs（逗号分隔）')
+        return
+      }
+      const fieldsArrRaw = fieldsText.split(',').map(s => s.trim()).filter(s => s !== '')
+      // fields must be integers
+      const fieldsArr = fieldsArrRaw.map(s => {
+        if (!/^-?\d+$/.test(s)) return NaN
+        return Number(s)
+      })
+      if (fieldsArr.some(v => Number.isNaN(v))) {
+        showInfo('字段 IDs 必须为整数，按逗号分隔（例如：10,11,12）')
+        return
+      }
+      const op = calculationOperation.value || operationOptions[0]
+      const coeffText = (calculationCoefficientsText.value || '').trim()
+      let coeffArr = null
+      if (coeffText) {
+        const coeffRaw = coeffText.split(',').map(s => s.trim()).filter(s => s !== '')
+        // coefficients may be floats or ints
+        coeffArr = coeffRaw.map(s => {
+          // allow decimals, including scientific notation
+          if (!/^[-+]?\d*(?:\.\d+)?(?:[eE][-+]?\d+)?$/.test(s)) return NaN
+          return Number(s)
+        })
+        if (coeffArr.some(v => Number.isNaN(v))) {
+          showInfo('系数必须为数字（整数或小数），按逗号分隔，例如：1,0.5,2')
+          return
+        }
+        if (coeffArr.length !== fieldsArr.length) {
+          showInfo('系数数量必须与字段数量一致')
+          return
+        }
+      }
+
+      calculationPayload = {fields: fieldsArr, operation: op}
+      // only include coefficient if user provided non-empty coeffText
+      if (coeffArr && coeffArr.length > 0) {
+        calculationPayload.coefficient = coeffArr
+      }
+    }
 
     const payload = {
       ...detailField.value,
-      calculation: calc
+      calculation: calculationPayload
     }
     let res
     if (!detailField.value.id) {
@@ -278,7 +390,7 @@ async function saveField() {
       closeDetail()
       await fetchFields()
     } else {
-      showInfo('操作未成功，请检查输入')
+      c('操作未成功，请检查输入')
     }
   } catch (e) {
     handleError(e)
@@ -293,7 +405,7 @@ function prepareDeleteField(field) {
 async function confirmDeleteField() {
   if (!deleteTarget.value) return
   try {
-    const res = await axios.delete('/field/delete', { data: { id: deleteTarget.value.id } })
+    const res = await axios.delete('/field/delete', {data: {id: deleteTarget.value.id}})
     if (res.data && res.data.status === 'success') {
       showSuccess('删除成功')
       await fetchFields()
@@ -316,7 +428,7 @@ function cancelDeleteField() {
 async function toggleFieldStatus(field) {
   try {
     const newStatus = !field.is_active
-    const res = await axios.patch('/field/toggle-status', { id: field.id, is_active: newStatus })
+    const res = await axios.patch('/field/toggle-status', {id: field.id, is_active: newStatus})
     if (res.data && res.data.status === 'success') {
       field.is_active = newStatus
       showSuccess('状态已更新')
@@ -334,19 +446,18 @@ function goToPage(page) {
   fetchFields()
 }
 
-function refreshFields() {
-  fetchFields()
-  showInfo('字段列表已刷新')
-}
+const debouncedFetchFields = debounce(() => {
+  fetchFields();
+}, 300)
 
-const debouncedFetchFields = debounce(() => {fetchFields();}, 300)
 function changeFilter() {
   if (currentPage.value === 1) {
     debouncedFetchFields()
-  }else {
+  } else {
     currentPage.value = 1
   }
 }
+
 watch([currentPage], debouncedFetchFields)
 watch([filterCategory, filterSet, keyword], changeFilter)
 
@@ -360,6 +471,18 @@ onMounted(() => {
 <style scoped>
 @import '@/assets/filter-list-styles.css';
 
-/* Page-specific small overrides (keep minimal) */
-.record-row { min-height: 48px; }
+.record-row {
+  min-height: 48px;
+}
+
+.calc-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.calc-row.hint {
+  color: #666;
+  font-size: 0.85rem;
+}
 </style>

@@ -6,7 +6,6 @@
         <legend>{{ setObj.set }}</legend>
         <div class="form-row">
           <table class="data-table">
-            <!-- define columns so table-layout:fixed can enforce widths reliably -->
             <colgroup>
               <col class="col-name"/>
               <col class="col-desc"/>

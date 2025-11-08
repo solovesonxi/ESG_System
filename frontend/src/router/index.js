@@ -15,6 +15,7 @@ import YearlyDataView from '@/views/YearlyDataView.vue';
 import SummaryDataView from "@/views/SummaryDataView.vue";
 import NotificationsView from "@/views/NotificationsView.vue";
 import SettingsView from "@/views/SettingsView.vue";
+import AIChatView from '@/views/AIChatView.vue';
 
 const routes = [{path: '/', redirect: '/home'}, {path: '/login', component: LoginView}, {
     path: '/home', component: Home
@@ -30,7 +31,9 @@ const routes = [{path: '/', redirect: '/home'}, {path: '/login', component: Logi
     path: '/field-management', component: FieldManagement
 }, {
     path: '/announcement-board', component: AnnouncementBoardView
-}]
+},
+{ path: '/ai-chat', component: AIChatView }
+]
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL), routes
