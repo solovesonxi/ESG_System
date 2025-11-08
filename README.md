@@ -61,25 +61,33 @@ npm run preview
 ## 项目结构
 ### Backend
 - `main.py` - 主入口文件和 API 端点。
+- `dump_db.py` - 数据库备份脚本。
 - `requirements.txt` - Python 依赖配置。
-- `utils.py` - 通用工具函数。
 - `core/` - 核心模块：
+  - `calculation.py` - 字段计算函数。
   - `dependencies.py` - 依赖注入配置。
+  - `dynamic_mapping.py` - 数据库自动映射配置。
   - `models.py` - 数据库模型定义。
   - `permissions.py` - 权限控制逻辑。
   - `schemas.py` - 数据模型定义。
   - `utils.py` - 核心工具函数。
 - `routers/` - API 路由：
-  - `login.py` - 登录相关接口。
-  - `register.py` - 注册相关接口。
-  - `update.py` - 数据更新接口。
-  - `verification.py` - 验证相关接口。
-  - `analytical/` - 分析类接口。
-  - `quantitative/` - 定量数据接口。
+  - `account.py` - 账号管理接口。
   - `agent.py` - AI 聊天接口。
+  - `auth.py` - 用户认证相关接口。
+  - `category.py` - 分类管理接口。
+  - `field.py` - 字段管理接口。
+  - `message.py` - 消息通知接口。
+  - `monthlt_data.py` - 月度数据接口。
+  - `progress.py` - 进度跟踪接口。
+  - `review.py` - 审核管理接口。
+  - `summary_data.py` - 汇总数据接口。
+  - `user.py` - 个人信息接口。
+  - `yearly_data.py` - 年度数据接口。
 - `static/` - 静态资源：
-  - `indicators.json` - 指标配置。
-  - `init_database.sql` - 数据库初始化脚本。
+  - `avatars/` - 用户头像。
+  - `icons/` - 图标图片。
+  - `init_db.sql` - 数据库初始化脚本。
 
 ### Frontend
 - `index.html` - 主页面入口。
@@ -98,12 +106,6 @@ npm run preview
   - `views/` - 页面组件：
     - `AIChatView.vue` - AI 聊天界面。
     - `Home.vue` - 主界面（含图表分析）。
-
-## API 接口
-- **定量数据**：`/quantitative/{category}`
-- **分析数据**：`/analytical/{category}`
-- **用户管理**：`/login`, `/register`
-- **AI 聊天**：`/agent/chat`
 
 ## 安全设计
 - Access Token（30分钟） + Refresh Token（1小时）

@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import or_, and_
 from sqlalchemy.orm import Session
 
-from core.dependencies import get_db, indicators
-from core.models import ReviewRecord
+from core.dependencies import get_db
+from core.models import ReviewRecord, Category
 from core.permission import get_current_user
 from core.utils import send_message
 
@@ -28,7 +28,7 @@ async def update_review_status(request: ReviewUpdateRequest, db: Session = Depen
     if not record:
         raise HTTPException(status_code=404, detail="数据暂未提交，无法审核")
     factory = str(record.factory)
-    department = str(record.category)
+    category = db.query(Category).filter_by(id=record.category).first()
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     action = '审核通过' if request.status == "approved" else '驳回' if request.status == "rejected" else '反审核'
     record.is_submitted = True if request.status == "approved" else False if request.status == "rejected" else record.is_submitted
@@ -41,10 +41,10 @@ async def update_review_status(request: ReviewUpdateRequest, db: Session = Depen
         record.level1_review_time = datetime.now()
         # 工厂审核部门月度数据
         if record.month:
-            msg_title = f"{action}了{factory}{record.year}年{record.month}月的{indicators['categories'][department]}数据"
+            msg_title = f"{action}了{factory}{record.year}年{record.month}月的{category.name_zh}数据"
             msg_content = f"{username}于{now_str}{msg_title}"
             send_message(db, "审核", msg_title, msg_content + "，请悉知。", sender_role=role, receiver_role='department',
-                         receiver_factory=factory, receiver_department=department)
+                         receiver_factory=factory)
             if request.status == "approved":
                 send_message(db, "审核", msg_title, msg_content + "，请总部审核。", sender_role=role,
                              receiver_role='headquarter')
@@ -52,7 +52,7 @@ async def update_review_status(request: ReviewUpdateRequest, db: Session = Depen
                              receiver_role='admin')
         # 总部审核工厂年度数据
         else:
-            msg_title = f"{action}了{factory}{record.year}年的{indicators['categories'][department]}数据"
+            msg_title = f"{action}了{factory}{record.year}年的{category.name_zh}数据"
             msg_content = f"{username}于{now_str}{msg_title}"
             send_message(db, "审核", msg_title, msg_content, sender_role=role, receiver_role='factory',
                          receiver_factory=factory)
@@ -67,12 +67,12 @@ async def update_review_status(request: ReviewUpdateRequest, db: Session = Depen
         record.level2_review_time = datetime.now()
         # 总部二次审核部门月度数据
         if record.month:
-            msg_title = f"{action}了{factory}{record.year}年{record.month}月的{indicators['categories'][department]}数据"
+            msg_title = f"{action}了{factory}{record.year}年{record.month}月的{category.name_zh}数据"
             msg_content = f"{username}于{now_str}{msg_title}"
             send_message(db, "审核", msg_title, msg_content, sender_role=role, receiver_role='factory',
                          receiver_factory=factory)
             send_message(db, "审核", msg_title, msg_content, sender_role=role, receiver_role='department',
-                         receiver_factory=factory, receiver_department=department)
+                         receiver_factory=factory)
     db.commit()
     return {"status": "success", "id": request.id, "message": "审核状态已更新"}
 

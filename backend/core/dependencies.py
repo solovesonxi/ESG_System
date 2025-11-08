@@ -58,7 +58,3 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # 配置日志
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", )
 logger = logging.getLogger(__name__)
-
-config_path = Path(__file__).parent.parent / "static" / "indicators.json"
-with open(config_path, "r", encoding="utf-8") as f:
-    indicators = json.load(f)
