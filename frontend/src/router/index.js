@@ -13,6 +13,7 @@ import AnnouncementBoardView from "@/views/AnnouncementBoardView.vue";
 import MonthlyDataView from '@/views/MonthlyDataView.vue';
 import YearlyDataView from '@/views/YearlyDataView.vue';
 import SummaryDataView from "@/views/SummaryDataView.vue";
+import DataAnalysisView from "@/views/DataAnalysisView.vue";
 import NotificationsView from "@/views/NotificationsView.vue";
 import AIChatView from '@/views/AIChatView.vue';
 
@@ -22,7 +23,7 @@ const routes = [{path: '/', redirect: '/home'}, {path: '/login', component: Logi
     path: '/profile', component: ProfileView
 }, {
     path: '/monthly-data', component: MonthlyDataView
-}, {path: '/yearly-data', component: YearlyDataView}, {path: '/summary-data', component: SummaryDataView}, {
+}, {path: '/yearly-data', component: YearlyDataView}, {path: '/summary-data', component: SummaryDataView}, {path: '/data-analysis', component: DataAnalysisView}, {
     path: '/review-management', component: ReviewManagement
 }, {path: '/account-management', component: AccountManagementView}, {
     path: '/category-management', component: CategoryManagement

@@ -54,11 +54,12 @@ const menuItems = computed(() => {
   if (!authStore.isDepartment) {
     items.push({ name: 'yearly-data', path: '/yearly-data', label: '年度数据', icon: 'calendar-alt' });
     if(authStore.isHeadquarter||authStore.isAdmin) {
-      items.push({ name: 'audit', path: '/summary-data', label: '汇总数据', icon: 'chart-pie' });
+      items.push({ name: 'summary', path: '/summary-data', label: '汇总数据', icon: 'chart-pie' });
+      items.push({ name: 'analysis', path: '/data-analysis', label: '数据分析', icon: 'chart-line' });
+      items.push({ name: 'ai', path: '/ai-chat', label: '聊天助手', icon: 'robot' });
     }
     items.push({ name: 'announcement', path: '/announcement-board', label: '公告发布', icon: 'bullhorn' });
     items.push({ name: 'review', path: '/review-management', label: '审核管理', icon: 'check-circle' });
-    items.push({ name: 'ai', path: '/ai-chat', label: '聊天助手', icon: 'robot' });
   }
   if (authStore.isAdmin) {
     items.push(

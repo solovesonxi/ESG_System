@@ -14,7 +14,7 @@ except Exception:
     SQLALCHEMY_DATABASE_URL = None
 
 DEFAULT_URL = os.getenv("DATABASE_URL") or SQLALCHEMY_DATABASE_URL
-DEFAULT_OUT = "./static/init_db.sql"
+DEFAULT_OUT = "../static/init_db.sql"
 DEFAULT_TABLES = None
 
 

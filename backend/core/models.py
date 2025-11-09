@@ -168,7 +168,7 @@ class EmissionData(Base):
 class WasteData(Base):
     __tablename__ = 'waste'
     factory = Column(String(100), primary_key=True)  # 工厂名称
-    year = Column(Integer, nullable=False)
+    year = Column(Integer, primary_key=True)
 
     # 月度数据（JSON数组存储12个月数据）
     epe = Column(JSON, nullable=False)

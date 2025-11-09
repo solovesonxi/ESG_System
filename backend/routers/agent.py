@@ -267,6 +267,7 @@ async def post_message(body: Dict[str, Any] = Body(...), db: Session = Depends(g
     try:
         db.add(am)
         conv.updated_at = datetime.now(timezone.utc)
+        logger.info(f"新增AI回答：{am.content}")
         db.commit()
         db.refresh(am)
     except Exception as e:
