@@ -112,4 +112,4 @@ npm run preview
 - 输入验证防 SQL 注入
 
 ## 许可证
-MIT License - 详见 `LICENSE` 文件。
+Apache-2.0 License - 详见 `LICENSE` 文件。
